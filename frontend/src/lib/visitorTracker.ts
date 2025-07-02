@@ -63,7 +63,7 @@ class VisitorTracker {
       });
 
       if (error) {
-        console.error('[VisitorTracker] Error sending page view to Supabase:', error);
+        console.error('[VisitorTracker] Error sending page view to Supabase:', JSON.stringify(error, null, 2));
       } else {
         console.log('[VisitorTracker] Successfully sent page view for', url);
       }
