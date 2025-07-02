@@ -1,3 +1,5 @@
+import { supabase } from './supabaseClient';
+
 class VisitorTracker {
   visitorId: string;
   sessionData: {
@@ -21,11 +23,11 @@ class VisitorTracker {
   getOrCreateVisitorId(): string {
     // This script runs only on the client, so we can safely use localStorage.
     if (typeof window === 'undefined') {
-      return 'server_side_visitor';
+      return '00000000-0000-0000-0000-000000000000'; // Default UUID for SSR
     }
     let visitorId = localStorage.getItem('visitor_id');
     if (!visitorId) {
-      visitorId = 'visitor_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+      visitorId = crypto.randomUUID();
       localStorage.setItem('visitor_id', visitorId);
     }
     return visitorId;
@@ -51,14 +53,26 @@ class VisitorTracker {
     this.sendToSupabase('page_view', pageData);
   }
 
-  sendToSupabase(eventType: string, data: any) {
-    // TODO: You will need to import your Supabase client here and implement
-    // the logic to send this data to your database.
-    console.log(`[VisitorTracker] Event: ${eventType}`, {
-      visitorId: this.visitorId,
-      session_start_time: this.sessionData.startTime,
-      ...data
-    });
+  async sendToSupabase(eventType: string, data: any) {
+    if (eventType === 'page_view') {
+      const { url, flatId } = data;
+      const { error } = await supabase.rpc('track_page_view', {
+        p_visitor_id: this.visitorId,
+        p_page_url: url,
+        p_flat_id: flatId,
+      });
+
+      if (error) {
+        console.error('[VisitorTracker] Error sending page view to Supabase:', error);
+      } else {
+        console.log('[VisitorTracker] Successfully sent page view for', url);
+      }
+    } else {
+      console.log(`[VisitorTracker] Unhandled Event: ${eventType}`, {
+        visitorId: this.visitorId,
+        ...data
+      });
+    }
   }
 }
 

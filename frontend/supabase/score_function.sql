@@ -11,6 +11,9 @@ BEGIN
   FROM visitor_interactions 
   WHERE lead_id = lead_uuid;
   
+  -- Sum up the scores
+  total_score := interaction_score;
+  
   -- Update lead with new score and status
   UPDATE leads_tracking
   SET 
