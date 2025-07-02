@@ -1,6 +1,12 @@
 import { type NextRequest, NextResponse } from "next/server";
 import OpenAI from 'openai';
 import { supabase } from '@/lib/supabaseClient';
+import { createClient } from '@supabase/supabase-js';
+
+const supabase_admin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -24,7 +30,7 @@ interface Development {
 
 export async function POST(request: NextRequest) {
   try {
-    const { messages, flatId } = await request.json();
+    const { messages, flatId, visitorId } = await request.json();
 
     if (!messages || messages.length === 0) {
       return NextResponse.json({ error: 'Messages are required' }, { status: 400 });
@@ -191,6 +197,41 @@ Detalhes das áreas: ${areaInfo}`;
 
     if (botResponse?.trim() === '[LEAD_FORM]') {
       return NextResponse.json({ action: 'collect_lead' });
+    }
+
+    if (visitorId) {
+      try {
+        const { data: lead } = await supabase_admin
+          .from("leads_tracking")
+          .select("id")
+          .eq("visitor_id", visitorId)
+          .single();
+
+        if (lead) {
+          const leadId = lead.id;
+          const userMessage = messages[messages.length - 1];
+
+          const { error: interactionError } = await supabase_admin
+            .from("visitor_interactions")
+            .insert({
+              lead_id: leadId,
+              interaction_type: "chat_message",
+              points_awarded: 5,
+              details: { message: userMessage.text },
+            });
+
+          if (interactionError) {
+            console.error("Error creating interaction for chat message:", interactionError);
+          } else {
+            const { error: scoreError } = await supabase_admin.rpc('calculate_lead_score', { lead_uuid: leadId });
+            if (scoreError) {
+              console.error("Error calculating lead score after chat:", scoreError);
+            }
+          }
+        }
+      } catch (e) {
+        console.error("Error during scoring for chat message:", e)
+      }
     }
     
     return NextResponse.json({ response: botResponse });

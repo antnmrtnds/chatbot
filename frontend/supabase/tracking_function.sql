@@ -2,6 +2,7 @@ CREATE OR REPLACE FUNCTION track_page_view(p_visitor_id UUID, p_page_url TEXT, p
 RETURNS void AS $$
 DECLARE
   v_is_new_session BOOLEAN;
+  v_lead_id UUID;
 BEGIN
   -- Determine if this is a new session (e.g., activity after 30 minutes of inactivity)
   SELECT (now() - last_activity_at) > interval '30 minutes'
@@ -33,6 +34,17 @@ BEGIN
     session_count = CASE
       WHEN v_is_new_session THEN leads_tracking.session_count + 1
       ELSE leads_tracking.session_count
-    END;
+    END
+  RETURNING id INTO v_lead_id;
+
+  -- If the update/insert happened, v_lead_id will be populated.
+  IF v_lead_id IS NOT NULL THEN
+    -- Insert a record for this interaction
+    INSERT INTO visitor_interactions(lead_id, interaction_type, points_awarded, details)
+    VALUES (v_lead_id, 'page_view', 1, jsonb_build_object('url', p_page_url, 'flat_id', p_flat_id));
+
+    -- Recalculate the lead score
+    PERFORM calculate_lead_score(v_lead_id);
+  END IF;
 END;
 $$ LANGUAGE plpgsql; 

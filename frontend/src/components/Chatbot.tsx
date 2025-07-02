@@ -23,6 +23,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MessageCircle, Loader2 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
+import visitorTracker from "@/lib/visitorTracker";
 
 type Message = {
   text: string;
@@ -69,6 +70,7 @@ function LeadCollectionModal({
           message,
           flatId,
           purchaseTimeframe,
+          visitorId: visitorTracker.visitorId,
         }),
       });
 
@@ -224,6 +226,7 @@ export default function Chatbot({ flatId }: ChatbotProps) {
         body: JSON.stringify({
           messages: newMessages,
           flatId: flatId,
+          visitorId: visitorTracker.visitorId,
         }),
       });
 

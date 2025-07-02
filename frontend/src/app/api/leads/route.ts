@@ -3,24 +3,62 @@ import { createClient } from '@supabase/supabase-js';
 
 export async function POST(request: NextRequest) {
   try {
-    const { name, email, phone, message, flatId, purchaseTimeframe } =
+    const { name, email, phone, message, flatId, purchaseTimeframe, visitorId } =
       await request.json();
 
     console.log("New Lead Received:");
-    console.log({ name, email, phone, message, flatId, purchaseTimeframe });
+    console.log({ name, email, phone, message, flatId, purchaseTimeframe, visitorId });
 
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    const { error } = await supabase
-      .from("leads")
-      .insert([
+    const { data: updatedLead, error: updateError } = await supabase
+      .from("leads_tracking")
+      .update({
+        contact_name: name,
+        contact_email: email,
+        contact_phone: phone,
+        qualification_answers: { message, purchaseTimeframe, flatId },
+        gdpr_consent: true,
+        gdpr_consent_date: new Date().toISOString(),
+      })
+      .eq("visitor_id", visitorId)
+      .select("id")
+      .single();
+
+    if (updateError) {
+      console.error("Error updating lead tracking data:", updateError);
+      // Even if the update fails (e.g., no matching visitor_id), we should still save the lead.
+      // This could happen if the user blocks trackers.
+      const { error: insertError } = await supabase.from("leads").insert([
         { name, email, phone, message, flat_id: flatId, purchase_timeframe: purchaseTimeframe },
       ]);
-    if (error) {
-      throw error;
+      if (insertError) throw insertError; // If insert also fails, then it's a server error.
+    } else {
+      const leadId = updatedLead?.id;
+      if (leadId) {
+        // Log the high-value interaction
+        const { error: interactionError } = await supabase
+          .from("visitor_interactions")
+          .insert({
+            lead_id: leadId,
+            interaction_type: "lead_submission",
+            points_awarded: 50,
+            details: { name, email, flatId, purchaseTimeframe },
+          });
+
+        if (interactionError) {
+          console.error("Error creating interaction for lead submission:", interactionError);
+        } else {
+          // Recalculate score
+          const { error: scoreError } = await supabase.rpc('calculate_lead_score', { lead_uuid: leadId });
+          if (scoreError) {
+            console.error("Error calculating lead score after submission:", scoreError);
+          }
+        }
+      }
     }
 
     // After successfully saving to Supabase, send data to n8n webhook
