@@ -6,6 +6,8 @@ export async function POST(request: NextRequest) {
     const { name, email, phone, message, flatId, purchaseTimeframe, visitorId } =
       await request.json();
 
+    let lead_score = 0;
+
     console.log("New Lead Received:");
     console.log({ name, email, phone, message, flatId, purchaseTimeframe, visitorId });
 
@@ -53,9 +55,12 @@ export async function POST(request: NextRequest) {
           console.error("Error creating interaction for lead submission:", interactionError);
         } else {
           // Recalculate score
-          const { error: scoreError } = await supabase.rpc('calculate_lead_score', { lead_uuid: leadId });
+          const { data: score, error: scoreError } = await supabase.rpc('calculate_lead_score', { lead_uuid: leadId });
           if (scoreError) {
             console.error("Error calculating lead score after submission:", scoreError);
+          } else {
+            lead_score = score;
+            console.log(`Lead ${leadId} scored ${lead_score}`);
           }
         }
       }
@@ -69,7 +74,7 @@ export async function POST(request: NextRequest) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ name, email, phone, message, flatId, purchaseTimeframe }),
+        body: JSON.stringify({ name, email, phone, message, flatId, purchaseTimeframe, visitorId, lead_score }),
       });
 
       if (!webhookResponse.ok) {
