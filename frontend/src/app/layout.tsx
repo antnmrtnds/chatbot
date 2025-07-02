@@ -4,7 +4,7 @@ import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import Script from "next/script";
-import UserledPageTracker from "@/components/UserledPageTracker";
+import AppTracker from "@/components/AppTracker";
 import { Suspense } from "react";
 
 const geistSans = Geist({
@@ -38,7 +38,7 @@ export default function RootLayout({
         </main>
         <Footer />
         <Suspense fallback={null}>
-          <UserledPageTracker />
+          <AppTracker />
         </Suspense>
         <Script
           id="userled-sdk-snippet"
