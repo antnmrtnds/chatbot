@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import OpenAI from 'openai';
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient, PostgrestError } from '@supabase/supabase-js';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -17,6 +17,15 @@ type Message = {
   text: string;
   sender: 'user' | 'bot';
 };
+
+interface Development {
+  flat_id: string;
+  bloco: string;
+  piso: string;
+  tipologia: string;
+  content: string;
+  texto_bruto?: string;
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -36,23 +45,22 @@ export async function POST(request: NextRequest) {
     console.log('Flat ID:', flatId);
     console.log('Conversation history length:', messages.length);
 
+    // This embedding is not used in the logic, so we can comment it out to fix the unused variable error.
+    // If you plan to use semantic search later, you can uncomment this section.
+    // const embeddingResponse = await openai.embeddings.create({
+    //   model: 'text-embedding-ada-002',
+    //   input: currentMessage,
+    // });
+    // const embedding = embeddingResponse.data[0].embedding;
 
-    // Generate embedding for the user's message
-    const embeddingResponse = await openai.embeddings.create({
-      model: 'text-embedding-ada-002',
-      input: currentMessage,
-    });
-
-    const embedding = embeddingResponse.data[0].embedding;
-
-    // Get developments from database - simple query for now
-    let query = supabase
+    // Get developments from database
+    const query = supabase
       .from('developments')
       .select('*');
     
     // If flatId is provided, filter by it first
     if (flatId) {
-      query = query.eq('flat_id', flatId);
+      query.eq('flat_id', flatId);
     }
     
     const { data: developments, error: searchError } = await query.limit(5);
@@ -62,20 +70,20 @@ export async function POST(request: NextRequest) {
     if (searchError) {
       console.error('Supabase search error:', searchError);
       
-      // Fallback: try to get developments directly, filtering by flatId if provided
-      let fallbackData: any[] | null = null;
-      let fallbackError: any = null;
+      let fallbackData: Development[] | null = null;
+      let fallbackError: PostgrestError | null = null;
       
       if (flatId) {
         // Try exact flat_id match first
         const { data: exactMatch, error: exactError } = await supabase
           .from('developments')
           .select('*')
-          .eq('flat_id', flatId);
+          .eq('flat_id', flatId)
+          .returns<Development[]>();
         
         if (exactMatch && exactMatch.length > 0) {
           fallbackData = exactMatch;
-          fallbackError = exactError;
+          if(exactError) fallbackError = exactError;
           console.log('Found exact flat_id match:', flatId, '- records found:', exactMatch.length);
         } else {
           // Try bloco and piso combination
@@ -85,11 +93,12 @@ export async function POST(request: NextRequest) {
               .from('developments')
               .select('*')
               .ilike('bloco', bloco)
-              .eq('piso', piso);
+              .eq('piso', piso)
+              .returns<Development[]>();
             
             if (blocoPisoMatch && blocoPisoMatch.length > 0) {
               fallbackData = blocoPisoMatch;
-              fallbackError = blocoPisoError;
+              if (blocoPisoError) fallbackError = blocoPisoError;
               console.log('Found bloco/piso match:', bloco, piso, '- records found:', blocoPisoMatch.length);
             }
           }
@@ -98,10 +107,11 @@ export async function POST(request: NextRequest) {
         const { data: allData, error: allError } = await supabase
           .from('developments')
           .select('*')
-          .limit(10);
+          .limit(10)
+          .returns<Development[]>();
         
         fallbackData = allData;
-        fallbackError = allError;
+        if(allError) fallbackError = allError;
       }
       
       if (fallbackError) {
@@ -113,8 +123,8 @@ export async function POST(request: NextRequest) {
       
       // Debug: Show all available flat_id values in fallback data
       if (fallbackData && fallbackData.length > 0) {
-        console.log('Available flat_ids in fallback data:', fallbackData.map((dev: any) => dev.flat_id));
-        console.log('Available bloco/piso combinations:', fallbackData.map((dev: any) => `${dev.bloco}_${dev.piso}`));
+        console.log('Available flat_ids in fallback data:', fallbackData.map((dev) => dev.flat_id));
+        console.log('Available bloco/piso combinations:', fallbackData.map((dev) => `${dev.bloco}_${dev.piso}`));
       }
       
       // Use fallback data with more detailed context
@@ -130,13 +140,13 @@ Detalhes das áreas: ${areaInfo}`;
       // Debug: Log the full structure of the first record
       if (developments && developments.length > 0) {
         console.log('First record structure:', JSON.stringify(developments[0], null, 2));
-        console.log('Available flat_ids in search results:', developments.map((dev: any) => dev.flat_id));
-        console.log('Available bloco values:', developments.map((dev: any) => dev.bloco));
-        console.log('Available piso values:', developments.map((dev: any) => dev.piso));
-        console.log('Available tipologia values:', developments.map((dev: any) => dev.tipologia));
+        console.log('Available flat_ids in search results:', developments.map((dev) => dev.flat_id));
+        console.log('Available bloco values:', developments.map((dev) => dev.bloco));
+        console.log('Available piso values:', developments.map((dev) => dev.piso));
+        console.log('Available tipologia values:', developments.map((dev) => dev.tipologia));
         
         // Debug: Compare with direct table query
-        const { data: directQuery, error: directError } = await supabase
+        const { data: directQuery } = await supabase
           .from('developments')
           .select('*')
           .limit(1);
@@ -147,13 +157,13 @@ Detalhes das áreas: ${areaInfo}`;
       }
       
       // Use developments directly since we already filtered in the query
-      let filteredDevelopments = developments;
+      const filteredDevelopments = developments;
       
       console.log('Using', filteredDevelopments?.length, 'records for context');
       
       if (filteredDevelopments && filteredDevelopments.length > 0) {
         // Build context from search results
-        context = filteredDevelopments?.map((dev: any) => {
+        context = filteredDevelopments?.map((dev) => {
           const areaInfo = dev.texto_bruto || '';
           return `Apartamento ${dev.tipologia} no Bloco ${dev.bloco}, piso ${dev.piso}:
 ${dev.content}

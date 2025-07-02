@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from("leads")
       .insert([
         { name, email, phone, message, flat_id: flatId, purchase_timeframe: purchaseTimeframe },
