@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import OpenAI from 'openai';
 import { createClient } from '@supabase/supabase-js';
+import { supabase } from "@/lib/supabaseClient";
 
 const supabase_admin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -54,7 +55,7 @@ export async function POST(request: NextRequest) {
     // const embedding = embeddingResponse.data[0].embedding;
 
     // Get developments from database
-    const query = supabase_admin
+    const query = supabase
       .from('developments')
       .select('*');
     
@@ -74,7 +75,7 @@ export async function POST(request: NextRequest) {
       
       if (flatId) {
         // Try exact flat_id match first
-        const { data: exactMatch } = await supabase_admin
+        const { data: exactMatch } = await supabase
           .from('developments')
           .select('*')
           .eq('flat_id', flatId)
@@ -87,7 +88,7 @@ export async function POST(request: NextRequest) {
           // Try bloco and piso combination
           if (flatId.includes('_')) {
             const [bloco, piso] = flatId.split('_');
-            const { data: blocoPisoMatch } = await supabase_admin
+            const { data: blocoPisoMatch } = await supabase
               .from('developments')
               .select('*')
               .ilike('bloco', bloco)
@@ -101,7 +102,7 @@ export async function POST(request: NextRequest) {
           }
         }
       } else {
-        const { data: allData } = await supabase_admin
+        const { data: allData } = await supabase
           .from('developments')
           .select('*')
           .limit(10)
@@ -137,7 +138,7 @@ Detalhes das áreas: ${areaInfo}`;
         console.log('Available tipologia values:', developments.map((dev) => dev.tipologia));
         
         // Debug: Compare with direct table query
-        const { data: directQuery } = await supabase_admin
+        const { data: directQuery } = await supabase
           .from('developments')
           .select('*')
           .limit(1);
