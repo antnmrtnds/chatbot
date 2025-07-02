@@ -1,16 +1,11 @@
 import { type NextRequest, NextResponse } from "next/server";
 import OpenAI from 'openai';
-import { createClient, PostgrestError } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabaseClient';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
   baseURL: 'https://api.openai.com/v1',
 });
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 // Define Message type for the new history functionality
 type Message = {
@@ -71,11 +66,10 @@ export async function POST(request: NextRequest) {
       console.error('Supabase search error:', searchError);
       
       let fallbackData: Development[] | null = null;
-      let fallbackError: PostgrestError | null = null;
       
       if (flatId) {
         // Try exact flat_id match first
-        const { data: exactMatch, error: exactError } = await supabase
+        const { data: exactMatch } = await supabase
           .from('developments')
           .select('*')
           .eq('flat_id', flatId)
@@ -83,13 +77,12 @@ export async function POST(request: NextRequest) {
         
         if (exactMatch && exactMatch.length > 0) {
           fallbackData = exactMatch;
-          if(exactError) fallbackError = exactError;
           console.log('Found exact flat_id match:', flatId, '- records found:', exactMatch.length);
         } else {
           // Try bloco and piso combination
           if (flatId.includes('_')) {
             const [bloco, piso] = flatId.split('_');
-            const { data: blocoPisoMatch, error: blocoPisoError } = await supabase
+            const { data: blocoPisoMatch } = await supabase
               .from('developments')
               .select('*')
               .ilike('bloco', bloco)
@@ -98,25 +91,18 @@ export async function POST(request: NextRequest) {
             
             if (blocoPisoMatch && blocoPisoMatch.length > 0) {
               fallbackData = blocoPisoMatch;
-              if (blocoPisoError) fallbackError = blocoPisoError;
               console.log('Found bloco/piso match:', bloco, piso, '- records found:', blocoPisoMatch.length);
             }
           }
         }
       } else {
-        const { data: allData, error: allError } = await supabase
+        const { data: allData } = await supabase
           .from('developments')
           .select('*')
           .limit(10)
           .returns<Development[]>();
         
         fallbackData = allData;
-        if(allError) fallbackError = allError;
-      }
-      
-      if (fallbackError) {
-        console.error('Fallback query error:', fallbackError);
-        return NextResponse.json({ error: 'Database query failed' }, { status: 500 });
       }
       
       console.log('Using fallback data, found', fallbackData?.length, 'records');

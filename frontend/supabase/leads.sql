@@ -1,6 +1,6 @@
 CREATE TABLE leads_tracking (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  visitor_id UUID, -- ID anónimo do visitante
+  visitor_id UUID UNIQUE, -- ID anónimo do visitante
   fingerprint_id TEXT, -- Impressão digital do dispositivo
   contact_email TEXT,
   contact_name TEXT,
