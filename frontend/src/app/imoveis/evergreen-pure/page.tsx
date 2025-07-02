@@ -9,7 +9,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Bath, Bed, Car, MapPin, Building2, ArrowRight } from "lucide-react";
-import Image from "next/image";
 
 export default function EvergreenPurePage() {
   // Sample flat data - in a real app, this would come from your database
