@@ -1,12 +1,17 @@
 import { type NextRequest, NextResponse } from "next/server";
 import OpenAI from 'openai';
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { supabase } from "@/lib/supabaseClient";
 
-const supabase_admin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+let supabase_admin: SupabaseClient | null = null;
+if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  supabase_admin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+  );
+} else {
+  console.warn("Supabase service key not found. Chat message scoring will be disabled.");
+}
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -199,7 +204,7 @@ Detalhes das áreas: ${areaInfo}`;
       return NextResponse.json({ action: 'collect_lead' });
     }
 
-    if (visitorId) {
+    if (visitorId && supabase_admin) {
       try {
         const { data: lead } = await supabase_admin
           .from("leads_tracking")
