@@ -1,6 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
 import OpenAI from 'openai';
-import { supabase } from '@/lib/supabaseClient';
 import { createClient } from '@supabase/supabase-js';
 
 const supabase_admin = createClient(
@@ -55,7 +54,7 @@ export async function POST(request: NextRequest) {
     // const embedding = embeddingResponse.data[0].embedding;
 
     // Get developments from database
-    const query = supabase
+    const query = supabase_admin
       .from('developments')
       .select('*');
     
@@ -75,7 +74,7 @@ export async function POST(request: NextRequest) {
       
       if (flatId) {
         // Try exact flat_id match first
-        const { data: exactMatch } = await supabase
+        const { data: exactMatch } = await supabase_admin
           .from('developments')
           .select('*')
           .eq('flat_id', flatId)
@@ -88,7 +87,7 @@ export async function POST(request: NextRequest) {
           // Try bloco and piso combination
           if (flatId.includes('_')) {
             const [bloco, piso] = flatId.split('_');
-            const { data: blocoPisoMatch } = await supabase
+            const { data: blocoPisoMatch } = await supabase_admin
               .from('developments')
               .select('*')
               .ilike('bloco', bloco)
@@ -102,7 +101,7 @@ export async function POST(request: NextRequest) {
           }
         }
       } else {
-        const { data: allData } = await supabase
+        const { data: allData } = await supabase_admin
           .from('developments')
           .select('*')
           .limit(10)
@@ -138,7 +137,7 @@ Detalhes das áreas: ${areaInfo}`;
         console.log('Available tipologia values:', developments.map((dev) => dev.tipologia));
         
         // Debug: Compare with direct table query
-        const { data: directQuery } = await supabase
+        const { data: directQuery } = await supabase_admin
           .from('developments')
           .select('*')
           .limit(1);
