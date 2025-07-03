@@ -354,7 +354,7 @@ export default function Chatbot({ flatId }: ChatbotProps) {
     <>
       <Sheet>
         <SheetTrigger asChild>
-          <Button className="fixed bottom-4 right-4 z-50 h-16 w-16 rounded-full shadow-lg">
+          <Button className="fixed bottom-4 right-4 z-50 h-16 w-16 rounded-full shadow-lg chatbot-float-btn animate-chatbot-pulse">
             <MessageCircle size={32} />
           </Button>
         </SheetTrigger>
@@ -451,6 +451,16 @@ export default function Chatbot({ flatId }: ChatbotProps) {
         onClose={() => setIsLeadModalOpen(false)}
         flatId={flatId}
       />
+      <style jsx global>{`
+        @keyframes chatbot-pulse {
+          0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 123, 255, 0.3); }
+          50% { transform: scale(1.08); box-shadow: 0 0 16px 8px rgba(0, 123, 255, 0.15); }
+        }
+        .animate-chatbot-pulse {
+          animation: chatbot-pulse 4s cubic-bezier(0.4,0,0.2,1) infinite;
+          animation-delay: 1s;
+        }
+      `}</style>
     </>
   );
 } 
