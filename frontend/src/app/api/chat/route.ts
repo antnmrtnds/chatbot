@@ -59,103 +59,87 @@ export async function POST(request: NextRequest) {
     // });
     // const embedding = embeddingResponse.data[0].embedding;
 
-    let developments: Development[] | null = null;
+    let developments: Development[] = [];
+    let contextText: string = "";
 
-    // If flatId is provided, try to find a match
     if (flatId) {
       // Try an exact match first
       const { data: exactMatch } = await supabase
         .from('developments')
         .select('*')
-        .eq('flat_id', flatId.toUpperCase())
-        .limit(1);
+        .eq('flat_id', flatId.toUpperCase());
 
       if (exactMatch && exactMatch.length > 0) {
         developments = exactMatch;
       } else {
-        // Fallback: Deconstruct ID like 'A01' into block 'A' and floor '0'
+        // Fallback to block/floor parsing if exact match fails
         const match = flatId.match(/^([A-Z])(\d+)$/);
         if (match) {
           const block = match[1];
           const floor = match[2];
           console.log(`Fallback Search: block='${block}', floor='${floor}'`);
 
-          const { data: fallbackData, error: fallbackError } = await supabase
+          const { data: fallbackData } = await supabase
             .from("developments")
             .select("*")
             .eq("bloco", block)
             .eq("piso", parseInt(floor, 10) - 1);
 
-          if (fallbackError) {
-            console.error(
-              "Error during fallback search:",
-              fallbackError
-            );
-          } else {
-            if (fallbackData && fallbackData.length > 0) {
-              developments = fallbackData;
-              console.log(`Found ${fallbackData.length} matches on fallback.`);
-            }
+          if (fallbackData && fallbackData.length > 0) {
+            developments = fallbackData;
           }
         }
       }
     }
 
-    // If still no developments, perform a broader search (last resort)
-    if (!developments || developments.length === 0) {
-      console.log(`Could not find a match for flatId: ${flatId}, even after fallback.`);
-      const { data: anyDevelopments } = await supabase
-        .from('developments')
-        .select('*')
-        .limit(5);
-      developments = anyDevelopments;
-    }
-
-    let context = '';
-
-    if (developments && developments.length > 0) {
+    if (developments.length > 0) {
       console.log('Search successful, found', developments.length, 'records');
-      
-      // Build context from the found developments
-      context = developments.map((dev) => {
-        const areaInfo = dev.texto_bruto || '';
-        return `Apartamento ${dev.tipologia} no Bloco ${dev.bloco}, piso ${dev.piso}:
-${dev.content}
-Detalhes das áreas: ${areaInfo}`;
-      }).join('\n\n') || '';
+      contextText = developments
+        .map(d => `Descrição Geral: ${d.content}\n\nDetalhes Específicos: ${d.texto_bruto}`)
+        .join("\n\n---\n\n");
     } else {
-      console.log('No developments found for context.');
+      console.log(`Could not find a match for flatId: ${flatId}, even after fallback.`);
+      contextText = "No context found for the given flatId.";
     }
 
-    console.log('Context length:', context.length);
+    console.log('Context length:', contextText.length);
+    
+    const systemPrompt = `
+You are a helpful virtual assistant for Viriato, a real estate company.
+Your primary goal is to answer user questions about a specific apartment, using the context provided below.
+When asked for information, you MUST use the provided context. Do not use any external knowledge.
 
-    // Format messages for OpenAI API
+If the context does not contain the answer, state that you don't have the information and offer to connect the user with a human agent by including the special token [LEAD_FORM] in your response.
+
+Key instructions:
+- If the user asks for the price, and it's not in the context, say "O preço é sob consulta." and include [LEAD_FORM].
+- If you use the [LEAD_FORM] token, it MUST be the very last part of your response.
+- Be friendly and professional.
+- Answer in Portuguese (PT-PT).
+- Mantenha as respostas concisas e diretas.
+Aqui está o contexto do nosso banco de dados:
+${contextText}`;
+
     const formattedMessages = messages.map((msg: Message) => ({
       role: msg.sender === 'user' ? 'user' : 'assistant',
       content: msg.text,
     }));
-    
-    // Generate response using OpenAI
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4',
+
+    // Create a completion
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4",
       messages: [
         {
-          role: 'system',
-          content: `Você é um assistente especializado em imóveis da empresa UpInvestments.
-          Seu objetivo é responder a perguntas sobre nossas propriedades com base no contexto fornecido.
-          Se o usuário estiver em uma página de apartamento específica (indicada por um flatId), concentre suas respostas nesse apartamento.
-          Seja sempre educado e prestativo. Se você não tiver a resposta no contexto, responda apenas com o texto "[LEAD_FORM]". Não adicione mais nenhum texto.
-          Mantenha as respostas concisas e diretas.
-          Aqui está o contexto do nosso banco de dados:
-          ${context}`,
+          role: "system",
+          content: systemPrompt,
         },
         ...formattedMessages,
       ],
       temperature: 0.5,
-      max_tokens: 150,
+      max_tokens: 400,
     });
 
-    const botResponse = response.choices[0].message.content;
+    const botResponse = completion.choices[0].message.content;
     console.log('Generated response:', botResponse);
 
     if (botResponse?.trim() === '[LEAD_FORM]') {
