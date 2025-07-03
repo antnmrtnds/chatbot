@@ -302,13 +302,13 @@ export default function Chatbot({ flatId }: ChatbotProps) {
     e: React.FormEvent<HTMLFormElement> | null,
     voiceInput?: string
   ) => {
-    e?.preventDefault();
-    const currentInput = voiceInput || input;
-    if (!currentInput.trim()) return;
+    if (e) e.preventDefault();
+    const messageText = voiceInput || input;
+    if (!messageText.trim()) return;
 
     const newMessages: Message[] = [
       ...messages,
-      { text: currentInput, sender: "user", timestamp: new Date() },
+      { text: messageText, sender: "user", timestamp: new Date() },
     ];
     setMessages(newMessages);
     setInput("");
@@ -319,22 +319,30 @@ export default function Chatbot({ flatId }: ChatbotProps) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          messages: newMessages.slice(-10), // Send last 10 messages for context
-          flatId,
+          messages: newMessages.map(m => ({ text: m.text, sender: m.sender })),
+          flatId: flatId,
           visitorId: visitorTracker.visitorId,
         }),
       });
 
-      if (!response.ok) {
-        throw new Error("API Error");
+      const data = await response.json();
+
+      if (data.error) {
+        throw new Error(data.error);
       }
 
-      const data = await response.json();
-      const botResponse = data.response;
-
-      if (botResponse.includes("[LEAD_FORM]")) {
+      if (data.action === "collect_lead") {
         setIsLeadModalOpen(true);
+        setMessages((prev) => [
+          ...prev,
+          {
+            text: "Para lhe fornecer informações mais detalhadas, por favor, deixe os seus dados de contacto.",
+            sender: "bot",
+            timestamp: new Date(),
+          },
+        ]);
       } else {
+        const botResponse = data.response;
         setMessages((prev) => [
           ...prev,
           { text: botResponse, sender: "bot", timestamp: new Date() },
@@ -342,11 +350,11 @@ export default function Chatbot({ flatId }: ChatbotProps) {
         playAudio(botResponse);
       }
     } catch (error) {
-      console.error(error);
+      console.error("Failed to fetch from /api/chat:", error);
       setMessages((prev) => [
         ...prev,
         {
-          text: "Desculpe, ocorreu um erro. Por favor, tente novamente.",
+          text: "Desculpe, ocorreu um erro de comunicação. Por favor, tente novamente mais tarde.",
           sender: "bot",
           timestamp: new Date(),
         },
