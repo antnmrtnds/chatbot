@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -21,7 +21,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { MessageCircle, Loader2 } from "lucide-react";
+import { MessageCircle, Loader2, Mic, StopCircle } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import visitorTracker from "@/lib/visitorTracker";
 
@@ -201,18 +201,89 @@ export default function Chatbot({ flatId }: ChatbotProps) {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isLeadModalOpen, setIsLeadModalOpen] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!input.trim()) return;
+  const [isRecording, setIsRecording] = useState(false);
+  const [audioPlayer, setAudioPlayer] = useState<HTMLAudioElement | null>(null);
+  const recognitionRef = useRef<any>(null);
 
-    const userMessage: Message = {
-      text: input,
-      sender: "user",
-      timestamp: new Date(),
-    };
+  useEffect(() => {
+    // Initialize SpeechRecognition
+    const SpeechRecognition =
+      (window as any).SpeechRecognition ||
+      (window as any).webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.continuous = false;
+      recognitionRef.current.interimResults = false;
+      recognitionRef.current.lang = "pt-PT";
 
-    const newMessages = [...messages, userMessage];
+      recognitionRef.current.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript;
+        setInput(transcript);
+        handleSubmit(null, transcript); // Pass transcript directly
+      };
+
+      recognitionRef.current.onerror = (event: any) => {
+        console.error("Speech recognition error", event.error);
+        setIsRecording(false);
+      };
+
+      recognitionRef.current.onend = () => {
+        setIsRecording(false);
+      };
+    }
+  }, []);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  const handleVoiceInput = () => {
+    if (isRecording) {
+      recognitionRef.current?.stop();
+    } else {
+      recognitionRef.current?.start();
+    }
+    setIsRecording(!isRecording);
+  };
+
+  const playAudio = async (text: string) => {
+    if (audioPlayer) {
+      audioPlayer.pause();
+    }
+
+    try {
+      const response = await fetch("/api/text-to-speech", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text }),
+      });
+
+      if (!response.ok) throw new Error("Failed to fetch audio");
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const newPlayer = new Audio(url);
+      setAudioPlayer(newPlayer);
+      newPlayer.play();
+    } catch (error) {
+      console.error("Error playing audio:", error);
+    }
+  };
+
+  const handleSubmit = async (
+    e: React.FormEvent<HTMLFormElement> | null,
+    voiceInput?: string
+  ) => {
+    e?.preventDefault();
+    const currentInput = voiceInput || input;
+    if (!currentInput.trim()) return;
+
+    const newMessages: Message[] = [
+      ...messages,
+      { text: currentInput, sender: "user", timestamp: new Date() },
+    ];
     setMessages(newMessages);
     setInput("");
     setIsLoading(true);
@@ -220,40 +291,40 @@ export default function Chatbot({ flatId }: ChatbotProps) {
     try {
       const response = await fetch("/api/chat", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          messages: newMessages,
-          flatId: flatId,
+          messages: newMessages.slice(-10), // Send last 10 messages for context
+          flatId,
           visitorId: visitorTracker.visitorId,
         }),
       });
 
       if (!response.ok) {
-        throw new Error("Network response was not ok");
+        throw new Error("API Error");
       }
 
       const data = await response.json();
+      const botResponse = data.response;
 
-      if (data.action === "collect_lead") {
+      if (botResponse.includes("[LEAD_FORM]")) {
         setIsLeadModalOpen(true);
-      } else if (data.response) {
-        const botMessage: Message = {
-          text: data.response,
-          sender: "bot",
-          timestamp: new Date(),
-        };
-        setMessages((prev) => [...prev, botMessage]);
+      } else {
+        setMessages((prev) => [
+          ...prev,
+          { text: botResponse, sender: "bot", timestamp: new Date() },
+        ]);
+        playAudio(botResponse);
       }
     } catch (error) {
-      console.error("Error fetching chat response:", error);
-      const errorMessage: Message = {
-        text: "Desculpe, ocorreu um erro. Por favor, tente novamente.",
-        sender: "bot",
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, errorMessage]);
+      console.error(error);
+      setMessages((prev) => [
+        ...prev,
+        {
+          text: "Desculpe, ocorreu um erro. Por favor, tente novamente.",
+          sender: "bot",
+          timestamp: new Date(),
+        },
+      ]);
     } finally {
       setIsLoading(false);
     }
@@ -261,101 +332,102 @@ export default function Chatbot({ flatId }: ChatbotProps) {
 
   return (
     <>
+      <Sheet>
+        <SheetTrigger asChild>
+          <Button className="fixed bottom-4 right-4 z-50 h-16 w-16 rounded-full shadow-lg">
+            <MessageCircle size={32} />
+          </Button>
+        </SheetTrigger>
+        <SheetContent
+          className="flex flex-col"
+          side="right"
+          style={{ width: "400px" }}
+        >
+          <SheetHeader>
+            <SheetTitle>Assistente Virtual</SheetTitle>
+            <SheetDescription>
+              Pergunte-me qualquer coisa sobre este imóvel.
+            </SheetDescription>
+          </SheetHeader>
+          <div className="flex-grow overflow-y-auto p-4 space-y-4">
+            {messages.map((msg, index) => (
+              <div
+                key={index}
+                className={`flex items-start gap-3 ${
+                  msg.sender === "user" ? "justify-end" : ""
+                }`}
+              >
+                {msg.sender === "bot" && (
+                  <Avatar>
+                    <AvatarImage src="/viriato-logo.svg" />
+                    <AvatarFallback>V</AvatarFallback>
+                  </Avatar>
+                )}
+                <div
+                  className={`max-w-xs rounded-lg px-4 py-2 ${
+                    msg.sender === "user"
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted"
+                  }`}
+                >
+                  <p className="text-sm">{msg.text}</p>
+                  <p className="text-xs text-right mt-1 opacity-70">
+                    {msg.timestamp.toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </p>
+                </div>
+                {msg.sender === "user" && (
+                  <Avatar>
+                    <AvatarFallback>U</AvatarFallback>
+                  </Avatar>
+                )}
+              </div>
+            ))}
+            {isLoading && (
+              <div className="flex items-start gap-3">
+                <Avatar>
+                  <AvatarImage src="/viriato-logo.svg" />
+                  <AvatarFallback>V</AvatarFallback>
+                </Avatar>
+                <div className="max-w-xs rounded-lg px-4 py-2 bg-muted">
+                  <Loader2 className="animate-spin" />
+                </div>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+          <SheetFooter>
+            <form onSubmit={handleSubmit} className="flex w-full items-center gap-2">
+              <Input
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="Escreva a sua mensagem..."
+                className="flex-grow"
+                disabled={isLoading}
+              />
+              <Button
+                type="button"
+                onClick={handleVoiceInput}
+                disabled={isLoading}
+                variant={isRecording ? "destructive" : "outline"}
+                size="icon"
+              >
+                {isRecording ? <StopCircle /> : <Mic />}
+              </Button>
+              <Button type="submit" disabled={isLoading}>
+                {isLoading ? <Loader2 className="animate-spin" /> : "Enviar"}
+              </Button>
+            </form>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
       <LeadCollectionModal
         isOpen={isLeadModalOpen}
         onClose={() => setIsLeadModalOpen(false)}
         flatId={flatId}
       />
-      <Sheet>
-        <SheetTrigger asChild>
-          <Button
-            size="lg"
-            className="fixed bottom-5 right-5 rounded-full w-16 h-16 shadow-lg"
-          >
-            <MessageCircle size={32} />
-          </Button>
-        </SheetTrigger>
-        <SheetContent>
-          <SheetHeader>
-            <SheetTitle>Assistente Virtual</SheetTitle>
-            <SheetDescription>
-              Faça perguntas sobre os nossos imóveis.
-            </SheetDescription>
-          </SheetHeader>
-          <div className="flex flex-col h-full">
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {messages.map((msg, index) => (
-                <div
-                  key={index}
-                  className={`flex items-end gap-2 ${
-                    msg.sender === "user" ? "justify-end" : ""
-                  }`}
-                >
-                  {msg.sender === "bot" && (
-                    <Avatar className="w-8 h-8">
-                      <AvatarImage src="/viriato-logo.svg" alt="Viriato" />
-                      <AvatarFallback>V</AvatarFallback>
-                    </Avatar>
-                  )}
-                  <div
-                    className={`max-w-xs p-3 rounded-lg ${
-                      msg.sender === "user"
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted"
-                    }`}
-                  >
-                    <p className="text-sm">{msg.text}</p>
-                    <p className="text-xs text-right mt-1 opacity-50">
-                      {msg.timestamp.toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </p>
-                  </div>
-                </div>
-              ))}
-              {isLoading && (
-                <div className="flex items-end gap-2">
-                  <Avatar className="w-8 h-8">
-                    <AvatarImage src="/viriato-logo.svg" alt="Viriato" />
-                    <AvatarFallback>V</AvatarFallback>
-                  </Avatar>
-                  <div className="max-w-xs p-3 rounded-lg bg-muted">
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                  </div>
-                </div>
-              )}
-            </div>
-            <div className="p-4 border-t">
-              <form onSubmit={handleSubmit} className="flex items-center space-x-2">
-                <Input
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  placeholder="Escreva a sua pergunta..."
-                  disabled={isLoading}
-                  className="flex-1"
-                />
-                <Button
-                  type="submit"
-                  disabled={isLoading || input.trim() === ""}
-                  size="icon"
-                >
-                  {isLoading ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <MessageCircle className="h-4 w-4" />
-                  )}
-                </Button>
-              </form>
-            </div>
-          </div>
-          <SheetFooter className="border-t pt-4">
-            <p className="text-xs text-muted-foreground text-center">
-              Para questões urgentes: (+351) 234 840 570
-            </p>
-          </SheetFooter>
-        </SheetContent>
-      </Sheet>
     </>
   );
 } 
