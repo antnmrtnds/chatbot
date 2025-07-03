@@ -24,6 +24,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MessageCircle, Loader2, Mic, StopCircle } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import visitorTracker from "@/lib/visitorTracker";
+import SiriWaveform from './SiriWaveform';
 
 type Message = {
   text: string;
@@ -206,6 +207,8 @@ export default function Chatbot({ flatId }: ChatbotProps) {
   const [isRecording, setIsRecording] = useState(false);
   const [audioPlayer, setAudioPlayer] = useState<HTMLAudioElement | null>(null);
   const recognitionRef = useRef<any>(null);
+  const [audioStream, setAudioStream] = useState<MediaStream | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   useEffect(() => {
     // Initialize SpeechRecognition
@@ -242,10 +245,20 @@ export default function Chatbot({ flatId }: ChatbotProps) {
   const handleVoiceInput = () => {
     if (isRecording) {
       recognitionRef.current?.stop();
+      audioStream?.getTracks().forEach(track => track.stop());
+      setAudioStream(null);
+      setIsRecording(false);
     } else {
-      recognitionRef.current?.start();
+      navigator.mediaDevices.getUserMedia({ audio: true })
+        .then(stream => {
+          setAudioStream(stream);
+          setIsRecording(true);
+          recognitionRef.current?.start();
+        })
+        .catch(err => {
+          console.error("Error getting user media", err);
+        });
     }
-    setIsRecording(!isRecording);
   };
 
   const playAudio = async (text: string) => {
@@ -265,6 +278,19 @@ export default function Chatbot({ flatId }: ChatbotProps) {
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
       const newPlayer = new Audio(url);
+
+      const audioContext = new AudioContext();
+      const source = audioContext.createMediaElementSource(newPlayer);
+      const destination = audioContext.createMediaStreamDestination();
+      source.connect(destination);
+      setAudioStream(destination.stream);
+      setIsPlaying(true);
+      
+      newPlayer.onended = () => {
+        setIsPlaying(false);
+        setAudioStream(null);
+      };
+
       setAudioPlayer(newPlayer);
       newPlayer.play();
     } catch (error) {
@@ -349,6 +375,9 @@ export default function Chatbot({ flatId }: ChatbotProps) {
               Pergunte-me qualquer coisa sobre este imóvel.
             </SheetDescription>
           </SheetHeader>
+          <div className="flex justify-center my-2">
+            <SiriWaveform audioStream={audioStream} isPlaying={isRecording || isPlaying} />
+          </div>
           <div className="flex-grow overflow-y-auto p-4 space-y-4">
             {messages.map((msg, index) => (
               <div

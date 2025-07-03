@@ -59,114 +59,59 @@ export async function POST(request: NextRequest) {
     // });
     // const embedding = embeddingResponse.data[0].embedding;
 
-    // Get developments from database
-    const query = supabase
-      .from('developments')
-      .select('*');
-    
-    // If flatId is provided, filter by it first
+    let developments: Development[] | null = null;
+
+    // If flatId is provided, try to find a match
     if (flatId) {
-      query.eq('flat_id', flatId);
+      // Try an exact match first
+      const { data: exactMatch } = await supabase
+        .from('developments')
+        .select('*')
+        .eq('flat_id', flatId)
+        .limit(1);
+
+      if (exactMatch && exactMatch.length > 0) {
+        developments = exactMatch;
+      } else {
+        // Fallback: If no exact match, try transforming the ID
+        // This handles cases like 'A01' from frontend vs 'A_0' in DB
+        const transformedFlatId = flatId.replace(/01$/, '_0');
+        if (transformedFlatId !== flatId) {
+          const { data: transformedMatch } = await supabase
+            .from('developments')
+            .select('*')
+            .eq('flat_id', transformedFlatId)
+            .limit(1);
+          if (transformedMatch && transformedMatch.length > 0) {
+            developments = transformedMatch;
+          }
+        }
+      }
     }
-    
-    const { data: developments, error: searchError } = await query.limit(5);
+
+    // If still no developments, perform a broader search (last resort)
+    if (!developments || developments.length === 0) {
+      const { data: anyDevelopments } = await supabase
+        .from('developments')
+        .select('*')
+        .limit(5);
+      developments = anyDevelopments;
+    }
 
     let context = '';
 
-    if (searchError) {
-      console.error('Supabase search error:', searchError);
+    if (developments && developments.length > 0) {
+      console.log('Search successful, found', developments.length, 'records');
       
-      let fallbackData: Development[] | null = null;
-      
-      if (flatId) {
-        // Try exact flat_id match first
-        const { data: exactMatch } = await supabase
-          .from('developments')
-          .select('*')
-          .eq('flat_id', flatId)
-          .returns<Development[]>();
-        
-        if (exactMatch && exactMatch.length > 0) {
-          fallbackData = exactMatch;
-          console.log('Found exact flat_id match:', flatId, '- records found:', exactMatch.length);
-        } else {
-          // Try bloco and piso combination
-          if (flatId.includes('_')) {
-            const [bloco, piso] = flatId.split('_');
-            const { data: blocoPisoMatch } = await supabase
-              .from('developments')
-              .select('*')
-              .ilike('bloco', bloco)
-              .eq('piso', piso)
-              .returns<Development[]>();
-            
-            if (blocoPisoMatch && blocoPisoMatch.length > 0) {
-              fallbackData = blocoPisoMatch;
-              console.log('Found bloco/piso match:', bloco, piso, '- records found:', blocoPisoMatch.length);
-            }
-          }
-        }
-      } else {
-        const { data: allData } = await supabase
-          .from('developments')
-          .select('*')
-          .limit(10)
-          .returns<Development[]>();
-        
-        fallbackData = allData;
-      }
-      
-      console.log('Using fallback data, found', fallbackData?.length, 'records');
-      
-      // Debug: Show all available flat_id values in fallback data
-      if (fallbackData && fallbackData.length > 0) {
-        console.log('Available flat_ids in fallback data:', fallbackData.map((dev) => dev.flat_id));
-        console.log('Available bloco/piso combinations:', fallbackData.map((dev) => `${dev.bloco}_${dev.piso}`));
-      }
-      
-      // Use fallback data with more detailed context
-      context = fallbackData?.map(dev => {
+      // Build context from the found developments
+      context = developments.map((dev) => {
         const areaInfo = dev.texto_bruto || '';
         return `Apartamento ${dev.tipologia} no Bloco ${dev.bloco}, piso ${dev.piso}:
 ${dev.content}
 Detalhes das áreas: ${areaInfo}`;
       }).join('\n\n') || '';
     } else {
-      console.log('Search successful, found', developments?.length, 'records');
-      
-      // Debug: Log the full structure of the first record
-      if (developments && developments.length > 0) {
-        console.log('First record structure:', JSON.stringify(developments[0], null, 2));
-        console.log('Available flat_ids in search results:', developments.map((dev) => dev.flat_id));
-        console.log('Available bloco values:', developments.map((dev) => dev.bloco));
-        console.log('Available piso values:', developments.map((dev) => dev.piso));
-        console.log('Available tipologia values:', developments.map((dev) => dev.tipologia));
-        
-        // Debug: Compare with direct table query
-        const { data: directQuery } = await supabase
-          .from('developments')
-          .select('*')
-          .limit(1);
-        
-        if (directQuery && directQuery.length > 0) {
-          console.log('Direct query structure:', JSON.stringify(directQuery[0], null, 2));
-        }
-      }
-      
-      // Use developments directly since we already filtered in the query
-      const filteredDevelopments = developments;
-      
-      console.log('Using', filteredDevelopments?.length, 'records for context');
-      
-      if (filteredDevelopments && filteredDevelopments.length > 0) {
-        // Build context from search results
-        context = filteredDevelopments?.map((dev) => {
-          const areaInfo = dev.texto_bruto || '';
-          return `Apartamento ${dev.tipologia} no Bloco ${dev.bloco}, piso ${dev.piso}:
-${dev.content}
-Detalhes das áreas: ${areaInfo}`;
-        }).join('\n\n') || '';
-      }
+      console.log('No developments found for context.');
     }
 
     console.log('Context length:', context.length);
