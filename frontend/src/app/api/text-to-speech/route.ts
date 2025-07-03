@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
-import * as ElevenLabs from "elevenlabs-node";
+const ElevenLabs = require("elevenlabs-node");
 
-const elevenlabs = new ElevenLabs.default({
+const elevenlabs = new ElevenLabs({
   apiKey: process.env.ELEVENLABS_API_KEY || "",
 });
 
