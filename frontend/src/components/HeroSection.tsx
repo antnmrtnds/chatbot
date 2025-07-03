@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Button } from "./ui/button";
+import Image from 'next/image';
 
 export default function HeroSection() {
   return (
@@ -30,6 +31,16 @@ export default function HeroSection() {
               Contactar
             </Link>
           </div>
+        </div>
+        <div className="hero-image-wrapper" style={{ marginTop: '2rem', textAlign: 'center' }}>
+          <Image
+            src="/photos/UP_Evergreen_Pure_price_list_v3[1].jpeg"
+            alt="Tabela de preços Evergreen Pure"
+            width={800}
+            height={450}
+            style={{ maxWidth: '100%', height: 'auto', borderRadius: '1rem', boxShadow: '0 4px 24px rgba(0,0,0,0.08)' }}
+            priority
+          />
         </div>
       </div>
     </section>
