@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -204,6 +204,7 @@ function LeadCollectionModal({
 
 export default function Chatbot({ flatId: propFlatId }: ChatbotProps) {
   const pathname = usePathname();
+  const router = useRouter();
   
   // Extract flatId from URL if not provided as prop
   const getFlatIdFromPath = () => {
@@ -214,15 +215,7 @@ export default function Chatbot({ flatId: propFlatId }: ChatbotProps) {
   
   const flatId = getFlatIdFromPath();
   
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      text: flatId
-        ? `Olá! Descobriu o projeto perfeito? 🏡\n\nSou especialista nos nossos novos condomínios em Aveiro e posso ajudá-lo com tudo - desde características dos apartamentos até opções de financiamento.\n\nVejo que está a ver o apartamento ${flatId}. Como posso ajudar hoje?`
-        : "Olá! Descobriu o projeto perfeito? 🏡\n\nSou especialista nos nossos novos condomínios em Aveiro e posso ajudá-lo com tudo - desde características dos apartamentos até opções de financiamento.\n\nComo posso ajudar hoje?",
-      sender: "bot",
-      timestamp: new Date(),
-    },
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
   
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -346,19 +339,27 @@ export default function Chatbot({ flatId: propFlatId }: ChatbotProps) {
   };
 
   // Generate navigation response based on query
-  const generateNavigationResponse = (query: string): string | null => {
+  const generateNavigationResponse = (query: string): { text: string; url?: string } | null => {
     const lowerQuery = query.toLowerCase();
     
     if (lowerQuery.includes('apartamento') || lowerQuery.includes('disponível')) {
-      return "Pode ver todos os apartamentos disponíveis no Evergreen Pure em /imoveis/evergreen-pure. Temos várias tipologias T1, T2 e T3 duplex disponíveis.";
+      return {
+        text: "A redirecioná-lo para a nossa página de apartamentos... Por favor, aguarde.",
+        url: "/imoveis/evergreen-pure"
+      };
     }
     
     if (lowerQuery.includes('contacto') || lowerQuery.includes('telefone')) {
-      return "Pode contactar-nos através do telefone (+351) 234 840 570 ou email info@viriato.pt. Também pode preencher o formulário de contacto para que entremos em contacto consigo.";
+      return {
+        text: "Pode contactar-nos através do telefone (+351) 234 840 570 ou email info@viriato.pt. Também pode preencher o formulário de contacto para que entremos em contacto consigo.",
+      };
     }
     
     if (lowerQuery.includes('sobre') || lowerQuery.includes('empresa')) {
-      return "Pode conhecer mais sobre a Viriato na nossa página 'Sobre Nós'. Somos uma empresa especializada em desenvolvimento imobiliário em Aveiro.";
+      return {
+        text: "A redirecioná-lo para a nossa página 'Sobre Nós'...",
+        url: "/sobre"
+      };
     }
     
     return null;
@@ -470,11 +471,19 @@ export default function Chatbot({ flatId: propFlatId }: ChatbotProps) {
         setMessages((prev) => [
           ...prev,
           {
-            text: navigationResponse,
+            text: navigationResponse.text,
             sender: "bot",
             timestamp: new Date(),
           },
         ]);
+
+        if (navigationResponse.url) {
+          setTimeout(() => {
+            router.push(navigationResponse.url as string);
+            setIsSheetOpen(false); // Close the sheet on redirect
+          }, 1500); // Wait 1.5 seconds before redirecting
+        }
+        
         setIsLoading(false);
         return;
       }
