@@ -350,6 +350,16 @@ export default function Chatbot({ flatId }: ChatbotProps) {
     }
   };
 
+  const handleSuggestionClick = (suggestion: string) => {
+    setMessages((prev) => [
+      ...prev,
+      { text: suggestion, sender: "user", timestamp: new Date() },
+    ]);
+    setInput("");
+    setIsLoading(true);
+    handleSubmit(null, suggestion);
+  };
+
   return (
     <>
       <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
@@ -372,6 +382,33 @@ export default function Chatbot({ flatId }: ChatbotProps) {
           <div className="flex justify-center my-2">
           </div>
           <div className="flex-grow overflow-y-auto pt-2 pb-4 px-4 space-y-2">
+            {messages.filter(m => m.sender === 'user').length === 0 && (
+              <div className="mb-6">
+                <div className="bg-muted text-gray-900 rounded-lg p-4 mb-4 shadow">
+                  <p className="text-base whitespace-pre-line">
+                    Olá! Descobriu o projeto perfeito? 🏡
+                    {"\n\n"}
+                    Sou especialista nos nossos novos condomínios em Aveiro e posso ajudá-lo com tudo - desde características dos apartamentos até opções de financiamento.
+                    {"\n\n"}
+                    Como posso ajudar hoje?
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <button type="button" className="px-3 py-2 rounded bg-primary text-white text-sm hover:bg-primary/80 transition" onClick={() => handleSuggestionClick('Ver apartamentos disponíveis')}>
+                    🏠 Ver apartamentos disponíveis
+                  </button>
+                  <button type="button" className="px-3 py-2 rounded bg-primary text-white text-sm hover:bg-primary/80 transition" onClick={() => handleSuggestionClick('Agendar visita virtual/presencial')}>
+                    📅 Agendar visita virtual/presencial
+                  </button>
+                  <button type="button" className="px-3 py-2 rounded bg-primary text-white text-sm hover:bg-primary/80 transition" onClick={() => handleSuggestionClick('Opções de financiamento')}>
+                    💰 Opções de financiamento
+                  </button>
+                  <button type="button" className="px-3 py-2 rounded bg-primary text-white text-sm hover:bg-primary/80 transition" onClick={() => handleSuggestionClick('Localização e comodidades')}>
+                    📍 Localização e comodidades
+                  </button>
+                </div>
+              </div>
+            )}
             {messages.map((msg, index) => (
               <div
                 key={index}
