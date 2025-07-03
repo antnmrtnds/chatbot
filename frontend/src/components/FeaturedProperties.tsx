@@ -70,7 +70,7 @@ export default function FeaturedProperties() {
                 </p>
                 <div className="flex items-baseline justify-between">
                   <h3 className="text-xl font-bold">{property.title.split(' - ')[1]}</h3>
-                  <span className="text-lg font-semibold text-blue-900">{property.price}</span>
+                  <span className="text-lg font-semibold text-[#111827]">{property.price}</span>
                 </div>
                 <p className="mt-2 text-sm text-gray-600">{property.location}</p>
                 <p className="mt-1 text-sm text-gray-600">
