@@ -54,32 +54,28 @@ export default function FeaturedProperties() {
         </div>
         <div className="mx-auto grid grid-cols-1 gap-6 py-12 sm:grid-cols-2 md:grid-cols-3 lg:gap-8">
           {featuredProperties.map((property) => (
-            <Card key={property.id} className="overflow-hidden border-0">
+            <Card key={property.id} className="overflow-hidden rounded-lg border-0 shadow-lg">
               <Link href={`/imoveis/evergreen-pure/${property.id}`} className="block" prefetch={false}>
                 <Image
                   src={property.image}
-                  width="400"
-                  height="250"
+                  width={400}
+                  height={300}
                   alt={property.title}
-                  className="h-48 w-full object-cover"
+                  className="h-60 w-full object-cover"
                 />
               </Link>
-              <CardContent className="p-4">
-                <Badge variant="secondary" className="mb-2">{property.status}</Badge>
-                <h3 className="text-lg font-bold">
-                    <Link href={`/imoveis/evergreen-pure/${property.id}`} prefetch={false}>
-                        {property.title}
-                    </Link>
-                </h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400">{property.location}</p>
-                <div className="mt-4 flex items-center justify-between">
-                  <span className="text-xl font-bold text-primary">{property.price}</span>
-                  <div className="flex items-center gap-4 text-sm">
-                    <span>{property.bedrooms} Q</span>
-                    <span>{property.bathrooms} WC</span>
-                    <span>{property.area}</span>
-                  </div>
+              <CardContent className="bg-white p-4">
+                <p className="border-b pb-1 mb-2 text-xs text-gray-500">
+                  {property.title.split(' - ')[0]}
+                </p>
+                <div className="flex items-baseline justify-between">
+                  <h3 className="text-xl font-bold">{property.title.split(' - ')[1]}</h3>
+                  <span className="text-lg font-semibold text-red-500">{property.price}</span>
                 </div>
+                <p className="mt-2 text-sm text-gray-600">{property.location}</p>
+                <p className="mt-1 text-sm text-gray-600">
+                  {property.bedrooms} Q | {property.bathrooms} WC | {property.area}
+                </p>
               </CardContent>
             </Card>
           ))}

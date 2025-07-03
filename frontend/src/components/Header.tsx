@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -16,6 +16,19 @@ import Link from "next/link";
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 10);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
 
   const navigation = [
     { name: "Home", href: "/" },
@@ -27,9 +40,9 @@ export default function Header() {
   ];
 
   return (
-    <header className="bg-white shadow-sm">
+    <header className={`fixed top-0 left-0 right-0 z-30 transition-all duration-300 ${isScrolled ? "bg-white shadow-md" : "bg-transparent"}`}>
       {/* Contact Info Bar */}
-      <div className="bg-primary text-primary-foreground">
+      <div className={`text-white transition-all duration-300 ${isScrolled ? "bg-primary text-primary-foreground" : "bg-black/30"}`}>
         <div className="container mx-auto px-4 py-2">
           <div className="flex justify-between items-center text-sm">
             <div className="flex items-center space-x-6">
@@ -50,9 +63,9 @@ export default function Header() {
               </div>
               <div className="flex items-center space-x-2">
                 <Globe size={14} />
-                <select className="bg-transparent text-primary-foreground text-sm">
-                  <option value="pt">PT</option>
-                  <option value="en">EN</option>
+                <select className="bg-transparent text-sm">
+                  <option value="pt" className="text-black">PT</option>
+                  <option value="en" className="text-black">EN</option>
                 </select>
               </div>
             </div>
@@ -64,7 +77,7 @@ export default function Header() {
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center py-4">
           {/* Logo */}
-          <Link href="/" className="text-2xl font-bold text-primary">
+          <Link href="/" className={`text-2xl font-bold transition-colors duration-300 ${isScrolled ? "text-primary" : "text-white"}`}>
             UPINVESTMENTS
           </Link>
 
@@ -74,7 +87,7 @@ export default function Header() {
               <Link
                 key={item.name}
                 href={item.href}
-                className="text-gray-700 hover:text-primary transition-colors font-medium"
+                className={`transition-colors duration-300 font-medium ${isScrolled ? "text-gray-700 hover:text-primary" : "text-white hover:text-gray-200"}`}
               >
                 {item.name}
               </Link>
@@ -83,7 +96,7 @@ export default function Header() {
 
           {/* Search and Mobile Menu */}
           <div className="flex items-center space-x-4">
-            <Button variant="outline" size="sm" className="hidden md:flex">
+            <Button variant="outline" size="sm" className={`hidden md:flex transition-all duration-300 ${isScrolled ? 'text-gray-700 border-gray-300 hover:bg-gray-100' : 'text-white border-white hover:bg-white/20'}`}>
               <Search size={16} className="mr-2" />
               Pesquisar
             </Button>
@@ -91,7 +104,7 @@ export default function Header() {
             {/* Mobile Menu */}
             <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
               <SheetTrigger asChild>
-                <Button variant="outline" size="sm" className="md:hidden">
+                <Button variant="outline" size="sm" className={`md:hidden transition-all duration-300 ${isScrolled ? 'text-gray-700 border-gray-300 hover:bg-gray-100' : 'text-white border-white hover:bg-white/20'}`}>
                   <Menu size={16} />
                 </Button>
               </SheetTrigger>
