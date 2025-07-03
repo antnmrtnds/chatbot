@@ -24,7 +24,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MessageCircle, Loader2, Mic, StopCircle } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import visitorTracker from "@/lib/visitorTracker";
-import SiriWaveform from './SiriWaveform';
 
 type Message = {
   text: string;
@@ -354,7 +353,7 @@ export default function Chatbot({ flatId }: ChatbotProps) {
     <>
       <Sheet>
         <SheetTrigger asChild>
-          <Button className="fixed bottom-4 right-4 z-50 h-16 w-16 rounded-full shadow-lg chatbot-float-btn animate-chatbot-pulse">
+          <Button className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 h-16 w-16 rounded-full chatbot-float-btn animate-chatbot-pulse hover:chatbot-float-btn-hover">
             <MessageCircle size={32} />
           </Button>
         </SheetTrigger>
@@ -370,7 +369,6 @@ export default function Chatbot({ flatId }: ChatbotProps) {
             </SheetDescription>
           </SheetHeader>
           <div className="flex justify-center my-2">
-            <SiriWaveform audioStream={audioStream} isPlaying={isRecording || isPlaying} />
           </div>
           <div className="flex-grow overflow-y-auto pt-2 pb-4 px-4 space-y-2">
             {messages.map((msg, index) => (
@@ -459,6 +457,14 @@ export default function Chatbot({ flatId }: ChatbotProps) {
         .animate-chatbot-pulse {
           animation: chatbot-pulse 4s cubic-bezier(0.4,0,0.2,1) infinite;
           animation-delay: 1s;
+        }
+        .chatbot-float-btn {
+          transition: box-shadow 150ms cubic-bezier(0.4,0,0.2,1), transform 150ms cubic-bezier(0.4,0,0.2,1);
+          box-shadow: 0 4px 24px 0 #111827;
+        }
+        .chatbot-float-btn:hover, .chatbot-float-btn-hover {
+          box-shadow: 0 0 24px 6px rgba(0, 123, 255, 0.25), 0 2px 8px rgba(0,0,0,0.10);
+          transform: scale(1.05);
         }
       `}</style>
     </>
