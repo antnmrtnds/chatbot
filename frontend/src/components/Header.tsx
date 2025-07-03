@@ -96,7 +96,7 @@ export default function Header() {
 
           {/* Search and Mobile Menu */}
           <div className="flex items-center space-x-4">
-            <Button variant="outline" size="sm" className={`hidden md:flex transition-all duration-300 ${isScrolled ? 'text-gray-700 border-gray-300 hover:bg-gray-100' : 'text-white border-white hover:bg-white/20'}`}>
+            <Button variant="outline" size="sm" className={`hidden md:flex transition-all duration-300 ${isScrolled ? 'text-gray-700 border-gray-300 hover:bg-gray-100' : 'text-white border-white bg-transparent hover:bg-white/20'}`}>
               <Search size={16} className="mr-2" />
               Pesquisar
             </Button>
@@ -104,7 +104,7 @@ export default function Header() {
             {/* Mobile Menu */}
             <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
               <SheetTrigger asChild>
-                <Button variant="outline" size="sm" className={`md:hidden transition-all duration-300 ${isScrolled ? 'text-gray-700 border-gray-300 hover:bg-gray-100' : 'text-white border-white hover:bg-white/20'}`}>
+                <Button variant="outline" size="sm" className={`md:hidden transition-all duration-300 ${isScrolled ? 'text-gray-700 border-gray-300 hover:bg-gray-100' : 'text-white border-white bg-transparent hover:bg-white/20'}`}>
                   <Menu size={16} />
                 </Button>
               </SheetTrigger>
