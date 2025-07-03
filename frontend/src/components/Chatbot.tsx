@@ -222,6 +222,11 @@ export default function Chatbot({ flatId: propFlatId }: ChatbotProps) {
   const [isLeadModalOpen, setIsLeadModalOpen] = useState(false);
   const [leadData, setLeadData] = useState<LeadQualificationData>({});
   const [qualificationStep, setQualificationStep] = useState<string | null>(null);
+  const [apartmentQualification, setApartmentQualification] = useState<{
+    budget?: string;
+    typology?: string;
+    step?: 'budget' | 'typology' | 'complete';
+  }>({});
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const [isRecording, setIsRecording] = useState(false);
@@ -543,8 +548,94 @@ export default function Chatbot({ flatId: propFlatId }: ChatbotProps) {
       { text: suggestion, sender: "user", timestamp: new Date() },
     ]);
     setInput("");
+    
+    // Special handling for "Ver apartamentos disponíveis"
+    if (suggestion.includes('Ver apartamentos disponíveis')) {
+      setApartmentQualification({ step: 'budget' });
+      setTimeout(() => {
+        setMessages((prev) => [
+          ...prev,
+          {
+            text: "Perfeito! Para lhe mostrar os apartamentos mais adequados, preciso de saber algumas preferências.\n\nQual é o seu orçamento aproximado?",
+            sender: "bot",
+            timestamp: new Date(),
+          },
+        ]);
+      }, 500);
+      return;
+    }
+    
     setIsLoading(true);
     handleSubmit(null, suggestion);
+  };
+
+  const handleBudgetSelection = (budget: string) => {
+    const updatedQualification = { ...apartmentQualification, budget, step: 'typology' as const };
+    setApartmentQualification(updatedQualification);
+    
+    setMessages((prev) => [
+      ...prev,
+      { text: budget, sender: "user", timestamp: new Date() },
+      {
+        text: "Excelente! Agora, que tipologia procura?",
+        sender: "bot",
+        timestamp: new Date(),
+      },
+    ]);
+  };
+
+  const handleTypologySelection = async (typology: string) => {
+    const updatedQualification = { 
+      ...apartmentQualification, 
+      typology, 
+      step: 'complete' as const 
+    };
+    setApartmentQualification(updatedQualification);
+    
+    setMessages((prev) => [
+      ...prev,
+      { text: typology, sender: "user", timestamp: new Date() },
+      {
+        text: "Perfeito! A guardar as suas preferências e a redirecioná-lo para os apartamentos que correspondem aos seus critérios...",
+        sender: "bot",
+        timestamp: new Date(),
+      },
+    ]);
+
+    // Update visitor profile with preferences
+    try {
+      await fetch('/api/leads', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          visitorId: visitorTracker.visitorId,
+          leadData: {
+            ...leadData,
+            apartment_preferences: {
+              budget: updatedQualification.budget,
+              typology: updatedQualification.typology,
+              search_date: new Date().toISOString()
+            }
+          },
+          leadScore: calculateLeadScore({
+            ...leadData,
+            budget_range: updatedQualification.budget === '< 300k' ? 'under_300k' : '300k_400k'
+          }),
+          flatId: flatId
+        })
+      });
+    } catch (error) {
+      console.error('Error updating visitor preferences:', error);
+    }
+
+    // Redirect to filtered listings after 2 seconds
+    setTimeout(() => {
+      const budgetParam = updatedQualification.budget === '< 300k' ? 'under_300k' : 'under_400k';
+      const typologyParam = updatedQualification.typology;
+      router.push(`/imoveis/evergreen-pure?budget=${budgetParam}&typology=${typologyParam}`);
+      setIsSheetOpen(false);
+      setApartmentQualification({});
+    }, 2000);
   };
 
   return (
@@ -569,7 +660,7 @@ export default function Chatbot({ flatId: propFlatId }: ChatbotProps) {
           <div className="flex justify-center my-2">
           </div>
           <div className="flex-grow overflow-y-auto pt-2 pb-4 px-4 space-y-2">
-            {messages.filter(m => m.sender === 'user').length === 0 && (
+            {messages.filter(m => m.sender === 'user').length === 0 && !apartmentQualification.step && (
               <div className="mb-6">
                 <div className="bg-muted text-gray-900 rounded-lg p-4 mb-4 shadow">
                   <p className="text-base whitespace-pre-line">
@@ -581,21 +672,62 @@ export default function Chatbot({ flatId: propFlatId }: ChatbotProps) {
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  <button type="button" className="px-3 py-2 rounded bg-primary text-white text-sm hover:bg-primary/80 transition" onClick={() => handleSuggestionClick('Ver apartamentos disponíveis')}>
+                  <button type="button" className="px-3 py-2 rounded bg-primary text-white text-sm hover:bg-primary/80 transition" onClick={() => handleSuggestionClick('🏠 Ver apartamentos disponíveis')}>
                     🏠 Ver apartamentos disponíveis
                   </button>
-                  <button type="button" className="px-3 py-2 rounded bg-primary text-white text-sm hover:bg-primary/80 transition" onClick={() => handleSuggestionClick('Agendar visita virtual/presencial')}>
+                  <button type="button" className="px-3 py-2 rounded bg-primary text-white text-sm hover:bg-primary/80 transition" onClick={() => handleSuggestionClick('📅 Agendar visita virtual/presencial')}>
                     📅 Agendar visita virtual/presencial
                   </button>
-                  <button type="button" className="px-3 py-2 rounded bg-primary text-white text-sm hover:bg-primary/80 transition" onClick={() => handleSuggestionClick('Opções de financiamento')}>
+                  <button type="button" className="px-3 py-2 rounded bg-primary text-white text-sm hover:bg-primary/80 transition" onClick={() => handleSuggestionClick('💰 Opções de financiamento')}>
                     💰 Opções de financiamento
                   </button>
-                  <button type="button" className="px-3 py-2 rounded bg-primary text-white text-sm hover:bg-primary/80 transition" onClick={() => handleSuggestionClick('Localização e comodidades')}>
+                  <button type="button" className="px-3 py-2 rounded bg-primary text-white text-sm hover:bg-primary/80 transition" onClick={() => handleSuggestionClick('📍 Localização e comodidades')}>
                     📍 Localização e comodidades
                   </button>
                 </div>
               </div>
             )}
+            
+            {/* Budget Selection */}
+            {apartmentQualification.step === 'budget' && (
+              <div className="mb-4">
+                <div className="flex flex-wrap gap-2">
+                  <button 
+                    type="button" 
+                    className="px-4 py-3 rounded bg-primary text-white text-sm hover:bg-primary/80 transition"
+                    onClick={() => handleBudgetSelection('< 300k')}
+                  >
+                    💰 Até 300.000€
+                  </button>
+                  <button 
+                    type="button" 
+                    className="px-4 py-3 rounded bg-primary text-white text-sm hover:bg-primary/80 transition"
+                    onClick={() => handleBudgetSelection('< 400k')}
+                  >
+                    💰 Até 400.000€
+                  </button>
+                </div>
+              </div>
+            )}
+            
+            {/* Typology Selection */}
+            {apartmentQualification.step === 'typology' && (
+              <div className="mb-4">
+                <div className="grid grid-cols-2 gap-2">
+                  {['T0', 'T1', 'T2', 'T3', 'T4', 'Duplex'].map((typology) => (
+                    <button 
+                      key={typology}
+                      type="button" 
+                      className="px-3 py-2 rounded bg-primary text-white text-sm hover:bg-primary/80 transition"
+                      onClick={() => handleTypologySelection(typology)}
+                    >
+                      🏠 {typology}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+            
             {messages.map((msg, index) => (
               <div
                 key={index}
@@ -616,7 +748,7 @@ export default function Chatbot({ flatId: propFlatId }: ChatbotProps) {
                       : "bg-muted"
                   }`}
                 >
-                  <p className="text-sm">{msg.text}</p>
+                  <p className="text-sm whitespace-pre-line">{msg.text}</p>
                   <p className="text-xs text-right mt-1 opacity-70">
                     {msg.timestamp.toLocaleTimeString([], {
                       hour: "2-digit",
@@ -645,27 +777,29 @@ export default function Chatbot({ flatId: propFlatId }: ChatbotProps) {
             <div ref={messagesEndRef} />
           </div>
           <SheetFooter>
-            <form onSubmit={handleSubmit} className="flex w-full items-center gap-2">
-              <Input
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder="Escreva a sua mensagem..."
-                className="flex-grow"
-                disabled={isLoading}
-              />
-              <Button
-                type="button"
-                onClick={handleVoiceInput}
-                disabled={isLoading}
-                variant={isRecording ? "destructive" : "outline"}
-                size="icon"
-              >
-                {isRecording ? <StopCircle /> : <Mic />}
-              </Button>
-              <Button type="submit" disabled={isLoading}>
-                {isLoading ? <Loader2 className="animate-spin" /> : "Enviar"}
-              </Button>
-            </form>
+            {!apartmentQualification.step && (
+              <form onSubmit={handleSubmit} className="flex w-full items-center gap-2">
+                <Input
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  placeholder="Escreva a sua mensagem..."
+                  className="flex-grow"
+                  disabled={isLoading}
+                />
+                <Button
+                  type="button"
+                  onClick={handleVoiceInput}
+                  disabled={isLoading}
+                  variant={isRecording ? "destructive" : "outline"}
+                  size="icon"
+                >
+                  {isRecording ? <StopCircle /> : <Mic />}
+                </Button>
+                <Button type="submit" disabled={isLoading}>
+                  {isLoading ? <Loader2 className="animate-spin" /> : "Enviar"}
+                </Button>
+              </form>
+            )}
           </SheetFooter>
         </SheetContent>
       </Sheet>
