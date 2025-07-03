@@ -42,7 +42,7 @@ export default function Header() {
   return (
     <header className={`fixed top-0 left-0 right-0 z-30 transition-all duration-300 ${isScrolled ? "bg-white shadow-md" : "bg-transparent"}`}>
       {/* Contact Info Bar */}
-      <div className={`text-white transition-all duration-300 ${isScrolled ? "bg-primary text-primary-foreground" : "bg-black/30"}`}>
+      <div className={`text-white transition-all duration-300 ${isScrolled ? "bg-primary text-primary-foreground" : "bg-black/50"}`}>
         <div className="container mx-auto px-4 py-2">
           <div className="flex justify-between items-center text-sm">
             <div className="flex items-center space-x-6">
