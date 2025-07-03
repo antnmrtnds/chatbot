@@ -4,8 +4,18 @@ import Image from 'next/image';
 
 export default function HeroSection() {
   return (
-    <section className="w-full py-12 md:py-24 lg:py-32 xl:py-48 bg-gradient-to-r from-primary to-primary/80 text-white">
-      <div className="container px-4 md:px-6">
+    <section
+      className="w-full py-12 md:py-24 lg:py-32 xl:py-48 text-white relative overflow-hidden"
+      style={{
+        backgroundImage: "url('/photos/UP_Evergreen_Pure_price_list_v3[1].jpeg')",
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+      }}
+    >
+      {/* Overlay for readability */}
+      <div className="absolute inset-0 bg-black/60 z-0" />
+      <div className="container px-4 md:px-6 relative z-10">
         <div className="flex flex-col items-center space-y-4 text-center">
           <div className="space-y-2">
             <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl/none">
@@ -31,16 +41,6 @@ export default function HeroSection() {
               Contactar
             </Link>
           </div>
-        </div>
-        <div className="hero-image-wrapper" style={{ marginTop: '2rem', textAlign: 'center' }}>
-          <Image
-            src="/photos/UP_Evergreen_Pure_price_list_v3[1].jpeg"
-            alt="Tabela de preços Evergreen Pure"
-            width={800}
-            height={450}
-            style={{ maxWidth: '100%', height: 'auto', borderRadius: '1rem', boxShadow: '0 4px 24px rgba(0,0,0,0.08)' }}
-            priority
-          />
         </div>
       </div>
     </section>
