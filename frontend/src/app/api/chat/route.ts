@@ -74,24 +74,28 @@ export async function POST(request: NextRequest) {
         developments = exactMatch;
       } else {
         // Fallback: Deconstruct ID like 'A01' into block 'A' and floor '0'
-        const blockMatch = flatId.match(/^([a-zA-Z]+)/);
-        const numberPart = flatId.replace(/^([a-zA-Z]+)/, '');
-
-        if (blockMatch && numberPart) {
-          const block = blockMatch[1].toUpperCase();
-          const floor = numberPart.charAt(0); // Assumes first digit of number part is the floor
-
+        const match = flatId.match(/^([A-Z])(\d+)$/);
+        if (match) {
+          const block = match[1];
+          const floor = match[2];
           console.log(`Fallback Search: block='${block}', floor='${floor}'`);
 
-          const { data: blockFloorMatch } = await supabase
-            .from('developments')
-            .select('*')
-            .eq('bloco', block)
-            .eq('piso', floor);
+          const { data: fallbackData, error: fallbackError } = await supabase
+            .from("developments")
+            .select("*")
+            .eq("bloco", block)
+            .eq("piso", parseInt(floor, 10) - 1);
 
-          if (blockFloorMatch && blockFloorMatch.length > 0) {
-            developments = blockFloorMatch;
-            console.log(`Found ${blockFloorMatch.length} matches on fallback.`);
+          if (fallbackError) {
+            console.error(
+              "Error during fallback search:",
+              fallbackError
+            );
+          } else {
+            if (fallbackData && fallbackData.length > 0) {
+              developments = fallbackData;
+              console.log(`Found ${fallbackData.length} matches on fallback.`);
+            }
           }
         }
       }
