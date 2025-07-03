@@ -19,7 +19,7 @@ export default function Header() {
 
   const navigation = [
     { name: "Home", href: "/" },
-    { name: "The Unique", href: "/the-unique" },
+    { name: "Evergreen", href: "/the-unique" },
     { name: "Projetos", href: "/projetos" },
     { name: "Em arrendamento", href: "/arrendamento" },
     { name: "Sobre Nós", href: "/sobre" },
@@ -40,7 +40,7 @@ export default function Header() {
               </div>
               <div className="flex items-center space-x-2">
                 <Mail size={14} />
-                <span>info@viriato.pt</span>
+                <span>vendas@upinvestments.pt</span>
               </div>
             </div>
             <div className="flex items-center space-x-4">

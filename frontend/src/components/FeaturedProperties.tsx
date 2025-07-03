@@ -54,7 +54,7 @@ export default function FeaturedProperties() {
         </div>
         <div className="mx-auto grid grid-cols-1 gap-6 py-12 sm:grid-cols-2 md:grid-cols-3 lg:gap-8">
           {featuredProperties.map((property) => (
-            <Card key={property.id} className="overflow-hidden">
+            <Card key={property.id} className="overflow-hidden border-0">
               <Link href={`/imoveis/evergreen-pure/${property.id}`} className="block" prefetch={false}>
                 <Image
                   src={property.image}
