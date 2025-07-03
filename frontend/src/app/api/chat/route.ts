@@ -35,7 +35,7 @@ interface Development {
 
 export async function POST(request: NextRequest) {
   try {
-    const { messages, flatId, visitorId } = await request.json();
+    const { messages, flatId, visitorId, leadData, leadScore } = await request.json();
 
     if (!messages || messages.length === 0) {
       return NextResponse.json({ error: 'Messages are required' }, { status: 400 });
@@ -49,15 +49,16 @@ export async function POST(request: NextRequest) {
 
     console.log('Received message:', currentMessage);
     console.log('Flat ID:', flatId);
+    console.log('Lead data:', leadData);
+    console.log('Lead score:', leadScore);
     console.log('Conversation history length:', messages.length);
 
-    // This embedding is not used in the logic, so we can comment it out to fix the unused variable error.
-    // If you plan to use semantic search later, you can uncomment this section.
-    // const embeddingResponse = await openai.embeddings.create({
-    //   model: 'text-embedding-ada-002',
-    //   input: currentMessage,
-    // });
-    // const embedding = embeddingResponse.data[0].embedding;
+    // Check if we should start lead qualification
+    const shouldQualifyLead = (messages.length >= 3 && (!leadData || Object.keys(leadData).length === 0));
+    const userShowsInterest = currentMessage.toLowerCase().includes('interessado') || 
+                            currentMessage.toLowerCase().includes('preço') ||
+                            currentMessage.toLowerCase().includes('comprar') ||
+                            currentMessage.toLowerCase().includes('visita');
 
     let developments: Development[] = [];
     let contextText: string = "";
@@ -103,19 +104,28 @@ export async function POST(request: NextRequest) {
     console.log('Context length:', contextText.length);
     
     const systemPrompt = `
-You are a helpful virtual assistant for Viriato, a real estate company.
-Your primary goal is to answer user questions about a specific apartment, using the context provided below.
-When asked for information, you MUST use the provided context. Do not use any external knowledge.
-
-If the context does not contain the answer, state that you don't have the information and offer to connect the user with a human agent by including the special token [LEAD_FORM] in your response.
+You are a helpful virtual assistant for Viriato, a real estate company specializing in property development in Aveiro.
+Your primary goal is to answer user questions about apartments and qualify potential leads.
 
 Key instructions:
-- If the user asks for the price, and it's not in the context, say "O preço é sob consulta." and include [LEAD_FORM].
-- If you use the [LEAD_FORM] token, it MUST be the very last part of your response.
-- Be friendly and professional.
-- Answer in Portuguese (PT-PT).
-- Mantenha as respostas concisas e diretas.
-Aqui está o contexto do nosso banco de dados:
+- Answer in Portuguese (PT-PT)
+- Be friendly, professional, and helpful
+- Use the provided context to answer questions about specific apartments
+- When you don't have information, offer to connect with a human agent using [LEAD_FORM]
+- If user shows interest, naturally ask qualifying questions about budget, timeline, family needs, etc.
+- For price inquiries without context, say "O preço é sob consulta" and include [LEAD_FORM]
+- Keep responses concise and direct
+
+${shouldQualifyLead && userShowsInterest ? `
+IMPORTANT: The user seems interested and this is a good time to qualify them as a lead. 
+After answering their question, ask ONE of these qualification questions naturally:
+- "Qual é o seu orçamento aproximado para este investimento?"
+- "Quando está a pensar fazer a compra?"
+- "Quantas pessoas vão viver no apartamento?"
+- "Já tem financiamento aprovado ou precisa de ajuda com o processo?"
+` : ''}
+
+Context from our database:
 ${contextText}`;
 
     const formattedMessages = messages.map((msg: Message) => ({
@@ -144,6 +154,21 @@ ${contextText}`;
       return NextResponse.json({ action: 'collect_lead' });
     }
 
+    // Determine if we should include qualification step
+    let qualificationStep = null;
+    if (shouldQualifyLead && userShowsInterest) {
+      // Determine which qualification question to ask based on what we don't have
+      if (!leadData?.budget_range) {
+        qualificationStep = 'budget';
+      } else if (!leadData?.timeline) {
+        qualificationStep = 'timeline';
+      } else if (!leadData?.family_size) {
+        qualificationStep = 'family_size';
+      } else if (!leadData?.financing_needs) {
+        qualificationStep = 'financing';
+      }
+    }
+
     if (visitorId && supabase_admin) {
       try {
         const { data: lead } = await supabase_admin
@@ -162,7 +187,7 @@ ${contextText}`;
               lead_id: leadId,
               interaction_type: "chat_message",
               points_awarded: 5,
-              details: { message: userMessage.text },
+              details: { message: userMessage.text, leadScore: leadScore },
             });
 
           if (interactionError) {
@@ -179,7 +204,10 @@ ${contextText}`;
       }
     }
     
-    return NextResponse.json({ response: botResponse });
+    return NextResponse.json({ 
+      response: botResponse,
+      qualification_step: qualificationStep
+    });
   } catch (error) {
     console.error('Error in chat API:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

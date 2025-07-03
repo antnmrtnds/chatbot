@@ -6,25 +6,6 @@ import Link from "next/link";
 export default function Footer() {
   return (
     <footer className="bg-gray-900 text-white">
-      {/* Newsletter Section */}
-      <div className="bg-primary">
-        <div className="container mx-auto px-4 py-8">
-          <div className="text-center">
-            <h3 className="text-xl font-semibold mb-4">Fique a par das novidades</h3>
-            <p className="mb-4">Subscreva a nossa newsletter</p>
-            <div className="flex max-w-md mx-auto">
-              <Input 
-                placeholder="O seu email..." 
-                className="bg-white text-gray-900"
-              />
-              <Button variant="secondary" className="ml-2">
-                Subscrever
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Main Footer Content */}
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">

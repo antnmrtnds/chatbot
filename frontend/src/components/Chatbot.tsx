@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -29,6 +30,19 @@ type Message = {
   text: string;
   sender: "user" | "bot";
   timestamp: Date;
+};
+
+type LeadQualificationData = {
+  budget_range?: string;
+  timeline?: string;
+  family_size?: number;
+  financing_needs?: string;
+  lead_score?: number;
+  contact_info?: {
+    name?: string;
+    email?: string;
+    phone?: string;
+  };
 };
 
 interface ChatbotProps {
@@ -188,19 +202,33 @@ function LeadCollectionModal({
   );
 }
 
-export default function Chatbot({ flatId }: ChatbotProps) {
+export default function Chatbot({ flatId: propFlatId }: ChatbotProps) {
+  const pathname = usePathname();
+  
+  // Extract flatId from URL if not provided as prop
+  const getFlatIdFromPath = () => {
+    if (propFlatId) return propFlatId;
+    const match = pathname.match(/\/imoveis\/evergreen-pure\/([^\/]+)/);
+    return match ? match[1] : undefined;
+  };
+  
+  const flatId = getFlatIdFromPath();
+  
   const [messages, setMessages] = useState<Message[]>([
     {
       text: flatId
-        ? `Olá! Sou o assistente virtual para o apartamento ${flatId}. Como posso ajudar?`
-        : "Olá! Sou o assistente virtual da Viriato. Como posso ajudar?",
+        ? `Olá! Descobriu o projeto perfeito? 🏡\n\nSou especialista nos nossos novos condomínios em Aveiro e posso ajudá-lo com tudo - desde características dos apartamentos até opções de financiamento.\n\nVejo que está a ver o apartamento ${flatId}. Como posso ajudar hoje?`
+        : "Olá! Descobriu o projeto perfeito? 🏡\n\nSou especialista nos nossos novos condomínios em Aveiro e posso ajudá-lo com tudo - desde características dos apartamentos até opções de financiamento.\n\nComo posso ajudar hoje?",
       sender: "bot",
       timestamp: new Date(),
     },
   ]);
+  
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isLeadModalOpen, setIsLeadModalOpen] = useState(false);
+  const [leadData, setLeadData] = useState<LeadQualificationData>({});
+  const [qualificationStep, setQualificationStep] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const [isRecording, setIsRecording] = useState(false);
@@ -209,6 +237,132 @@ export default function Chatbot({ flatId }: ChatbotProps) {
   const [audioStream, setAudioStream] = useState<MediaStream | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+
+  useEffect(() => {
+    if (!isSheetOpen) {
+      // Stop microphone and audio stream when panel closes
+      if (isRecording && recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+      if (audioStream) {
+        audioStream.getTracks().forEach(track => track.stop());
+        setAudioStream(null);
+      }
+      setIsRecording(false);
+    }
+  }, [isSheetOpen]);
+
+  // Calculate lead score based on collected data
+  const calculateLeadScore = (data: LeadQualificationData): number => {
+    let score = 0;
+    
+    // Budget scoring (40% of total score)
+    if (data.budget_range) {
+      const budgetScores: { [key: string]: number } = {
+        'under_200k': 20,
+        '200k_300k': 35,
+        '300k_400k': 40,
+        'over_400k': 40,
+        'no_budget': 10
+      };
+      score += budgetScores[data.budget_range] || 0;
+    }
+    
+    // Timeline scoring (30% of total score)
+    if (data.timeline) {
+      const timelineScores: { [key: string]: number } = {
+        'immediately': 30,
+        'within_3_months': 25,
+        'within_6_months': 20,
+        'within_year': 15,
+        'just_looking': 5
+      };
+      score += timelineScores[data.timeline] || 0;
+    }
+    
+    // Family size scoring (10% of total score)
+    if (data.family_size) {
+      score += data.family_size > 2 ? 10 : 5;
+    }
+    
+    // Financing needs scoring (20% of total score)
+    if (data.financing_needs) {
+      const financingScores: { [key: string]: number } = {
+        'cash_buyer': 20,
+        'pre_approved': 15,
+        'need_mortgage': 10,
+        'need_help': 5
+      };
+      score += financingScores[data.financing_needs] || 0;
+    }
+    
+    return Math.min(score, 100);
+  };
+
+  // Store visitor data in Supabase
+  const updateVisitorData = async (data: LeadQualificationData) => {
+    try {
+      const response = await fetch('/api/leads', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          visitorId: visitorTracker.visitorId,
+          leadData: data,
+          leadScore: calculateLeadScore(data),
+          flatId: flatId
+        })
+      });
+      
+      if (!response.ok) {
+        console.error('Failed to update visitor data');
+      }
+    } catch (error) {
+      console.error('Error updating visitor data:', error);
+    }
+  };
+
+  // Handle qualification questions
+  const handleQualificationResponse = (response: string, step: string) => {
+    const updatedData = { ...leadData };
+    
+    switch (step) {
+      case 'budget':
+        updatedData.budget_range = response;
+        break;
+      case 'timeline':
+        updatedData.timeline = response;
+        break;
+      case 'family_size':
+        updatedData.family_size = parseInt(response) || 1;
+        break;
+      case 'financing':
+        updatedData.financing_needs = response;
+        break;
+    }
+    
+    setLeadData(updatedData);
+    updateVisitorData(updatedData);
+    setQualificationStep(null);
+  };
+
+  // Generate navigation response based on query
+  const generateNavigationResponse = (query: string): string | null => {
+    const lowerQuery = query.toLowerCase();
+    
+    if (lowerQuery.includes('apartamento') || lowerQuery.includes('disponível')) {
+      return "Pode ver todos os apartamentos disponíveis no Evergreen Pure em /imoveis/evergreen-pure. Temos várias tipologias T1, T2 e T3 duplex disponíveis.";
+    }
+    
+    if (lowerQuery.includes('contacto') || lowerQuery.includes('telefone')) {
+      return "Pode contactar-nos através do telefone (+351) 234 840 570 ou email info@viriato.pt. Também pode preencher o formulário de contacto para que entremos em contacto consigo.";
+    }
+    
+    if (lowerQuery.includes('sobre') || lowerQuery.includes('empresa')) {
+      return "Pode conhecer mais sobre a Viriato na nossa página 'Sobre Nós'. Somos uma empresa especializada em desenvolvimento imobiliário em Aveiro.";
+    }
+    
+    return null;
+  };
 
   useEffect(() => {
     // Initialize SpeechRecognition
@@ -305,6 +459,26 @@ export default function Chatbot({ flatId }: ChatbotProps) {
     setIsLoading(true);
 
     try {
+      // Check if this is a qualification response
+      if (qualificationStep) {
+        handleQualificationResponse(messageText, qualificationStep);
+      }
+
+      // Check for navigation queries first
+      const navigationResponse = generateNavigationResponse(messageText);
+      if (navigationResponse) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            text: navigationResponse,
+            sender: "bot",
+            timestamp: new Date(),
+          },
+        ]);
+        setIsLoading(false);
+        return;
+      }
+
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -312,11 +486,18 @@ export default function Chatbot({ flatId }: ChatbotProps) {
           messages: newMessages.map(m => ({ text: m.text, sender: m.sender })),
           flatId: flatId,
           visitorId: visitorTracker.visitorId,
+          leadData: leadData,
+          leadScore: calculateLeadScore(leadData)
         }),
       });
 
       const botResponse = await response.json();
-      const botMessageText = botResponse.response;
+      let botMessageText = botResponse.response;
+
+      // Check if bot wants to qualify lead
+      if (botResponse.qualification_step) {
+        setQualificationStep(botResponse.qualification_step);
+      }
 
       if (botMessageText.includes("[LEAD_FORM]")) {
         setIsLeadModalOpen(true);
@@ -327,10 +508,7 @@ export default function Chatbot({ flatId }: ChatbotProps) {
       setMessages((prev) => [
         ...prev,
         {
-          text: botMessageText.replace(
-            "[LEAD_FORM]",
-            " "
-          ),
+          text: botMessageText.replace("[LEAD_FORM]", " "),
           sender: "bot",
           timestamp: new Date(),
         },

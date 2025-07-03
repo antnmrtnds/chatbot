@@ -1,4 +1,4 @@
-import Chatbot from "@/components/Chatbot";
+import Image from "next/image";
 import {
   Card,
   CardContent,
@@ -9,7 +9,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Bath, Bed, Car, MapPin, Building2, Heart, Share2, Calendar, Info } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 
 interface PageProps {
@@ -228,9 +227,6 @@ export default function FlatPage({ params }: PageProps) {
           </div>
         </div>
       </div>
-
-      {/* Pass the flatId to the Chatbot */}
-      <Chatbot flatId={flatId} />
     </div>
   );
 } 

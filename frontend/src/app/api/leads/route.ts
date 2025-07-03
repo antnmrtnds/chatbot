@@ -97,4 +97,69 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
+}
+
+export async function PATCH(request: NextRequest) {
+  try {
+    const { visitorId, leadData, leadScore, flatId } = await request.json();
+
+    console.log("Updating visitor lead data:");
+    console.log({ visitorId, leadData, leadScore, flatId });
+
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
+    // Update the leads_tracking table with qualification data
+    const { data: updatedLead, error: updateError } = await supabase
+      .from("leads_tracking")
+      .update({
+        qualification_answers: {
+          ...leadData,
+          flat_id: flatId,
+          last_updated: new Date().toISOString()
+        },
+        lead_score: leadScore,
+        updated_at: new Date().toISOString()
+      })
+      .eq("visitor_id", visitorId)
+      .select("id")
+      .single();
+
+    if (updateError) {
+      console.error("Error updating visitor lead data:", updateError);
+      return NextResponse.json(
+        { error: "Failed to update visitor data." },
+        { status: 500 }
+      );
+    }
+
+    // Log the qualification interaction
+    if (updatedLead?.id) {
+      const { error: interactionError } = await supabase
+        .from("visitor_interactions")
+        .insert({
+          lead_id: updatedLead.id,
+          interaction_type: "lead_qualification",
+          points_awarded: 10,
+          details: { leadData, leadScore, flatId },
+        });
+
+      if (interactionError) {
+        console.error("Error creating qualification interaction:", interactionError);
+      }
+    }
+
+    return NextResponse.json({ 
+      message: "Visitor data updated successfully!",
+      leadScore: leadScore
+    });
+  } catch (error) {
+    console.error("Error updating visitor data:", error);
+    return NextResponse.json(
+      { error: "Failed to update visitor data." },
+      { status: 500 }
+    );
+  }
 } 
