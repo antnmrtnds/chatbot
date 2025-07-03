@@ -13,13 +13,13 @@ import Image from "next/image";
 import Link from "next/link";
 
 interface PageProps {
-  params: Promise<{
+  params: {
     flatId: string;
-  }>;
+  };
 }
 
-export default async function FlatPage({ params }: PageProps) {
-  const { flatId } = await params;
+export default function FlatPage({ params }: PageProps) {
+  const { flatId } = params;
 
   return (
     <div className="bg-gray-50">

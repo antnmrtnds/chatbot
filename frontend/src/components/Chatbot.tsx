@@ -262,39 +262,29 @@ export default function Chatbot({ flatId }: ChatbotProps) {
   };
 
   const playAudio = async (text: string) => {
-    if (audioPlayer) {
-      audioPlayer.pause();
-    }
-
+    setIsPlaying(true);
     try {
-      const response = await fetch("/api/text-to-speech", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const response = await fetch('/api/text-to-speech', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text }),
       });
 
-      if (!response.ok) throw new Error("Failed to fetch audio");
+      if (!response.ok) {
+        throw new Error('Failed to convert text to speech');
+      }
 
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
-      const newPlayer = new Audio(url);
-
-      const audioContext = new AudioContext();
-      const source = audioContext.createMediaElementSource(newPlayer);
-      const destination = audioContext.createMediaStreamDestination();
-      source.connect(destination);
-      setAudioStream(destination.stream);
-      setIsPlaying(true);
-      
-      newPlayer.onended = () => {
+      const audio = new Audio(url);
+      setAudioPlayer(audio);
+      audio.play();
+      audio.onended = () => {
         setIsPlaying(false);
-        setAudioStream(null);
       };
-
-      setAudioPlayer(newPlayer);
-      newPlayer.play();
     } catch (error) {
-      console.error("Error playing audio:", error);
+      console.error(error);
+      setIsPlaying(false);
     }
   };
 
@@ -325,32 +315,28 @@ export default function Chatbot({ flatId }: ChatbotProps) {
         }),
       });
 
-      const data = await response.json();
+      const botResponse = await response.json();
+      const botMessageText = botResponse.response;
 
-      if (data.error) {
-        throw new Error(data.error);
-      }
-
-      if (data.action === "collect_lead") {
+      if (botMessageText.includes("[LEAD_FORM]")) {
         setIsLeadModalOpen(true);
-        setMessages((prev) => [
-          ...prev,
-          {
-            text: "Para lhe fornecer informações mais detalhadas, por favor, deixe os seus dados de contacto.",
-            sender: "bot",
-            timestamp: new Date(),
-          },
-        ]);
       } else {
-        const botResponse = data.response;
-        setMessages((prev) => [
-          ...prev,
-          { text: botResponse, sender: "bot", timestamp: new Date() },
-        ]);
-        playAudio(botResponse);
+        await playAudio(botMessageText);
       }
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          text: botMessageText.replace(
+            "[LEAD_FORM]",
+            " "
+          ),
+          sender: "bot",
+          timestamp: new Date(),
+        },
+      ]);
     } catch (error) {
-      console.error("Failed to fetch from /api/chat:", error);
+      console.error(error);
       setMessages((prev) => [
         ...prev,
         {
