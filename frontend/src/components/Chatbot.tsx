@@ -688,46 +688,6 @@ export default function Chatbot({ flatId: propFlatId }: ChatbotProps) {
               </div>
             )}
             
-            {/* Budget Selection */}
-            {apartmentQualification.step === 'budget' && (
-              <div className="mb-4">
-                <div className="flex flex-wrap gap-2">
-                  <button 
-                    type="button" 
-                    className="px-4 py-3 rounded bg-primary text-white text-sm hover:bg-primary/80 transition"
-                    onClick={() => handleBudgetSelection('< 300k')}
-                  >
-                    💰 Até 300.000€
-                  </button>
-                  <button 
-                    type="button" 
-                    className="px-4 py-3 rounded bg-primary text-white text-sm hover:bg-primary/80 transition"
-                    onClick={() => handleBudgetSelection('< 400k')}
-                  >
-                    💰 Até 400.000€
-                  </button>
-                </div>
-              </div>
-            )}
-            
-            {/* Typology Selection */}
-            {apartmentQualification.step === 'typology' && (
-              <div className="mb-4">
-                <div className="grid grid-cols-2 gap-2">
-                  {['T0', 'T1', 'T2', 'T3', 'T4', 'Duplex'].map((typology) => (
-                    <button 
-                      key={typology}
-                      type="button" 
-                      className="px-3 py-2 rounded bg-primary text-white text-sm hover:bg-primary/80 transition"
-                      onClick={() => handleTypologySelection(typology)}
-                    >
-                      🏠 {typology}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-            
             {messages.map((msg, index) => (
               <div
                 key={index}
@@ -774,6 +734,47 @@ export default function Chatbot({ flatId: propFlatId }: ChatbotProps) {
                 </div>
               </div>
             )}
+
+            {/* Budget Selection */}
+            {apartmentQualification.step === 'budget' && (
+              <div className="mb-4">
+                <div className="flex flex-wrap gap-2">
+                  <button 
+                    type="button" 
+                    className="px-4 py-3 rounded bg-primary text-white text-sm hover:bg-primary/80 transition"
+                    onClick={() => handleBudgetSelection('< 300k')}
+                  >
+                    💰 Até 300.000€
+                  </button>
+                  <button 
+                    type="button" 
+                    className="px-4 py-3 rounded bg-primary text-white text-sm hover:bg-primary/80 transition"
+                    onClick={() => handleBudgetSelection('< 400k')}
+                  >
+                    💰 Até 400.000€
+                  </button>
+                </div>
+              </div>
+            )}
+            
+            {/* Typology Selection */}
+            {apartmentQualification.step === 'typology' && (
+              <div className="mb-4">
+                <div className="grid grid-cols-2 gap-2">
+                  {['T0', 'T1', 'T2', 'T3', 'T4', 'Duplex'].map((typology) => (
+                    <button 
+                      key={typology}
+                      type="button" 
+                      className="px-3 py-2 rounded bg-primary text-white text-sm hover:bg-primary/80 transition"
+                      onClick={() => handleTypologySelection(typology)}
+                    >
+                      🏠 {typology}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+            
             <div ref={messagesEndRef} />
           </div>
           <SheetFooter>
