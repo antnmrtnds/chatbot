@@ -63,64 +63,29 @@ export async function POST(request: NextRequest) {
     let contextText: string = "";
 
     if (flatId) {
-      console.log(`Looking for apartment with flatId: ${flatId}`);
-      
-      // Try exact match first
-      const { data: exactMatch, error: exactError } = await supabase
-        .from('developments')
-        .select('*')
-        .eq('flat_id', flatId.toUpperCase());
+      // Convert flatId from 'A01' to 'A_0'
+      const match = flatId.toUpperCase().match(/^([A-Z])(\d+)$/);
 
-      console.log('Exact match result:', exactMatch, 'Error:', exactError);
+      if (match) {
+        const block = match[1];
+        const number = parseInt(match[2], 10);
+        // The URL 'A01' corresponds to floor 0, 'A02' to 1, etc.
+        const floor = number > 0 ? number - 1 : 0;
+        const formattedFlatId = `${block}_${floor}`;
+        
+        console.log(`Searching for flat with ID: ${formattedFlatId}`);
 
-      if (exactMatch && exactMatch.length > 0) {
-        developments = exactMatch;
-        console.log('Found exact match');
-      } else {
-        // Try alternative format (A01 -> A_0)
-        const match = flatId.match(/^([A-Z])(\d+)$/);
-        if (match) {
-          const block = match[1];
-          const floor = match[2];
-          const alternativeId = `${block}_${parseInt(floor, 10) - 1}`;
-          
-          console.log(`Trying alternative format: ${alternativeId}`);
-          
-          const { data: altMatch, error: altError } = await supabase
-            .from('developments')
-            .select('*')
-            .eq('flat_id', alternativeId);
+        const { data, error } = await supabase
+          .from('developments')
+          .select('*')
+          .eq('flat_id', formattedFlatId)
 
-          console.log('Alternative match result:', altMatch, 'Error:', altError);
+        if (error) {
+          console.error("Error fetching development data:", error);
+        }
 
-          if (altMatch && altMatch.length > 0) {
-            developments = altMatch;
-            console.log('Found alternative match');
-          } else {
-            // Fallback to block/floor parsing
-            console.log(`Fallback Search: block='${block}', floor='${floor}'`);
-
-            const { data: fallbackData, error: fallbackError } = await supabase
-              .from("developments")
-              .select("*")
-              .eq("bloco", block)
-              .eq("piso", parseInt(floor, 10) - 1);
-
-            console.log('Fallback result:', fallbackData, 'Error:', fallbackError);
-
-            if (fallbackData && fallbackData.length > 0) {
-              developments = fallbackData;
-              console.log('Found fallback match');
-            } else {
-              // Let's see what data is actually in the database
-              console.log('No matches found. Checking all available data...');
-              const { data: allData } = await supabase
-                .from('developments')
-                .select('flat_id, bloco, piso, tipologia')
-                .limit(10);
-              console.log('Available developments:', allData);
-            }
-          }
+        if (data && data.length > 0) {
+          developments = data;
         }
       }
     }
