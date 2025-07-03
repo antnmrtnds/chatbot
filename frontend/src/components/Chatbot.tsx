@@ -372,7 +372,7 @@ export default function Chatbot({ flatId }: ChatbotProps) {
           <div className="flex justify-center my-2">
             <SiriWaveform audioStream={audioStream} isPlaying={isRecording || isPlaying} />
           </div>
-          <div className="flex-grow overflow-y-auto p-4 space-y-4">
+          <div className="flex-grow overflow-y-auto pt-2 pb-4 px-4 space-y-2">
             {messages.map((msg, index) => (
               <div
                 key={index}
