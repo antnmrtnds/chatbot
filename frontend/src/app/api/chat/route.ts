@@ -67,23 +67,31 @@ export async function POST(request: NextRequest) {
       const { data: exactMatch } = await supabase
         .from('developments')
         .select('*')
-        .eq('flat_id', flatId)
+        .eq('flat_id', flatId.toUpperCase())
         .limit(1);
 
       if (exactMatch && exactMatch.length > 0) {
         developments = exactMatch;
       } else {
-        // Fallback: If no exact match, try transforming the ID
-        // This handles cases like 'A01' from frontend vs 'A_0' in DB
-        const transformedFlatId = flatId.replace(/01$/, '_0');
-        if (transformedFlatId !== flatId) {
-          const { data: transformedMatch } = await supabase
+        // Fallback: Deconstruct ID like 'A01' into block 'A' and floor '0'
+        const blockMatch = flatId.match(/^([a-zA-Z]+)/);
+        const numberPart = flatId.replace(/^([a-zA-Z]+)/, '');
+
+        if (blockMatch && numberPart) {
+          const block = blockMatch[1].toUpperCase();
+          const floor = numberPart.charAt(0); // Assumes first digit of number part is the floor
+
+          console.log(`Fallback Search: block='${block}', floor='${floor}'`);
+
+          const { data: blockFloorMatch } = await supabase
             .from('developments')
             .select('*')
-            .eq('flat_id', transformedFlatId)
-            .limit(1);
-          if (transformedMatch && transformedMatch.length > 0) {
-            developments = transformedMatch;
+            .eq('bloco', block)
+            .eq('piso', floor);
+
+          if (blockFloorMatch && blockFloorMatch.length > 0) {
+            developments = blockFloorMatch;
+            console.log(`Found ${blockFloorMatch.length} matches on fallback.`);
           }
         }
       }
@@ -91,6 +99,7 @@ export async function POST(request: NextRequest) {
 
     // If still no developments, perform a broader search (last resort)
     if (!developments || developments.length === 0) {
+      console.log(`Could not find a match for flatId: ${flatId}, even after fallback.`);
       const { data: anyDevelopments } = await supabase
         .from('developments')
         .select('*')
