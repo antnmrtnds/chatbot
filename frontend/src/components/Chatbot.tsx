@@ -209,6 +209,8 @@ export default function Chatbot({ flatId }: ChatbotProps) {
   const [audioStream, setAudioStream] = useState<MediaStream | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
 
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
+
   useEffect(() => {
     // Initialize SpeechRecognition
     const SpeechRecognition =
@@ -240,6 +242,20 @@ export default function Chatbot({ flatId }: ChatbotProps) {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  useEffect(() => {
+    if (!isSheetOpen) {
+      // Stop microphone and audio stream when panel closes
+      if (isRecording && recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+      if (audioStream) {
+        audioStream.getTracks().forEach(track => track.stop());
+        setAudioStream(null);
+      }
+      setIsRecording(false);
+    }
+  }, [isSheetOpen]);
 
   const handleVoiceInput = () => {
     if (isRecording) {
@@ -351,9 +367,9 @@ export default function Chatbot({ flatId }: ChatbotProps) {
 
   return (
     <>
-      <Sheet>
+      <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
         <SheetTrigger asChild>
-          <Button className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 h-16 w-16 rounded-full chatbot-float-btn animate-chatbot-pulse hover:chatbot-float-btn-hover">
+          <Button className="fixed bottom-4 z-50 h-16 w-32 rounded-full shadow-lg chatbot-float-btn animate-chatbot-pulse hover:chatbot-float-btn-hover">
             <MessageCircle size={32} />
           </Button>
         </SheetTrigger>
@@ -463,7 +479,7 @@ export default function Chatbot({ flatId }: ChatbotProps) {
           box-shadow: 0 4px 24px 0 #111827;
         }
         .chatbot-float-btn:hover, .chatbot-float-btn-hover {
-          box-shadow: 0 0 24px 6px rgba(0, 123, 255, 0.25), 0 2px 8px rgba(0,0,0,0.10);
+          box-shadow: 0 0 24px 6px #111827, 0 2px 8px rgba(0,0,0,0.10);
           transform: scale(1.05);
         }
       `}</style>
