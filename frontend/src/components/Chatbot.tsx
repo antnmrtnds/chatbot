@@ -90,6 +90,9 @@ function LeadCollectionModal({
 
       if (!response.ok) throw new Error("Failed to submit lead");
 
+      // Link the visitor with their email for future tracking
+      await visitorTracker.linkVisitorWithEmail(email);
+
       setSubmitStatus("success");
       setTimeout(() => {
         onClose();
