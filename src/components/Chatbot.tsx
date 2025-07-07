@@ -267,6 +267,9 @@ export default function Chatbot({ flatId: propFlatId }: ChatbotProps) {
       ? `Estou à sua disposição caso tenha questões relativas ao apartamento ${flatId}.`
       : "Olá! Sou o seu assistente virtual. Como posso ajudá-lo a encontrar a sua casa de sonho?";
     
+    console.log('Chatbot initialized with flatId:', flatId);
+    console.log('Current pathname:', pathname);
+    
     setMessages([
       {
         text: welcomeMessage,

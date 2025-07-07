@@ -33,6 +33,52 @@ interface Development {
   texto_bruto?: string;
 }
 
+// Add a function to transform URL flatId format to database format
+function transformFlatIdForDatabase(urlFlatId: string): string {
+  if (!urlFlatId) return urlFlatId;
+  
+  console.log('Transforming flatId:', urlFlatId);
+  
+  // Extract letter and number parts - more flexible regex
+  const match = urlFlatId.match(/^([A-H])(\d*)$/i);
+  if (!match) {
+    console.log('No regex match for flatId:', urlFlatId);
+    return urlFlatId; // Return original if no match
+  }
+  
+  const letter = match[1].toUpperCase();
+  const number = match[2];
+  
+  console.log('Extracted letter:', letter, 'number:', number);
+  
+  // Based on the actual database pattern:
+  // Ground floor (A-D): A_0, B_0, C_0, D_0
+  // First floor (E-G): E, F, G (just the letter!)
+  // Duplex (H): H
+  
+  if (['A', 'B', 'C', 'D'].includes(letter)) {
+    // Ground floor apartments - always append _0
+    const result = `${letter}_0`;
+    console.log('Transformed to (ground floor):', result);
+    return result;
+  } else if (['E', 'F', 'G'].includes(letter)) {
+    // First floor apartments - just the letter
+    const result = letter;
+    console.log('Transformed to (first floor):', result);
+    return result;
+  } else if (letter === 'H') {
+    // Duplex apartment - just H
+    const result = 'H';
+    console.log('Transformed to (duplex):', result);
+    return result;
+  }
+  
+  // Fallback - should not happen with valid apartment IDs
+  const result = urlFlatId;
+  console.log('Transformed to (fallback):', result);
+  return result;
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { messages, flatId, visitorId, leadData, leadScore } = await request.json();
@@ -65,12 +111,16 @@ export async function POST(request: NextRequest) {
 
     if (flatId) {
       console.log(`Searching for flat with ID: ${flatId}`);
+      
+      // Transform the flatId from URL format to database format
+      const dbFlatId = transformFlatIdForDatabase(flatId);
+      console.log(`Transformed flatId from ${flatId} to ${dbFlatId}`);
 
-      // Try to find the flat using the flatId directly first
+      // Try to find the flat using the transformed flatId directly first
       const { data, error } = await supabase
         .from('developments')
         .select('*')
-        .eq('flat_id', flatId);
+        .eq('flat_id', dbFlatId);
 
       if (error) {
         console.error("Error fetching development data:", error);
@@ -85,11 +135,22 @@ export async function POST(request: NextRequest) {
         const { data: searchData, error: searchError } = await supabase
           .from('developments')
           .select('*')
-          .ilike('flat_id', `%${flatId}%`);
+          .ilike('flat_id', `%${dbFlatId}%`);
 
         if (!searchError && searchData && searchData.length > 0) {
           developments = searchData;
           console.log(`Found ${searchData.length} flats with pattern search`);
+        } else {
+          // Also try with original flatId as fallback
+          const { data: fallbackData, error: fallbackError } = await supabase
+            .from('developments')
+            .select('*')
+            .ilike('flat_id', `%${flatId}%`);
+            
+          if (!fallbackError && fallbackData && fallbackData.length > 0) {
+            developments = fallbackData;
+            console.log(`Found ${fallbackData.length} flats with fallback search`);
+          }
         }
       }
     }
@@ -127,7 +188,8 @@ Key instructions:
 - For questions you cannot answer with the provided context, offer to connect with a human agent using [LEAD_FORM]
 - If user shows interest, naturally ask qualifying questions about budget, timeline, family needs, etc.
 - Keep responses concise and direct
-- Always refer to apartments by their reference (e.g., "apartamento A_0", "apartamento E_1")
+- Always refer to apartments by their display reference (e.g., "apartamento A01", "apartamento E02", "apartamento H01")
+- Use the original flatId parameter for display purposes, but search using the transformed database format
 
 ${flatId && developments.length > 0 ? `
 CURRENT APARTMENT CONTEXT: You are specifically discussing apartment ${flatId}.
