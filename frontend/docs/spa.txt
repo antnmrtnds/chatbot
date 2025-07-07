@@ -1,0 +1,54 @@
+# Single Page Apps
+
+<aside>
+💡 **Unsure where to find the Userled Snippet?
+‣**
+
+</aside>
+
+A **Single Page Application (SPA)** only re-renders part of the site when moving between pages - all pages are part of the same root HTML template.
+
+This means that the snippet will not be re-run when moving between pages, and it might mean that page URLs provide no information about the current page, if no routes (e.g. `/about`) are used.
+
+The first part of installation is largely same as for [Multi Page Apps](https://www.notion.so/Multi-Page-Apps-675abce1ec4144ffa2bb71bce9627ffa?pvs=21). 
+
+The snippet should be pasted right before the closing `</body>` tag of your website.
+
+Where you should embed the snippet depends on the framework you use. For example in a [NextJS](https://nextjs.org/) app, this would be in `_document.tsx`.
+
+<aside>
+⚠️
+
+The snippet will need to be modified to not call `page` if your app also calls `page` on initial load. Be sure to remove the comma `,` before `window.Userled("page")` as this will cause the snippet not to load properly.
+
+```jsx
+<script id="userled-sdk-snippet">
+  window.userledSettings={app_id:"{{APP_ID}}"},window.userledSnippetTs=(new Date).getTime(),(function(){if(!window.Userled){window.Userled=function(){return e.call(arguments)};var e=window.Userled;e.call=function(n){return new Promise((function(i,d){e.queue.push([].concat.apply([i,d],n))}))},e.queue=[],e.snippetVersion="4.0.0",window.Userled("page")}})();
+</script>
+<script id="userled-sdk" type="module" src="https://sdk.userledclient.io?appId={{APP_ID}}&snippetVersion={{versionId}}" data-cfasync="false"></script>
+```
+
+</aside>
+
+In order to signal page changes on each page, the following method must be called:
+
+```jsx
+window.Userled("page");
+```
+
+This will signal a page change event, including the current and previous URLs.
+
+If you would like to also label the current page with a `PageName`, pass it as the second parameter:
+
+```jsx
+window.Userled("page", "Pricing");
+```
+
+How these page calls should be embedded will depend on the framework you use.
+
+Checkout our [React Gatsby starter](https://www.notion.so/Gatsby-React-starter-93a44e7774134b55bcf765007d4f9e10?pvs=21) and [NextJS starter](https://www.notion.so/NextJS-12-starter-adce305f4c804d27bbd31877f71fb043?pvs=21) for example SPA setups.
+
+<aside>
+👋 Struggling to integrate with your SPA framework? [Get in touch](https://userled.slack.com/join/shared_invite/zt-19x998nhy-KwmRQgMunszYnkSC0FmOag#/shared-invite/email) - we’re here to help!
+
+</aside>
