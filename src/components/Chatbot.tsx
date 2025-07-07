@@ -263,14 +263,18 @@ export default function Chatbot({ flatId: propFlatId }: ChatbotProps) {
 
   useEffect(() => {
     // Display welcome message when the component mounts
+    const welcomeMessage = flatId 
+      ? `Estou à sua disposição caso tenha questões relativas ao apartamento ${flatId}.`
+      : "Olá! Sou o seu assistente virtual. Como posso ajudá-lo a encontrar a sua casa de sonho?";
+    
     setMessages([
       {
-        text: "Olá! Sou o seu assistente virtual. Como posso ajudá-lo a encontrar a sua casa de sonho?",
+        text: welcomeMessage,
         sender: "bot",
         timestamp: new Date(),
       },
     ]);
-  }, []);
+  }, [flatId]);
 
   // Calculate lead score based on collected data
   const calculateLeadScore = (data: LeadQualificationData): number => {

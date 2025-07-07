@@ -64,29 +64,32 @@ export async function POST(request: NextRequest) {
     let contextText: string = "";
 
     if (flatId) {
-      // Convert flatId from 'A01' to 'A_0'
-      const match = flatId.toUpperCase().match(/^([A-Z])(\d+)$/);
+      console.log(`Searching for flat with ID: ${flatId}`);
 
-      if (match) {
-        const block = match[1];
-        const number = parseInt(match[2], 10);
-        // The URL 'A01' corresponds to floor 0, 'A02' to 1, etc.
-        const floor = number > 0 ? number - 1 : 0;
-        const formattedFlatId = `${block}_${floor}`;
-        
-        console.log(`Searching for flat with ID: ${formattedFlatId}`);
+      // Try to find the flat using the flatId directly first
+      const { data, error } = await supabase
+        .from('developments')
+        .select('*')
+        .eq('flat_id', flatId);
 
-        const { data, error } = await supabase
+      if (error) {
+        console.error("Error fetching development data:", error);
+      }
+
+      if (data && data.length > 0) {
+        developments = data;
+        console.log('Found flat with direct match');
+      } else {
+        // If no direct match, try to search by matching patterns in flat_id
+        console.log('No direct match, trying pattern search');
+        const { data: searchData, error: searchError } = await supabase
           .from('developments')
           .select('*')
-          .eq('flat_id', formattedFlatId)
+          .ilike('flat_id', `%${flatId}%`);
 
-        if (error) {
-          console.error("Error fetching development data:", error);
-        }
-
-        if (data && data.length > 0) {
-          developments = data;
+        if (!searchError && searchData && searchData.length > 0) {
+          developments = searchData;
+          console.log(`Found ${searchData.length} flats with pattern search`);
         }
       }
     }
@@ -107,14 +110,29 @@ export async function POST(request: NextRequest) {
 You are a helpful virtual assistant for Viriato, a real estate company specializing in property development in Aveiro.
 Your primary goal is to answer user questions about apartments and qualify potential leads.
 
+About Evergreen Pure Development:
+- Located in Santa Joana, Aveiro
+- Composed of two blocks with 8 apartments each
+- Offers T1, T2, T3 and T3 duplex typologies
+- Areas range from 56m² to 117m²
+- Minimalist design with high-quality finishes
+- Construction completion expected by end of 2025
+- All apartments are currently under construction ("em planta")
+
 Key instructions:
 - Answer in Portuguese (PT-PT)
 - Be friendly, professional, and helpful
-- Use the provided context to answer questions about specific apartments
-- When you don't have information, offer to connect with a human agent using [LEAD_FORM]
+- Use the provided apartment context to answer specific questions about areas, typology, features, etc.
+- When asked about prices, always say "Para informações sobre preços, por favor contacte-nos" and include [LEAD_FORM]
+- For questions you cannot answer with the provided context, offer to connect with a human agent using [LEAD_FORM]
 - If user shows interest, naturally ask qualifying questions about budget, timeline, family needs, etc.
-- For price inquiries without context, say "O preço é sob consulta" and include [LEAD_FORM]
 - Keep responses concise and direct
+- Always refer to apartments by their reference (e.g., "apartamento A_0", "apartamento E_1")
+
+${flatId && developments.length > 0 ? `
+CURRENT APARTMENT CONTEXT: You are specifically discussing apartment ${flatId}.
+Use the detailed information provided below to answer questions about this specific apartment.
+` : ''}
 
 ${shouldQualifyLead && userShowsInterest ? `
 IMPORTANT: The user seems interested and this is a good time to qualify them as a lead. 
@@ -125,8 +143,10 @@ After answering their question, ask ONE of these qualification questions natural
 - "Já tem financiamento aprovado ou precisa de ajuda com o processo?"
 ` : ''}
 
-Context from our database:
-${contextText}`;
+${contextText ? `
+Apartment Information:
+${contextText}
+` : 'No specific apartment information available.'}`;
 
     const formattedMessages = messages.map((msg: Message) => ({
       role: msg.sender === 'user' ? 'user' : 'assistant',
