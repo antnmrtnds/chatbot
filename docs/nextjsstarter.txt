@@ -1,0 +1,73 @@
+# [NextJS](https://nextjs.org/) 12 starter
+
+### Installation
+
+Installing the Userled SDK snippet on a NextJS webapp is a 2 step process:
+
+1. Add our snippet to your NextJS `_document.tsx`. Make sure it’s the last entry on the `<body>` tag, to not affect your page load times.
+    1. Be sure to omit the `<script>` `</script>` tags when copying the snippet from our app as the snippet should be injected using an inline script ([`dangerouslySetInnerHTML`](https://nextjs.org/docs/basic-features/script#inline-scripts)) in your NextJS app.
+    2. Remember to replace `YOUR_APP_ID` with your own APP_ID. If you copied the snippet from our app it should already be populated for you.
+
+```jsx
+import { Html, Head, Main, NextScript } from 'next/document'
+
+export default function Document() {
+  return (
+    <Html>
+      <Head />
+      <body>
+        <Main />
+        <NextScript />
+
+				<script
+            dangerouslySetInnerHTML={{
+              __html: `
+window.userledSettings={app_id:"YOUR_APP_ID"};
+  (function(){
+    if(!window.Userled){window.Userled=function(){e.call(arguments)};var e=window.Userled;e.call=function(t){e.queue.push(t)},e.queue=[],e.snippetVersion="1.0.0";var t=function(){var e=document.createElement("script");e.type="text/javascript",e.async=!0,e.src="${SERVER_URL}/static/sdk.bundle.js";var t=document.getElementsByTagName("script")[0];t.parentNode.insertBefore(e,t)};"complete"===document.readyState?t():window.attachEvent?window.attachEvent("onload",t):window.addEventListener("load",t,!1);
+    window.Userled("page");
+  }})();
+`,
+            }}
+          />
+      </body>
+    </Html>
+  )
+}
+```
+
+1. NextJS can render your web app as both an MPA and SPA. The following listener should be added to your `_app.tsx`file to cater for both:
+
+```jsx
+import { Router } from "next/router";
+
+declare global {
+  interface Window {
+    Userled: any;
+  }
+}
+
+const page = (name?: string) => {
+  if (window?.Userled) window.Userled("page", name);
+}
+
+interface UserledProps {
+  page: (name?: string) => void;
+}
+
+export const Userled: UserledProps = {
+  page: page,
+};
+
+// Listens to route changes and triggers a Page call on every change
+Router.events.on("routeChangeComplete", (url) => {
+	Userled.page();
+});
+```
+
+<aside>
+👋 Struggling to integrate with your SPA framework? [Get in touch](https://userled.slack.com/join/shared_invite/zt-19x998nhy-KwmRQgMunszYnkSC0FmOag#/shared-invite/email) - we’re here to help!
+
+</aside>
+
+ For further help, checkout our [Single Page Apps](https://www.notion.so/Single-Page-Apps-dd74df198e084dbaba269bc7b3401b65?pvs=21) and [Multi Page Apps](https://www.notion.so/Multi-Page-Apps-675abce1ec4144ffa2bb71bce9627ffa?pvs=21) starters depending on your website.
