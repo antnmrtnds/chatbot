@@ -206,201 +206,266 @@ function LeadCollectionModal({
 }
 
 export default function Chatbot({ flatId: propFlatId }: ChatbotProps) {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState("");
-  const [isOpen, setIsOpen] = useState(false);
-  const [isLeadModalOpen, setIsLeadModalOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isWelcomeOpen, setIsWelcomeOpen] = useState(true);
-  const [qualificationStep, setQualificationStep] = useState("start");
-  const [leadData, setLeadData] = useState<LeadQualificationData>({});
-  const messagesEndRef = useRef<HTMLDivElement | null>(null);
-  const router = useRouter();
   const pathname = usePathname();
+  const router = useRouter();
+  
+  // Extract flatId from URL if not provided as prop
+  const getFlatIdFromPath = () => {
+    if (propFlatId) return propFlatId;
+    const match = pathname.match(/\/imoveis\/evergreen-pure\/([^\/]+)/);
+    return match ? match[1] : undefined;
+  };
+  
+  const flatId = getFlatIdFromPath();
+  
+  const [messages, setMessages] = useState<Message[]>([]);
+  
+  const [input, setInput] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [isLeadModalOpen, setIsLeadModalOpen] = useState(false);
+  const [leadData, setLeadData] = useState<LeadQualificationData>({});
+  const [qualificationStep, setQualificationStep] = useState<string | null>(null);
+  const [apartmentQualification, setApartmentQualification] = useState<{
+    budget?: string;
+    typology?: string;
+    step?: 'budget' | 'typology' | 'complete';
+  }>({});
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
   const [isRecording, setIsRecording] = useState(false);
+  const [audioPlayer, setAudioPlayer] = useState<HTMLAudioElement | null>(null);
+  const recognitionRef = useRef<any>(null);
   const [audioStream, setAudioStream] = useState<MediaStream | null>(null);
-  const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [isWelcomeModalOpen, setIsWelcomeModalOpen] = useState(true);
 
-  // This ref will be attached to the input field
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  // Focus the input field when the sheet opens
   useEffect(() => {
-    if (isOpen && inputRef.current) {
-      setTimeout(() => {
-        inputRef.current?.focus();
-      }, 100); // A small delay can help
+    if (!isSheetOpen) {
+      // Stop microphone and audio stream when panel closes
+      if (isRecording && recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+      if (audioStream) {
+        audioStream.getTracks().forEach(track => track.stop());
+        setAudioStream(null);
+      }
+      setIsRecording(false);
     }
-  }, [isOpen]);
+  }, [isSheetOpen, isRecording, audioStream]);
 
-  // Scroll to the bottom of the messages container when a new message is added
+  useEffect(() => {
+    // Scroll to the bottom of the messages container
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages]);
+
+  useEffect(() => {
+    // Display welcome message when the component mounts
+    setMessages([
+      {
+        text: "Olá! Sou o seu assistente virtual. Como posso ajudá-lo a encontrar a sua casa de sonho?",
+        sender: "bot",
+        timestamp: new Date(),
+      },
+    ]);
+  }, []);
+
+  // Calculate lead score based on collected data
+  const calculateLeadScore = (data: LeadQualificationData): number => {
+    let score = 0;
+    
+    // Budget scoring (40% of total score)
+    if (data.budget_range) {
+      const budgetScores: { [key: string]: number } = {
+        'under_200k': 20,
+        '200k_300k': 35,
+        '300k_400k': 40,
+        'over_400k': 40,
+        'no_budget': 10
+      };
+      score += budgetScores[data.budget_range] || 0;
+    }
+    
+    // Timeline scoring (30% of total score)
+    if (data.timeline) {
+      const timelineScores: { [key: string]: number } = {
+        'immediately': 30,
+        'within_3_months': 25,
+        'within_6_months': 20,
+        'within_year': 15,
+        'just_looking': 5
+      };
+      score += timelineScores[data.timeline] || 0;
+    }
+    
+    // Family size scoring (10% of total score)
+    if (data.family_size) {
+      score += data.family_size > 2 ? 10 : 5;
+    }
+    
+    // Financing needs scoring (20% of total score)
+    if (data.financing_needs) {
+      const financingScores: { [key: string]: number } = {
+        'cash_buyer': 20,
+        'pre_approved': 15,
+        'need_mortgage': 10,
+        'need_help': 5
+      };
+      score += financingScores[data.financing_needs] || 0;
+    }
+    
+    return Math.min(score, 100);
+  };
+
+  // Store visitor data in Supabase
+  const updateVisitorData = async (data: LeadQualificationData) => {
+    try {
+      const response = await fetch('/api/leads', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          visitorId: visitorTracker.visitorId,
+          leadData: data,
+          leadScore: calculateLeadScore(data),
+          flatId: flatId
+        })
+      });
+      
+      if (!response.ok) {
+        console.error('Failed to update visitor data');
+      }
+    } catch (error) {
+      console.error('Error updating visitor data:', error);
+    }
+  };
+
+  // Handle qualification questions
+  const handleQualificationResponse = (response: string, step: string) => {
+    const updatedData = { ...leadData };
+    
+    switch (step) {
+      case 'budget':
+        updatedData.budget_range = response;
+        break;
+      case 'timeline':
+        updatedData.timeline = response;
+        break;
+      case 'family_size':
+        updatedData.family_size = parseInt(response) || 1;
+        break;
+      case 'financing':
+        updatedData.financing_needs = response;
+        break;
+    }
+    
+    setLeadData(updatedData);
+    updateVisitorData(updatedData);
+    setQualificationStep(null);
+  };
+
+  // Generate navigation response based on query
+  const generateNavigationResponse = (query: string): { text: string; url?: string } | null => {
+    const lowerQuery = query.toLowerCase();
+    
+    if (lowerQuery.includes('apartamento') || lowerQuery.includes('disponível')) {
+      return {
+        text: "A redirecioná-lo para a nossa página de apartamentos... Por favor, aguarde.",
+        url: "/imoveis/evergreen-pure"
+      };
+    }
+    
+    if (lowerQuery.includes('contacto') || lowerQuery.includes('telefone')) {
+      return {
+        text: "Pode contactar-nos através do telefone (+351) 234 840 570 ou email info@viriato.pt. Também pode preencher o formulário de contacto para que entremos em contacto consigo.",
+      };
+    }
+    
+    if (lowerQuery.includes('sobre') || lowerQuery.includes('empresa')) {
+      return {
+        text: "A redirecioná-lo para a nossa página 'Sobre Nós'...",
+        url: "/sobre"
+      };
+    }
+    
+    return null;
+  };
+
+  useEffect(() => {
+    // Initialize SpeechRecognition
+    const SpeechRecognition =
+      (window as any).SpeechRecognition ||
+      (window as any).webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.continuous = false;
+      recognitionRef.current.interimResults = false;
+      recognitionRef.current.lang = "pt-PT";
+
+      recognitionRef.current.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript;
+        setInput(transcript);
+        handleSubmit(null, transcript); // Pass transcript directly
+      };
+
+      recognitionRef.current.onerror = (event: any) => {
+        console.error("Speech recognition error", event.error);
+        setIsRecording(false);
+      };
+
+      recognitionRef.current.onend = () => {
+        setIsRecording(false);
+      };
+    }
+  }, []);
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  useEffect(() => {
-    const initializeChat = async () => {
-      // Wait for visitorId to be set
-      if (!visitorTracker.visitorId) {
-        // This is a simple way to wait, in a real app you might want a more robust solution
-        await new Promise(resolve => setTimeout(resolve, 500));
-      }
-
-      const flatId = propFlatId || getFlatIdFromPath();
-      if (flatId) {
-        setMessages([
-          {
-            text: `Olá! Bem-vindo ao stand de vendas virtual do empreendimento Evergreen Pure. Como posso ajudar a encontrar a sua casa de sonho?`,
-            sender: "bot",
-            timestamp: new Date(),
-          },
-        ]);
-        await visitorTracker.trackInteraction("chatbot_impression", { flatId });
-      } else {
-        setMessages([
-          {
-            text: `Olá! Bem-vindo ao stand de vendas virtual da Viriato. Como posso ajudar?`,
-            sender: "bot",
-            timestamp: new Date(),
-          },
-        ]);
-        await visitorTracker.trackInteraction("chatbot_impression", {
-          page: window.location.pathname,
-        });
-      }
-    };
-    initializeChat();
-  }, [propFlatId]);
-
-  const getFlatIdFromPath = () => {
-    const match = pathname.match(/\/imoveis\/evergreen-pure\/(t\d+(\+\d)?)/);
-    return match ? match[1] : undefined;
-  };
-
-  const calculateLeadScore = (data: LeadQualificationData): number => {
-    let score = 0;
-    if (data.budget_range) score += 20;
-    if (data.timeline) {
-      if (data.timeline === "Brevemente") score += 30;
-      if (data.timeline === "Até ao final do ano") score += 20;
-      if (data.timeline === "Durante os próximos dois anos") score += 10;
-    }
-    if (data.family_size) {
-      if (data.family_size >= 2) score += 15;
-    }
-    if (data.financing_needs) {
-      if (data.financing_needs === "Sim") score += 10;
-      if (data.financing_needs === "Não") score += 5;
-    }
-    if (data.contact_info?.email || data.contact_info?.phone) score += 25;
-    return Math.min(score, 100);
-  };
-
-  const updateVisitorData = async (data: LeadQualificationData) => {
-    const score = calculateLeadScore(data);
-    setLeadData(prevData => ({ ...prevData, ...data, lead_score: score }));
-
-    try {
-      await visitorTracker.trackInteraction("lead_qualification_update", {
-        ...data,
-        lead_score: score,
-      });
-    } catch (error) {
-      console.error("Error updating visitor data:", error);
-    }
-  };
-
-  const handleQualificationResponse = (response: string, step: string) => {
-    let nextStep = "";
-    let qualificationData: LeadQualificationData = {};
-
-    switch (step) {
-      case "start":
-        if (response === "Sim") {
-          nextStep = "ask_budget";
-          setMessages(prev => [
-            ...prev,
-            { text: response, sender: "user", timestamp: new Date() },
-            {
-              text: "Qual é o seu orçamento?",
-              sender: "bot",
-              timestamp: new Date(),
-            },
-          ]);
-        } else {
-          setQualificationStep("done");
-        }
-        break;
-      // ... other cases
-    }
-
-    if (Object.keys(qualificationData).length > 0) {
-      updateVisitorData(qualificationData);
-    }
-    if (nextStep) {
-      setQualificationStep(nextStep);
-    }
-  };
-
-  const generateNavigationResponse = (query: string): { text: string; url?: string } | null => {
-    const lowerQuery = query.toLowerCase();
-    
-    // Simple keyword matching for navigation
-    if (lowerQuery.includes('imóveis') || lowerQuery.includes('propriedades')) {
-      return { text: "Claro, a ver as nossas propriedades disponíveis...", url: '/imoveis/evergreen-pure' };
-    }
-    if (lowerQuery.includes('preços') || lowerQuery.includes('tabela')) {
-        return { text: "A tabela de preços encontra-se no nosso website. Pode também descarregar a brochura para mais detalhes.", url: '/imoveis/evergreen-pure' };
-    }
-    if (lowerQuery.includes('brochura') || lowerQuery.includes('download')) {
-        return { text: "Pode descarregar a brochura directamente aqui.", url: '/20250212_Viriato_Apresentacao Interativa_PT.pdf' };
-    }
-    if (lowerQuery.includes('mapa') || lowerQuery.includes('localização')) {
-        return { text: "O nosso stand de vendas fica em Aveiro. A abrir o mapa...", url: 'https://maps.app.goo.gl/K2qC3X4Y5Z6A7B8C9' };
-    }
-    return null;
-  };
-
   const handleVoiceInput = () => {
     if (isRecording) {
-      // Stop recording logic
+      recognitionRef.current?.stop();
       audioStream?.getTracks().forEach(track => track.stop());
+      setAudioStream(null);
       setIsRecording(false);
     } else {
-      // Start recording logic
       navigator.mediaDevices.getUserMedia({ audio: true })
         .then(stream => {
           setAudioStream(stream);
           setIsRecording(true);
-          // Add transcription logic here
+          recognitionRef.current?.start();
         })
-        .catch(err => console.error("Error accessing microphone:", err));
+        .catch(err => {
+          console.error("Error getting user media", err);
+        });
     }
   };
 
   const playAudio = async (text: string) => {
-    if (isPlaying) return;
     setIsPlaying(true);
     try {
-      const response = await fetch("/api/text-to-speech", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const response = await fetch('/api/text-to-speech', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text }),
       });
-      if (!response.ok) throw new Error("Failed to convert text to speech");
+
+      if (!response.ok) {
+        throw new Error('Failed to convert text to speech');
+      }
+
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
-      setAudioUrl(url);
       const audio = new Audio(url);
+      setAudioPlayer(audio);
       audio.play();
       audio.onended = () => {
         setIsPlaying(false);
-        URL.revokeObjectURL(url);
-        setAudioUrl(null);
       };
     } catch (error) {
-      console.error("Error playing audio:", error);
+      console.error(error);
       setIsPlaying(false);
     }
   };
@@ -409,264 +474,393 @@ export default function Chatbot({ flatId: propFlatId }: ChatbotProps) {
     e: React.FormEvent<HTMLFormElement> | null,
     voiceInput?: string
   ) => {
-    e?.preventDefault();
+    if (e) e.preventDefault();
     const messageText = voiceInput || input;
     if (!messageText.trim()) return;
 
-    const userMessage: Message = {
-      text: messageText,
-      sender: "user",
-      timestamp: new Date(),
-    };
-    setMessages((prev) => [...prev, userMessage]);
+    const newMessages: Message[] = [
+      ...messages,
+      { text: messageText, sender: "user", timestamp: new Date() },
+    ];
+    setMessages(newMessages);
     setInput("");
     setIsLoading(true);
 
-    await visitorTracker.trackInteraction("chatbot_message_sent", {
-      message: messageText,
-    });
+    try {
+      // Check if this is a qualification response
+      if (qualificationStep) {
+        handleQualificationResponse(messageText, qualificationStep);
+      }
 
-    // Handle navigation first
-    const navResponse = generateNavigationResponse(messageText);
-    if (navResponse) {
-        setMessages(prev => [...prev, { text: navResponse.text, sender: 'bot', timestamp: new Date() }]);
-        if (navResponse.url) {
-            if (navResponse.url.startsWith('http')) {
-                window.open(navResponse.url, '_blank');
-            } else {
-                router.push(navResponse.url);
-            }
+      // Check for navigation queries first
+      const navigationResponse = generateNavigationResponse(messageText);
+      if (navigationResponse) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            text: navigationResponse.text,
+            sender: "bot",
+            timestamp: new Date(),
+          },
+        ]);
+
+        if (navigationResponse.url) {
+          setTimeout(() => {
+            router.push(navigationResponse.url as string);
+            setIsSheetOpen(false); // Close the sheet on redirect
+          }, 1500); // Wait 1.5 seconds before redirecting
         }
+        
         setIsLoading(false);
         return;
-    }
+      }
 
-
-    try {
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          messages: [...messages, userMessage],
-          flatId: propFlatId || getFlatIdFromPath(),
+          messages: newMessages.map(m => ({ text: m.text, sender: m.sender })),
+          flatId: flatId,
           visitorId: visitorTracker.visitorId,
+          leadData: leadData,
+          leadScore: calculateLeadScore(leadData)
         }),
       });
 
-      if (!response.ok) {
-        throw new Error("Network response was not ok");
+      const botResponse = await response.json();
+      let botMessageText = botResponse.response;
+
+      // Check if bot wants to qualify lead
+      if (botResponse.qualification_step) {
+        setQualificationStep(botResponse.qualification_step);
       }
 
-      const data = await response.json();
-      const botMessage: Message = {
-        text: data.response,
-        sender: "bot",
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, botMessage]);
-      await playAudio(data.response);
+      if (botMessageText.includes("[LEAD_FORM]")) {
+        setIsLeadModalOpen(true);
+      } else {
+        await playAudio(botMessageText);
+      }
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          text: botMessageText.replace("[LEAD_FORM]", " "),
+          sender: "bot",
+          timestamp: new Date(),
+        },
+      ]);
     } catch (error) {
-      console.error("Error:", error);
-      const errorMessage: Message = {
-        text: "Desculpe, ocorreu um erro. Por favor, tente novamente mais tarde.",
-        sender: "bot",
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, errorMessage]);
+      console.error(error);
+      setMessages((prev) => [
+        ...prev,
+        {
+          text: "Desculpe, ocorreu um erro de comunicação. Por favor, tente novamente mais tarde.",
+          sender: "bot",
+          timestamp: new Date(),
+        },
+      ]);
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleSuggestionClick = (suggestion: string) => {
-    setInput(suggestion);
-    // Directly call handleSubmit, creating a synthetic event if needed
-    // or refactor handleSubmit to not strictly require the event.
-    // For simplicity, we'll just set the input. The user can then click send.
-    // A more advanced implementation could trigger the submission directly.
-    const fakeEvent = { preventDefault: () => {} } as React.FormEvent<HTMLFormElement>;
-    handleSubmit(fakeEvent, suggestion);
-};
-
+    setMessages((prev) => [
+      ...prev,
+      { text: suggestion, sender: "user", timestamp: new Date() },
+    ]);
+    setInput("");
+    
+    // Special handling for "Ver apartamentos disponíveis"
+    if (suggestion.includes('Ver apartamentos disponíveis')) {
+      setApartmentQualification({ step: 'budget' });
+      setTimeout(() => {
+        setMessages((prev) => [
+          ...prev,
+          {
+            text: "Perfeito! Para lhe mostrar os apartamentos mais adequados, preciso de saber algumas preferências.\n\nQual é o seu orçamento aproximado?",
+            sender: "bot",
+            timestamp: new Date(),
+          },
+        ]);
+      }, 500);
+      return;
+    }
+    
+    setIsLoading(true);
+    handleSubmit(null, suggestion);
+  };
 
   const handleBudgetSelection = (budget: string) => {
-    const userMessage: Message = { text: budget, sender: "user", timestamp: new Date() };
-    const botMessage: Message = { text: "Excelente. E para quando planeia a compra?", sender: "bot", timestamp: new Date() };
-    setMessages(prev => [...prev, userMessage, botMessage]);
-    updateVisitorData({ budget_range: budget });
-    setQualificationStep("ask_timeline");
+    const updatedQualification = { ...apartmentQualification, budget, step: 'typology' as const };
+    setApartmentQualification(updatedQualification);
+    
+    setMessages((prev) => [
+      ...prev,
+      { text: budget, sender: "user", timestamp: new Date() },
+      {
+        text: "Excelente! Agora, que tipologia procura?",
+        sender: "bot",
+        timestamp: new Date(),
+      },
+    ]);
   };
 
   const handleTypologySelection = async (typology: string) => {
-    const userMessage: Message = {
-      text: `Estou interessado em ${typology}`,
-      sender: "user",
-      timestamp: new Date(),
+    const updatedQualification = { 
+      ...apartmentQualification, 
+      typology, 
+      step: 'complete' as const 
     };
-    setMessages((prev) => [...prev, userMessage]);
-    setIsLoading(true);
+    setApartmentQualification(updatedQualification);
+    
+    setMessages((prev) => [
+      ...prev,
+      { text: typology, sender: "user", timestamp: new Date() },
+      {
+        text: "Perfeito! A guardar as suas preferências e a redirecioná-lo para os apartamentos que correspondem aos seus critérios...",
+        sender: "bot",
+        timestamp: new Date(),
+      },
+    ]);
 
+    // Update visitor profile with preferences
     try {
-      const response = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      await fetch('/api/leads', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          messages: [...messages, userMessage],
-          flatId: propFlatId || getFlatIdFromPath(),
           visitorId: visitorTracker.visitorId,
-          context: {
-            typology,
-          }
-        }),
+          leadData: {
+            ...leadData,
+            apartment_preferences: {
+              budget: updatedQualification.budget,
+              typology: updatedQualification.typology,
+              search_date: new Date().toISOString()
+            }
+          },
+          leadScore: calculateLeadScore({
+            ...leadData,
+            budget_range: updatedQualification.budget === '< 300k' ? 'under_300k' : '300k_400k'
+          }),
+          flatId: flatId
+        })
       });
-
-      if (!response.ok) throw new Error("Network response was not ok");
-
-      const data = await response.json();
-      const botMessage: Message = {
-        text: data.response,
-        sender: "bot",
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, botMessage]);
     } catch (error) {
-      console.error("Error:", error);
-      const errorMessage: Message = {
-        text: "Desculpe, ocorreu um erro ao processar a sua seleção.",
-        sender: "bot",
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, errorMessage]);
-    } finally {
-      setIsLoading(false);
+      console.error('Error updating visitor preferences:', error);
     }
+
+    // Redirect to filtered listings after 2 seconds
+    setTimeout(() => {
+      const budgetParam = updatedQualification.budget === '< 300k' ? 'under_300k' : 'under_400k';
+      const typologyParam = updatedQualification.typology;
+      router.push(`/imoveis/evergreen-pure?budget=${budgetParam}&typology=${typologyParam}`);
+      setIsSheetOpen(false);
+      setApartmentQualification({});
+    }, 2000);
   };
 
   return (
     <>
-      <LeadCollectionModal
-        isOpen={isLeadModalOpen}
-        onClose={() => setIsLeadModalOpen(false)}
-        flatId={propFlatId || getFlatIdFromPath()}
-      />
-      <Dialog open={isWelcomeOpen} onOpenChange={setIsWelcomeOpen}>
+      <Dialog open={isWelcomeModalOpen} onOpenChange={setIsWelcomeModalOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Bem-vindo ao nosso stand de vendas virtual!</DialogTitle>
+            <DialogTitle>Bem-vindo!</DialogTitle>
             <DialogDescription>
-              Use o chatbot no canto inferior direito para tirar dúvidas, ou, se preferir, um especialista pode entrar em contacto consigo.
+              Olá! Sou o seu assistente virtual. Como posso ajudá-lo a encontrar a sua casa de sonho?
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button onClick={() => setIsWelcomeOpen(false)}>Começar</Button>
+            <Button onClick={() => setIsWelcomeModalOpen(false)}>Fechar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <div className="fixed bottom-4 right-4 z-50">
-        <Sheet open={isOpen} onOpenChange={setIsOpen}>
-          <SheetTrigger asChild>
-            <Button
-              size="icon"
-              className="rounded-full h-16 w-16 bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-transform duration-300 hover:scale-110"
-            >
-              <MessageCircle size={32} />
-            </Button>
-          </SheetTrigger>
-          <SheetContent className="w-[400px] sm:w-[540px] flex flex-col">
-            <SheetHeader>
-              <SheetTitle>Assistente Virtual</SheetTitle>
-              <SheetDescription>
-                Faça uma pergunta ou descreva o que procura.
-              </SheetDescription>
-            </SheetHeader>
-            <div className="flex-grow overflow-y-auto p-4 space-y-4">
-              {messages.map((msg, index) => (
-                <div
-                  key={index}
-                  className={`flex items-end gap-2 ${
-                    msg.sender === "user" ? "justify-end" : "justify-start"
-                  }`}
-                >
-                  {msg.sender === "bot" && (
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage src="/viriato-logo.svg" alt="Viriato" />
-                      <AvatarFallback>V</AvatarFallback>
-                    </Avatar>
-                  )}
-                  <div
-                    className={`max-w-xs md:max-w-md lg:max-w-lg rounded-lg px-4 py-2 ${
-                      msg.sender === "user"
-                        ? "bg-blue-600 text-white"
-                        : "bg-gray-200 text-gray-800"
-                    }`}
-                  >
-                    <p className="text-sm">{msg.text}</p>
-                    <p className="text-xs text-right mt-1 opacity-75">
-                      {new Date(msg.timestamp).toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </p>
-                  </div>
+
+      <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+        <SheetTrigger asChild>
+          <Button
+            className="fixed bottom-4 right-4 z-50 h-16 w-16 rounded-full shadow-lg"
+          >
+            <MessageCircle size={32} />
+          </Button>
+        </SheetTrigger>
+        <SheetContent className="flex flex-col">
+          <SheetHeader>
+            <SheetTitle>Assistente Virtual</SheetTitle>
+            <SheetDescription>
+              Pergunte-me qualquer coisa sobre este imóvel.
+            </SheetDescription>
+          </SheetHeader>
+          <div className="flex justify-center my-2">
+          </div>
+          <div className="flex-grow overflow-y-auto pt-2 pb-4 px-4 space-y-2">
+            {messages.filter(m => m.sender === 'user').length === 0 && !apartmentQualification.step && (
+              <div className="mb-6">
+                <div className="bg-muted text-gray-900 rounded-lg p-4 mb-4 shadow">
+                  <p className="text-base whitespace-pre-line">
+                    Olá! Descobriu o projeto perfeito? 🏡
+                    {"\n\n"}
+                    Sou especialista nos nossos novos condomínios em Aveiro e posso ajudá-lo com tudo - desde características dos apartamentos até opções de financiamento.
+                    {"\n\n"}
+                    Como posso ajudar hoje?
+                  </p>
                 </div>
-              ))}
-              {isLoading && (
-                <div className="flex items-center justify-start gap-2">
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src="/viriato-logo.svg" alt="Viriato" />
+                <div className="flex flex-wrap gap-2">
+                  <button type="button" className="px-3 py-2 rounded bg-primary text-white text-sm hover:bg-primary/80 transition" onClick={() => handleSuggestionClick('🏠 Ver apartamentos disponíveis')}>
+                    🏠 Ver apartamentos disponíveis
+                  </button>
+                  <button type="button" className="px-3 py-2 rounded bg-primary text-white text-sm hover:bg-primary/80 transition" onClick={() => handleSuggestionClick('📅 Agendar visita virtual/presencial')}>
+                    📅 Agendar visita virtual/presencial
+                  </button>
+                  <button type="button" className="px-3 py-2 rounded bg-primary text-white text-sm hover:bg-primary/80 transition" onClick={() => handleSuggestionClick('💰 Opções de financiamento')}>
+                    💰 Opções de financiamento
+                  </button>
+                  <button type="button" className="px-3 py-2 rounded bg-primary text-white text-sm hover:bg-primary/80 transition" onClick={() => handleSuggestionClick('📍 Localização e comodidades')}>
+                    📍 Localização e comodidades
+                  </button>
+                </div>
+              </div>
+            )}
+            
+            {messages.map((msg, index) => (
+              <div
+                key={index}
+                className={`flex items-start gap-3 ${
+                  msg.sender === "user" ? "justify-end" : ""
+                }`}
+              >
+                {msg.sender === "bot" && (
+                  <Avatar>
+                    <AvatarImage src="/viriato-logo.svg" />
                     <AvatarFallback>V</AvatarFallback>
                   </Avatar>
-                  <div className="bg-gray-200 text-gray-800 rounded-lg px-4 py-2">
-                    <Loader2 className="animate-spin h-5 w-5" />
-                  </div>
+                )}
+                <div
+                  className={`max-w-xs rounded-lg px-4 py-2 ${
+                    msg.sender === "user"
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted"
+                  }`}
+                >
+                  <p className="text-sm whitespace-pre-line">{msg.text}</p>
+                  <p className="text-xs text-right mt-1 opacity-70">
+                    {msg.timestamp.toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </p>
                 </div>
-              )}
-              <div ref={messagesEndRef} />
-            </div>
-
-            {/* Quick Suggestions */}
-            <div className="p-2 border-t">
-              <p className="text-sm font-medium mb-2">Sugestões:</p>
-              <div className="flex flex-wrap gap-2">
-                <Button variant="outline" size="sm" onClick={() => handleSuggestionClick("Quais as tipologias disponíveis?")}>T2 ou T3?</Button>
-                <Button variant="outline" size="sm" onClick={() => handleSuggestionClick("Gostaria de ver a tabela de preços")}>Preços</Button>
-                <Button variant="outline" size="sm" onClick={() => handleSuggestionClick("Quero descarregar a brochura")}>Brochura</Button>
-                <Button variant="outline" size="sm" onClick={() => setIsLeadModalOpen(true)}>Pedir Contacto</Button>
+                {msg.sender === "user" && (
+                  <Avatar>
+                    <AvatarFallback>U</AvatarFallback>
+                  </Avatar>
+                )}
               </div>
-            </div>
+            ))}
+            {isLoading && (
+              <div className="flex items-start gap-3">
+                <Avatar>
+                  <AvatarImage src="/viriato-logo.svg" />
+                  <AvatarFallback>V</AvatarFallback>
+                </Avatar>
+                <div className="max-w-xs rounded-lg px-4 py-2 bg-muted">
+                  <Loader2 className="animate-spin" />
+                </div>
+              </div>
+            )}
 
-            <SheetFooter>
-              <form
-                onSubmit={handleSubmit}
-                className="flex items-center gap-2 w-full"
-              >
+            {/* Budget Selection */}
+            {apartmentQualification.step === 'budget' && (
+              <div className="mb-4">
+                <div className="flex flex-wrap gap-2">
+                  <button 
+                    type="button" 
+                    className="px-4 py-3 rounded bg-primary text-white text-sm hover:bg-primary/80 transition"
+                    onClick={() => handleBudgetSelection('< 300k')}
+                  >
+                    💰 Até 300.000€
+                  </button>
+                  <button 
+                    type="button" 
+                    className="px-4 py-3 rounded bg-primary text-white text-sm hover:bg-primary/80 transition"
+                    onClick={() => handleBudgetSelection('< 400k')}
+                  >
+                    💰 Até 400.000€
+                  </button>
+                </div>
+              </div>
+            )}
+            
+            {/* Typology Selection */}
+            {apartmentQualification.step === 'typology' && (
+              <div className="mb-4">
+                <div className="grid grid-cols-2 gap-2">
+                  {['T0', 'T1', 'T2', 'T3', 'T4', 'Duplex'].map((typology) => (
+                    <button 
+                      key={typology}
+                      type="button" 
+                      className="px-3 py-2 rounded bg-primary text-white text-sm hover:bg-primary/80 transition"
+                      onClick={() => handleTypologySelection(typology)}
+                    >
+                      🏠 {typology}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            <div ref={messagesEndRef} />
+          </div>
+          <SheetFooter>
+            {!apartmentQualification.step && (
+              <form onSubmit={handleSubmit} className="flex w-full items-center gap-2">
                 <Input
-                  ref={inputRef}
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   placeholder="Escreva a sua mensagem..."
                   className="flex-grow"
+                  disabled={isLoading}
                 />
-                <Button type="submit" disabled={isLoading}>
-                  {isLoading ? (
-                    <Loader2 className="animate-spin h-5 w-5" />
-                  ) : (
-                    "Enviar"
-                  )}
-                </Button>
                 <Button
                   type="button"
+                  onClick={handleVoiceInput}
+                  disabled={isLoading}
                   variant={isRecording ? "destructive" : "outline"}
                   size="icon"
-                  onClick={handleVoiceInput}
                 >
                   {isRecording ? <StopCircle /> : <Mic />}
                 </Button>
+                <Button type="submit" disabled={isLoading}>
+                  {isLoading ? <Loader2 className="animate-spin" /> : "Enviar"}
+                </Button>
               </form>
-            </SheetFooter>
-          </SheetContent>
-        </Sheet>
-      </div>
+            )}
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
+      <LeadCollectionModal
+        isOpen={isLeadModalOpen}
+        onClose={() => setIsLeadModalOpen(false)}
+        flatId={flatId}
+      />
+      <style jsx global>{`
+        @keyframes chatbot-pulse {
+          0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 #11182744; }
+          50% { transform: scale(1.08); box-shadow: 0 0 16px 8px #11182788; }
+        }
+        .animate-chatbot-pulse {
+          animation: chatbot-pulse 4s cubic-bezier(0.4,0,0.2,1) infinite;
+          animation-delay: 1s;
+        }
+        .chatbot-float-btn {
+          transition: box-shadow 150ms cubic-bezier(0.4,0,0.2,1), transform 150ms cubic-bezier(0.4,0,0.2,1);
+          box-shadow: 0 4px 24px 0 #111827;
+        }
+        .chatbot-float-btn:hover, .chatbot-float-btn-hover {
+          box-shadow: 0 0 24px 6px rgba(0, 123, 255, 0.25), 0 2px 8px rgba(0,0,0,0.10);
+          transform: scale(1.05);
+        }
+      `}</style>
     </>
   );
 } 
