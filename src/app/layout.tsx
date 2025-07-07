@@ -5,7 +5,6 @@ import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import AppTracker from "@/components/AppTracker";
-import Chatbot from "@/components/Chatbot";
 import { Suspense } from "react";
 
 export const metadata: Metadata = {
@@ -31,7 +30,6 @@ export default function RootLayout({
         <Suspense fallback={null}>
           <AppTracker />
         </Suspense>
-        <Chatbot />
       </body>
     </html>
   );
