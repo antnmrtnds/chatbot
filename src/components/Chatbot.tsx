@@ -376,7 +376,22 @@ export default function Chatbot({ flatId: propFlatId }: ChatbotProps) {
   const generateNavigationResponse = (query: string): { text: string; url?: string } | null => {
     const lowerQuery = query.toLowerCase();
     
-    if (lowerQuery.includes('apartamento') || lowerQuery.includes('disponível')) {
+    // Handle "outros apartamentos" - redirect to listing even if on specific apartment page
+    if (lowerQuery.includes('outros apartamentos') || lowerQuery.includes('ver outros')) {
+      return {
+        text: "A redirecioná-lo para a nossa página de apartamentos... Por favor, aguarde.",
+        url: "/imoveis/evergreen-pure"
+      };
+    }
+    
+    // If we're on a specific apartment page, don't redirect for apartment queries
+    // Let the API handle apartment-specific questions with context
+    if (flatId && (lowerQuery.includes('apartamento') || lowerQuery.includes('disponível') || lowerQuery.includes('preço') || lowerQuery.includes('preco'))) {
+      return null; // Let the API handle it with apartment context
+    }
+    
+    // Only redirect to apartment listing if we're NOT on a specific apartment page
+    if (!flatId && (lowerQuery.includes('apartamento') || lowerQuery.includes('disponível'))) {
       return {
         text: "A redirecioná-lo para a nossa página de apartamentos... Por favor, aguarde.",
         url: "/imoveis/evergreen-pure"
@@ -705,26 +720,53 @@ export default function Chatbot({ flatId: propFlatId }: ChatbotProps) {
               <div className="mb-6">
                 <div className="bg-muted text-gray-900 rounded-lg p-4 mb-4 shadow">
                   <p className="text-base whitespace-pre-line">
-                    Olá! Descobriu o projeto perfeito? 🏡
-                    {"\n\n"}
-                    Sou especialista nos nossos novos condomínios em Aveiro e posso ajudá-lo com tudo - desde características dos apartamentos até opções de financiamento.
-                    {"\n\n"}
-                    Como posso ajudar hoje?
+                    {flatId ? (
+                      `Olá! Está a ver o apartamento ${flatId}? 🏡
+${"\n\n"}
+Posso responder a todas as suas questões sobre este apartamento específico - áreas, características, preços, e muito mais!
+${"\n\n"}
+Como posso ajudar hoje?`
+                    ) : (
+                      `Olá! Descobriu o projeto perfeito? 🏡
+${"\n\n"}
+Sou especialista nos nossos novos condomínios em Aveiro e posso ajudá-lo com tudo - desde características dos apartamentos até opções de financiamento.
+${"\n\n"}
+Como posso ajudar hoje?`
+                    )}
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  <button type="button" className="px-3 py-2 rounded bg-primary text-white text-sm hover:bg-primary/80 transition" onClick={() => handleSuggestionClick('🏠 Ver apartamentos disponíveis')}>
-                    🏠 Ver apartamentos disponíveis
-                  </button>
-                  <button type="button" className="px-3 py-2 rounded bg-primary text-white text-sm hover:bg-primary/80 transition" onClick={() => handleSuggestionClick('📅 Agendar visita virtual/presencial')}>
-                    📅 Agendar visita virtual/presencial
-                  </button>
-                  <button type="button" className="px-3 py-2 rounded bg-primary text-white text-sm hover:bg-primary/80 transition" onClick={() => handleSuggestionClick('💰 Opções de financiamento')}>
-                    💰 Opções de financiamento
-                  </button>
-                  <button type="button" className="px-3 py-2 rounded bg-primary text-white text-sm hover:bg-primary/80 transition" onClick={() => handleSuggestionClick('📍 Localização e comodidades')}>
-                    📍 Localização e comodidades
-                  </button>
+                  {flatId ? (
+                    <>
+                      <button type="button" className="px-3 py-2 rounded bg-primary text-white text-sm hover:bg-primary/80 transition" onClick={() => handleSuggestionClick(`💰 Qual é o preço do apartamento ${flatId}?`)}>
+                        💰 Preço deste apartamento
+                      </button>
+                      <button type="button" className="px-3 py-2 rounded bg-primary text-white text-sm hover:bg-primary/80 transition" onClick={() => handleSuggestionClick(`📐 Quais são as áreas do apartamento ${flatId}?`)}>
+                        📐 Áreas e tipologia
+                      </button>
+                      <button type="button" className="px-3 py-2 rounded bg-primary text-white text-sm hover:bg-primary/80 transition" onClick={() => handleSuggestionClick('📅 Agendar visita virtual/presencial')}>
+                        📅 Agendar visita
+                      </button>
+                      <button type="button" className="px-3 py-2 rounded bg-primary text-white text-sm hover:bg-primary/80 transition" onClick={() => handleSuggestionClick('🏠 Ver outros apartamentos disponíveis')}>
+                        🏠 Ver outros apartamentos
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button type="button" className="px-3 py-2 rounded bg-primary text-white text-sm hover:bg-primary/80 transition" onClick={() => handleSuggestionClick('🏠 Ver apartamentos disponíveis')}>
+                        🏠 Ver apartamentos disponíveis
+                      </button>
+                      <button type="button" className="px-3 py-2 rounded bg-primary text-white text-sm hover:bg-primary/80 transition" onClick={() => handleSuggestionClick('📅 Agendar visita virtual/presencial')}>
+                        📅 Agendar visita virtual/presencial
+                      </button>
+                      <button type="button" className="px-3 py-2 rounded bg-primary text-white text-sm hover:bg-primary/80 transition" onClick={() => handleSuggestionClick('💰 Opções de financiamento')}>
+                        💰 Opções de financiamento
+                      </button>
+                      <button type="button" className="px-3 py-2 rounded bg-primary text-white text-sm hover:bg-primary/80 transition" onClick={() => handleSuggestionClick('📍 Localização e comodidades')}>
+                        📍 Localização e comodidades
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
             )}
