@@ -213,10 +213,12 @@ export default function Chatbot({ flatId: propFlatId }: ChatbotProps) {
   const getFlatIdFromPath = () => {
     if (propFlatId) return propFlatId;
     const match = pathname.match(/\/imoveis\/evergreen-pure\/([^\/]+)/);
+    console.log('Chatbot URL extraction:', { pathname, match, result: match ? match[1] : undefined });
     return match ? match[1] : undefined;
   };
   
   const flatId = getFlatIdFromPath();
+  console.log('Chatbot flatId:', flatId);
   
   const [messages, setMessages] = useState<Message[]>([]);
   
@@ -269,6 +271,7 @@ export default function Chatbot({ flatId: propFlatId }: ChatbotProps) {
     
     console.log('Chatbot initialized with flatId:', flatId);
     console.log('Current pathname:', pathname);
+    console.log('Setting welcome message:', welcomeMessage);
     
     setMessages([
       {
@@ -277,7 +280,7 @@ export default function Chatbot({ flatId: propFlatId }: ChatbotProps) {
         timestamp: new Date(),
       },
     ]);
-  }, [flatId]);
+  }, [flatId, pathname]);
 
   // Calculate lead score based on collected data
   const calculateLeadScore = (data: LeadQualificationData): number => {
@@ -718,23 +721,6 @@ export default function Chatbot({ flatId: propFlatId }: ChatbotProps) {
           <div className="flex-grow overflow-y-auto pt-2 pb-4 px-4 space-y-2">
             {messages.filter(m => m.sender === 'user').length === 0 && !apartmentQualification.step && (
               <div className="mb-6">
-                <div className="bg-muted text-gray-900 rounded-lg p-4 mb-4 shadow">
-                  <p className="text-base whitespace-pre-line">
-                    {flatId ? (
-                      `Olá! Está a ver o apartamento ${flatId}? 🏡
-${"\n\n"}
-Posso responder a todas as suas questões sobre este apartamento específico - áreas, características, preços, e muito mais!
-${"\n\n"}
-Como posso ajudar hoje?`
-                    ) : (
-                      `Olá! Descobriu o projeto perfeito? 🏡
-${"\n\n"}
-Sou especialista nos nossos novos condomínios em Aveiro e posso ajudá-lo com tudo - desde características dos apartamentos até opções de financiamento.
-${"\n\n"}
-Como posso ajudar hoje?`
-                    )}
-                  </p>
-                </div>
                 <div className="flex flex-wrap gap-2">
                   {flatId ? (
                     <>

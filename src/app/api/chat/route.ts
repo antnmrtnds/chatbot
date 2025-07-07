@@ -31,6 +31,7 @@ interface Development {
   tipologia: string;
   content: string;
   texto_bruto?: string;
+  price?: string;
 }
 
 // Add a function to transform URL flatId format to database format
@@ -93,6 +94,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'The last message is empty' }, { status: 400 });
     }
 
+    console.log('=== CHAT API REQUEST ===');
     console.log('Received message:', currentMessage);
     console.log('Flat ID:', flatId);
     console.log('Lead data:', leadData);
@@ -110,6 +112,7 @@ export async function POST(request: NextRequest) {
     let contextText: string = "";
 
     if (flatId) {
+      console.log(`=== APARTMENT SEARCH ===`);
       console.log(`Searching for flat with ID: ${flatId}`);
       
       // Transform the flatId from URL format to database format
@@ -158,7 +161,10 @@ export async function POST(request: NextRequest) {
     if (developments.length > 0) {
       console.log('Search successful, found', developments.length, 'records');
       contextText = developments
-        .map(d => `Descrição Geral: ${d.content}\n\nDetalhes Específicos: ${d.texto_bruto}`)
+        .map(d => {
+          let priceInfo = d.price ? `Preço: ${d.price}\n` : '';
+          return `${priceInfo}Descrição Geral: ${d.content}\n\nDetalhes Específicos: ${d.texto_bruto || ''}`;
+        })
         .join("\n\n---\n\n");
     } else {
       console.log(`Could not find a match for flatId: ${flatId}, even after fallback.`);
@@ -184,7 +190,7 @@ Key instructions:
 - Answer in Portuguese (PT-PT)
 - Be friendly, professional, and helpful
 - Use the provided apartment context to answer specific questions about areas, typology, features, etc.
-- When asked about prices, always say "Para informações sobre preços, por favor contacte-nos" and include [LEAD_FORM]
+- If the price is present in the context, you may answer with the actual price. If the price is missing, say "Para informações sobre preços, por favor contacte-nos" and include [LEAD_FORM]
 - For questions you cannot answer with the provided context, offer to connect with a human agent using [LEAD_FORM]
 - If user shows interest, naturally ask qualifying questions about budget, timeline, family needs, etc.
 - Keep responses concise and direct

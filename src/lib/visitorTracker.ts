@@ -55,34 +55,30 @@ class VisitorTracker {
       this.visitorId = '00000000-0000-0000-0000-000000000000';
       this.fingerprintId = 'ssr-fingerprint';
       this.sessionData.sessionId = 'ssr-session';
+      console.log('[VisitorTracker] Not running in browser, using SSR fallback IDs.');
       return;
     }
-
     try {
       // Generate device fingerprint
       const fingerprint = await this.generateDeviceFingerprint();
       this.fingerprintHash = await this.hashFingerprint(fingerprint);
       this.fingerprintId = this.fingerprintHash;
-
       // Get or create visitor ID using multiple methods
       this.visitorId = await this.getOrCreateVisitorId();
-      
       // Initialize session
       this.sessionData.sessionId = this.generateSessionId();
       this.sessionData.referrer = document.referrer;
       this.sessionData.utmParams = this.extractUtmParams();
-
       // Store fingerprint and visitor mapping
       await this.storeVisitorFingerprint();
-      
       this.isInitialized = true;
-      console.log("VisitorTracker initialized:", {
+      console.log('[VisitorTracker] Initialized:', {
         visitorId: this.visitorId,
         fingerprintId: this.fingerprintId,
         sessionId: this.sessionData.sessionId
       });
     } catch (error) {
-      console.error('Error initializing VisitorTracker:', error);
+      console.error('[VisitorTracker] Error initializing:', error);
       // Fallback to basic UUID
       this.visitorId = this.generateFallbackId();
       this.fingerprintId = 'fallback-fingerprint';
@@ -164,31 +160,37 @@ class VisitorTracker {
   private async getOrCreateVisitorId(): Promise<string> {
     // Method 1: Check localStorage
     let visitorId = localStorage.getItem('visitor_id');
-    
+    if (visitorId) {
+      console.log('[VisitorTracker] Found visitorId in localStorage:', visitorId);
+    }
     // Method 2: Check sessionStorage as backup
     if (!visitorId) {
       visitorId = sessionStorage.getItem('visitor_id_backup');
+      if (visitorId) {
+        console.log('[VisitorTracker] Found visitorId in sessionStorage:', visitorId);
+      }
     }
-    
     // Method 3: Check IndexedDB for persistent storage
     if (!visitorId) {
       visitorId = await this.getFromIndexedDB('visitor_id');
+      if (visitorId) {
+        console.log('[VisitorTracker] Found visitorId in IndexedDB:', visitorId);
+      }
     }
-    
     // Method 4: Check if we have this fingerprint in our database
     if (!visitorId) {
       visitorId = await this.getVisitorIdByFingerprint();
+      if (visitorId) {
+        console.log('[VisitorTracker] Found visitorId by fingerprint in DB:', visitorId);
+      }
     }
-    
     // Method 5: Generate new visitor ID
     if (!visitorId) {
       visitorId = crypto.randomUUID();
-      console.log('Generated new visitor ID:', visitorId);
+      console.log('[VisitorTracker] Generated new visitor ID:', visitorId);
     }
-    
     // Store in all available storage methods
     await this.storeVisitorId(visitorId);
-    
     return visitorId;
   }
 
@@ -196,20 +198,17 @@ class VisitorTracker {
     try {
       // Store in localStorage (primary)
       localStorage.setItem('visitor_id', visitorId);
-      
       // Store in sessionStorage (backup)
       sessionStorage.setItem('visitor_id_backup', visitorId);
-      
       // Store in IndexedDB (persistent backup)
       await this.storeInIndexedDB('visitor_id', visitorId);
-      
       // Store in cookie with long expiration (1 year)
       const expirationDate = new Date();
       expirationDate.setFullYear(expirationDate.getFullYear() + 1);
       document.cookie = `visitor_id=${visitorId}; expires=${expirationDate.toUTCString()}; path=/; SameSite=Strict`;
-      
+      console.log('[VisitorTracker] Stored visitorId in all storage methods:', visitorId);
     } catch (error) {
-      console.warn('Error storing visitor ID:', error);
+      console.warn('[VisitorTracker] Error storing visitor ID:', error);
     }
   }
 
