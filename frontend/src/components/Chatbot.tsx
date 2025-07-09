@@ -667,27 +667,28 @@ export default function Chatbot({ flatId: propFlatId }: ChatbotProps) {
               <div className="mb-6">
                 <div className="bg-muted text-gray-900 rounded-lg p-4 mb-4 shadow">
                   <p className="text-base whitespace-pre-line">
-                    Olá! Descobriu o projeto perfeito? 🏡
-                    {"\n\n"}
-                    Sou especialista nos nossos novos condomínios em Aveiro e posso ajudá-lo com tudo - desde características dos apartamentos até opções de financiamento.
-                    {"\n\n"}
-                    Como posso ajudar hoje?
+                    {flatId
+                      ? `Que informações gostaria de saber sobre o apartamento ${flatId}?`
+                      : `Olá! Descobriu o projeto perfeito? 🏡\n\nSou especialista nos nossos novos condomínios em Aveiro e posso ajudá-lo com tudo - desde características dos apartamentos até opções de financiamento.\n\nComo posso ajudar hoje?`
+                    }
                   </p>
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  <button type="button" className="px-3 py-2 rounded bg-primary text-white text-sm hover:bg-primary/80 transition" onClick={() => handleSuggestionClick('🏠 Ver apartamentos disponíveis')}>
-                    🏠 Ver apartamentos disponíveis
-                  </button>
-                  <button type="button" className="px-3 py-2 rounded bg-primary text-white text-sm hover:bg-primary/80 transition" onClick={() => handleSuggestionClick('📅 Agendar visita virtual/presencial')}>
-                    📅 Agendar visita virtual/presencial
-                  </button>
-                  <button type="button" className="px-3 py-2 rounded bg-primary text-white text-sm hover:bg-primary/80 transition" onClick={() => handleSuggestionClick('💰 Opções de financiamento')}>
-                    💰 Opções de financiamento
-                  </button>
-                  <button type="button" className="px-3 py-2 rounded bg-primary text-white text-sm hover:bg-primary/80 transition" onClick={() => handleSuggestionClick('📍 Localização e comodidades')}>
-                    📍 Localização e comodidades
-                  </button>
-                </div>
+                {!flatId && (
+                  <div className="flex flex-wrap gap-2">
+                    <button type="button" className="px-3 py-2 rounded bg-primary text-white text-sm hover:bg-primary/80 transition" onClick={() => handleSuggestionClick('🏠 Ver apartamentos disponíveis')}>
+                      🏠 Ver apartamentos disponíveis
+                    </button>
+                    <button type="button" className="px-3 py-2 rounded bg-primary text-white text-sm hover:bg-primary/80 transition" onClick={() => handleSuggestionClick('📅 Agendar visita virtual/presencial')}>
+                      📅 Agendar visita virtual/presencial
+                    </button>
+                    <button type="button" className="px-3 py-2 rounded bg-primary text-white text-sm hover:bg-primary/80 transition" onClick={() => handleSuggestionClick('💰 Opções de financiamento')}>
+                      💰 Opções de financiamento
+                    </button>
+                    <button type="button" className="px-3 py-2 rounded bg-primary text-white text-sm hover:bg-primary/80 transition" onClick={() => handleSuggestionClick('📍 Localização e comodidades')}>
+                      📍 Localização e comodidades
+                    </button>
+                  </div>
+                )}
               </div>
             )}
             
