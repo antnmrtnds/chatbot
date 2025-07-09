@@ -22,7 +22,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { MessageCircle, Loader2, Mic, StopCircle } from "lucide-react";
+import { MessageCircle, Loader2, Mic, StopCircle, X } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import visitorTracker from "@/lib/visitorTracker";
 
@@ -237,10 +237,11 @@ export default function Chatbot({ flatId: propFlatId }: ChatbotProps) {
   const recognitionRef = useRef<any>(null);
   const [audioStream, setAudioStream] = useState<MediaStream | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isSheetOpen, setIsSheetOpen] = useState(false);
+  // Remove Sheet state, use modal open state
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
-    if (!isSheetOpen) {
+    if (!isModalOpen) {
       // Stop microphone and audio stream when panel closes
       if (isRecording && recognitionRef.current) {
         recognitionRef.current.stop();
@@ -251,7 +252,7 @@ export default function Chatbot({ flatId: propFlatId }: ChatbotProps) {
       }
       setIsRecording(false);
     }
-  }, [isSheetOpen]);
+  }, [isModalOpen]);
 
   // Calculate lead score based on collected data
   const calculateLeadScore = (data: LeadQualificationData): number => {
@@ -350,7 +351,13 @@ export default function Chatbot({ flatId: propFlatId }: ChatbotProps) {
   const generateNavigationResponse = (query: string): { text: string; url?: string } | null => {
     const lowerQuery = query.toLowerCase();
     
-    if (lowerQuery.includes('apartamento') || lowerQuery.includes('disponível')) {
+    // Only trigger redirect for specific phrases
+    if (
+      lowerQuery.includes('ver apartamentos disponíveis') ||
+      lowerQuery.includes('mostrar apartamentos') ||
+      lowerQuery.includes('quero ver apartamentos') ||
+      lowerQuery.includes('lista de apartamentos')
+    ) {
       return {
         text: "A redirecioná-lo para a nossa página de apartamentos... Por favor, aguarde.",
         url: "/imoveis/evergreen-pure"
@@ -488,7 +495,7 @@ export default function Chatbot({ flatId: propFlatId }: ChatbotProps) {
         if (navigationResponse.url) {
           setTimeout(() => {
             router.push(navigationResponse.url as string);
-            setIsSheetOpen(false); // Close the sheet on redirect
+            setIsModalOpen(false); // Close the modal on redirect
           }, 1500); // Wait 1.5 seconds before redirecting
         }
         
@@ -636,33 +643,46 @@ export default function Chatbot({ flatId: propFlatId }: ChatbotProps) {
       const budgetParam = updatedQualification.budget === '< 300k' ? 'under_300k' : 'under_400k';
       const typologyParam = updatedQualification.typology;
       router.push(`/imoveis/evergreen-pure?budget=${budgetParam}&typology=${typologyParam}`);
-      setIsSheetOpen(false);
+      setIsModalOpen(false);
       setApartmentQualification({});
     }, 2000);
   };
 
   return (
     <>
-      <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-        <SheetTrigger asChild>
-          <Button className="fixed bottom-4 right-4 z-50 h-16 w-16 rounded-full chatbot-float-btn animate-chatbot-pulse hover:chatbot-float-btn-hover">
-            <MessageCircle size={32} />
-          </Button>
-        </SheetTrigger>
-        <SheetContent
-          className="flex flex-col"
-          side="right"
-          style={{ width: "400px" }}
+      {/* Floating Button */}
+      {!isModalOpen && (
+        <Button
+          className="fixed bottom-4 right-4 z-50 h-16 w-16 rounded-full chatbot-float-btn animate-chatbot-pulse hover:chatbot-float-btn-hover bg-primary text-primary-foreground shadow-lg"
+          onClick={() => setIsModalOpen(true)}
         >
-          <SheetHeader>
-            <SheetTitle>Assistente Virtual</SheetTitle>
-            <SheetDescription>
-              Pergunte-me qualquer coisa sobre este imóvel.
-            </SheetDescription>
-          </SheetHeader>
-          <div className="flex justify-center my-2">
+          <MessageCircle size={32} />
+        </Button>
+      )}
+
+      {/* Floating Modal Chat Window */}
+      {isModalOpen && (
+        <div className="fixed bottom-6 right-6 z-50 w-full max-w-sm md:max-w-md bg-card text-card-foreground rounded-2xl shadow-2xl flex flex-col border border-border animate-fade-in">
+          {/* Header */}
+          <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-primary text-primary-foreground rounded-t-2xl">
+            <div className="flex items-center gap-3">
+              <Avatar>
+                <AvatarImage src="/viriato-logo.svg" />
+                <AvatarFallback>V</AvatarFallback>
+              </Avatar>
+              <div className="font-semibold text-lg">Assistente Virtual</div>
+            </div>
+            <button
+              className="p-2 rounded-full hover:bg-primary-foreground/10 transition"
+              onClick={() => setIsModalOpen(false)}
+              aria-label="Fechar"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
-          <div className="flex-grow overflow-y-auto pt-2 pb-4 px-4 space-y-2">
+
+          {/* Messages Area */}
+          <div className="flex-grow overflow-y-auto pt-2 pb-4 px-4 space-y-2 bg-card" style={{ maxHeight: '60vh' }}>
             {messages.filter(m => m.sender === 'user').length === 0 && !apartmentQualification.step && (
               <div className="mb-6">
                 <div className="bg-muted text-gray-900 rounded-lg p-4 mb-4 shadow">
@@ -691,13 +711,10 @@ export default function Chatbot({ flatId: propFlatId }: ChatbotProps) {
                 )}
               </div>
             )}
-            
             {messages.map((msg, index) => (
               <div
                 key={index}
-                className={`flex items-start gap-3 ${
-                  msg.sender === "user" ? "justify-end" : ""
-                }`}
+                className={`flex items-start gap-3 ${msg.sender === "user" ? "justify-end" : ""}`}
               >
                 {msg.sender === "bot" && (
                   <Avatar>
@@ -706,11 +723,9 @@ export default function Chatbot({ flatId: propFlatId }: ChatbotProps) {
                   </Avatar>
                 )}
                 <div
-                  className={`max-w-xs rounded-lg px-4 py-2 ${
-                    msg.sender === "user"
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted"
-                  }`}
+                  className={`max-w-xs rounded-lg px-4 py-2 ${msg.sender === "user"
+                    ? "bg-primary text-primary-foreground ml-auto"
+                    : "bg-muted"}`}
                 >
                   <p className="text-sm whitespace-pre-line">{msg.text}</p>
                   <p className="text-xs text-right mt-1 opacity-70">
@@ -738,7 +753,6 @@ export default function Chatbot({ flatId: propFlatId }: ChatbotProps) {
                 </div>
               </div>
             )}
-
             {/* Budget Selection */}
             {apartmentQualification.step === 'budget' && (
               <div className="mb-4">
@@ -760,7 +774,6 @@ export default function Chatbot({ flatId: propFlatId }: ChatbotProps) {
                 </div>
               </div>
             )}
-            
             {/* Typology Selection */}
             {apartmentQualification.step === 'typology' && (
               <div className="mb-4">
@@ -778,10 +791,10 @@ export default function Chatbot({ flatId: propFlatId }: ChatbotProps) {
                 </div>
               </div>
             )}
-            
             <div ref={messagesEndRef} />
           </div>
-          <SheetFooter>
+          {/* Input Area */}
+          <div className="p-3 border-t border-border bg-card rounded-b-2xl">
             {!apartmentQualification.step && (
               <form onSubmit={handleSubmit} className="flex w-full items-center gap-2">
                 <Input
@@ -805,9 +818,9 @@ export default function Chatbot({ flatId: propFlatId }: ChatbotProps) {
                 </Button>
               </form>
             )}
-          </SheetFooter>
-        </SheetContent>
-      </Sheet>
+          </div>
+        </div>
+      )}
       <LeadCollectionModal
         isOpen={isLeadModalOpen}
         onClose={() => setIsLeadModalOpen(false)}
@@ -829,6 +842,13 @@ export default function Chatbot({ flatId: propFlatId }: ChatbotProps) {
         .chatbot-float-btn:hover, .chatbot-float-btn-hover {
           box-shadow: 0 0 24px 6px rgba(0, 123, 255, 0.25), 0 2px 8px rgba(0,0,0,0.10);
           transform: scale(1.05);
+        }
+        .animate-fade-in {
+          animation: fadeIn 0.3s cubic-bezier(0.4,0,0.2,1);
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(40px); }
+          to { opacity: 1; transform: translateY(0); }
         }
       `}</style>
     </>
