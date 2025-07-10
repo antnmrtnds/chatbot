@@ -950,6 +950,70 @@ export default function Chatbot({ flatId: propFlatId }: ChatbotProps) {
           <div className="flex justify-center my-2">
           </div>
           <div className="flex-grow overflow-y-auto pt-2 pb-4 px-4 space-y-2">
+            
+            {messages.map((msg, index) => (
+              <div key={index}>
+                <div
+                  className={`flex items-start gap-3 ${
+                    msg.sender === "user" ? "justify-end" : ""
+                  }`}
+                >
+                  {msg.sender === "bot" && (
+                    <Avatar>
+                      <AvatarImage src="/viriato-logo.svg" />
+                      <AvatarFallback>V</AvatarFallback>
+                    </Avatar>
+                  )}
+                  <div
+                    className={`max-w-xs rounded-lg px-4 py-2 ${
+                      msg.sender === "user"
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted"
+                    }`}
+                  >
+                    <p className="text-sm whitespace-pre-line">{msg.text}</p>
+                    {/* Show NLU debug info in development */}
+                    {process.env.NODE_ENV === 'development' && msg.nluData && msg.sender === "bot" && (
+                      <div className="text-xs mt-2 p-2 bg-gray-100 rounded text-gray-600">
+                        <div>Intent: {msg.nluData.intent} ({(msg.nluData.confidence * 100).toFixed(1)}%)</div>
+                        {msg.nluData.entities.length > 0 && (
+                          <div>Entities: {msg.nluData.entities.map(e => `${e.type}:${e.value}`).join(', ')}</div>
+                        )}
+                      </div>
+                    )}
+                    <p className="text-xs text-right mt-1 opacity-70">
+                      {msg.timestamp.toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </p>
+                  </div>
+                  {msg.sender === "user" && (
+                    <Avatar>
+                      <AvatarFallback>U</AvatarFallback>
+                    </Avatar>
+                  )}
+                </div>
+                
+                {/* Show contextual suggestions after bot messages */}
+                {msg.sender === "bot" && index === messages.length - 1 && !isLoading && contextualSuggestions.length > 0 && (
+                  <div className="mt-3 ml-12">
+                    <div className="flex flex-wrap gap-2">
+                      {contextualSuggestions.slice(0, 3).map((suggestion, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          className="px-3 py-1 rounded-full bg-gray-100 text-gray-700 text-xs hover:bg-gray-200 transition"
+                          onClick={() => handleSuggestionClick(suggestion)}
+                        >
+                          {suggestion}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
             {messages.filter(m => m.sender === 'user').length === 0 && !apartmentQualification.step && (
               <div className="mb-6">
                 <div className="flex flex-wrap gap-2">
@@ -1026,70 +1090,6 @@ export default function Chatbot({ flatId: propFlatId }: ChatbotProps) {
                 )}
               </div>
             )}
-            
-            {messages.map((msg, index) => (
-              <div key={index}>
-                <div
-                  className={`flex items-start gap-3 ${
-                    msg.sender === "user" ? "justify-end" : ""
-                  }`}
-                >
-                  {msg.sender === "bot" && (
-                    <Avatar>
-                      <AvatarImage src="/viriato-logo.svg" />
-                      <AvatarFallback>V</AvatarFallback>
-                    </Avatar>
-                  )}
-                  <div
-                    className={`max-w-xs rounded-lg px-4 py-2 ${
-                      msg.sender === "user"
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted"
-                    }`}
-                  >
-                    <p className="text-sm whitespace-pre-line">{msg.text}</p>
-                    {/* Show NLU debug info in development */}
-                    {process.env.NODE_ENV === 'development' && msg.nluData && msg.sender === "bot" && (
-                      <div className="text-xs mt-2 p-2 bg-gray-100 rounded text-gray-600">
-                        <div>Intent: {msg.nluData.intent} ({(msg.nluData.confidence * 100).toFixed(1)}%)</div>
-                        {msg.nluData.entities.length > 0 && (
-                          <div>Entities: {msg.nluData.entities.map(e => `${e.type}:${e.value}`).join(', ')}</div>
-                        )}
-                      </div>
-                    )}
-                    <p className="text-xs text-right mt-1 opacity-70">
-                      {msg.timestamp.toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </p>
-                  </div>
-                  {msg.sender === "user" && (
-                    <Avatar>
-                      <AvatarFallback>U</AvatarFallback>
-                    </Avatar>
-                  )}
-                </div>
-                
-                {/* Show contextual suggestions after bot messages */}
-                {msg.sender === "bot" && index === messages.length - 1 && !isLoading && contextualSuggestions.length > 0 && (
-                  <div className="mt-3 ml-12">
-                    <div className="flex flex-wrap gap-2">
-                      {contextualSuggestions.slice(0, 3).map((suggestion, idx) => (
-                        <button
-                          key={idx}
-                          type="button"
-                          className="px-3 py-1 rounded-full bg-gray-100 text-gray-700 text-xs hover:bg-gray-200 transition"
-                          onClick={() => handleSuggestionClick(suggestion)}
-                        >
-                          {suggestion}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))}
             {isLoading && (
               <div className="flex items-start gap-3">
                 <Avatar>
