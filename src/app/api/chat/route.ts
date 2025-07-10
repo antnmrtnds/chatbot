@@ -5,6 +5,8 @@ import { supabase } from "@/lib/supabaseClient";
 import { nluService, NLUResult } from "@/lib/nlu";
 import { memoryService } from "@/lib/memoryService";
 import { sessionStateManager } from "@/lib/sessionStateManager";
+import { calendarService, VisitScheduleData } from "@/lib/calendarService";
+import { leadService, LeadData } from "@/lib/leadService";
 
 let supabase_admin: SupabaseClient | null = null;
 if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
@@ -168,9 +170,12 @@ export async function POST(request: NextRequest) {
             sender: 'bot',
           });
           
-          // If flow completed, update user preferences with collected data
+          // If flow completed, update user preferences with collected data and handle transactional completion
           if (flowResult.completed && flowResult.data) {
             await updateUserPreferencesFromFlowData(visitorId, flowStatus.flowType!, flowResult.data);
+            
+            // Handle transactional workflow completion
+            await handleTransactionalCompletion(flowStatus.flowType!, flowResult.data, actualSessionId, visitorId);
           }
           
           return NextResponse.json({
@@ -701,4 +706,148 @@ async function updateUserPreferencesFromFlowData(visitorId: string, flowType: st
     await memoryService.updateUserPreferences(visitorId, preferences);
     console.log('Updated user preferences from flow:', preferences);
   }
+}
+
+/**
+ * Handle transactional workflow completion
+ */
+async function handleTransactionalCompletion(
+  flowType: string,
+  flowData: any,
+  sessionId: string,
+  visitorId: string
+): Promise<void> {
+  console.log('=== TRANSACTIONAL COMPLETION ===');
+  console.log('Flow type:', flowType);
+  console.log('Flow data:', flowData);
+
+  try {
+    switch (flowType) {
+      case 'visit_scheduling':
+        await handleVisitSchedulingCompletion(flowData, sessionId, visitorId);
+        break;
+        
+      case 'lead_qualification':
+        await handleLeadQualificationCompletion(flowData, sessionId, visitorId);
+        break;
+        
+      default:
+        console.log('No transactional completion handler for flow type:', flowType);
+    }
+  } catch (error) {
+    console.error('Error in transactional completion:', error);
+  }
+}
+
+/**
+ * Handle visit scheduling completion - generate calendar invites
+ */
+async function handleVisitSchedulingCompletion(
+  flowData: any,
+  sessionId: string,
+  visitorId: string
+): Promise<void> {
+  console.log('Processing visit scheduling completion...');
+  
+  // Extract contact information from the flow data
+  const contactInfo = extractContactFromFlowData(flowData.contact_info);
+  
+  const scheduleData: VisitScheduleData = {
+    visitorName: contactInfo.name,
+    visitorEmail: contactInfo.email,
+    visitorPhone: flowData.phone_number,
+    visitType: flowData.visit_type,
+    preferredDate: flowData.preferred_date,
+    preferredTime: flowData.preferred_time,
+    propertyId: 'Evergreen Pure',
+    propertyAddress: 'Santa Joana, Aveiro'
+  };
+
+  // Generate calendar invite
+  const icsContent = calendarService.generateCalendarInvite(scheduleData);
+  const googleUrl = calendarService.generateGoogleCalendarUrl(scheduleData);
+  const outlookUrl = calendarService.generateOutlookCalendarUrl(scheduleData);
+
+  console.log('Calendar invite generated for:', contactInfo.email);
+  console.log('Google Calendar URL:', googleUrl);
+  console.log('Outlook Calendar URL:', outlookUrl);
+
+  // Store the calendar invite data in memory for potential retrieval
+  await memoryService.updateConversationContext(sessionId, {
+    text: `Calendar invite generated for visit on ${scheduleData.preferredDate} at ${scheduleData.preferredTime}. Google: ${googleUrl}`,
+    sender: 'bot'
+  });
+
+  // In a real implementation, this would send an email with the calendar invite
+  console.log('Visit scheduling completed - calendar invite ready for:', {
+    name: scheduleData.visitorName,
+    email: scheduleData.visitorEmail,
+    visitType: scheduleData.visitType,
+    date: scheduleData.preferredDate,
+    time: scheduleData.preferredTime
+  });
+}
+
+/**
+ * Handle lead qualification completion - process and score lead
+ */
+async function handleLeadQualificationCompletion(
+  flowData: any,
+  sessionId: string,
+  visitorId: string
+): Promise<void> {
+  console.log('Processing lead qualification completion...');
+  
+  const leadData: LeadData = {
+    contact_collection: flowData.contact_collection,
+    phone_collection: flowData.phone_collection,
+    budget_qualification: flowData.budget_qualification,
+    authority: flowData.authority,
+    need: flowData.need,
+    timeline_qualification: flowData.timeline_qualification,
+    sessionId: sessionId,
+    timestamp: new Date().toISOString(),
+    source: 'chatbot'
+  };
+
+  // Process the lead through the lead service
+  const processedLead = await leadService.processLead(leadData);
+  
+  console.log('Lead processed successfully:', {
+    id: processedLead.id,
+    name: processedLead.contactInfo.name,
+    email: processedLead.contactInfo.email,
+    grade: processedLead.qualification.grade,
+    priority: processedLead.qualification.priority,
+    score: processedLead.qualification.total,
+    assignedAgent: processedLead.assignedAgent
+  });
+
+  // Store the processed lead data in memory
+  await memoryService.updateConversationContext(sessionId, {
+    text: `Lead qualification completed - Grade ${processedLead.qualification.grade}, Priority ${processedLead.qualification.priority}, Agent: ${processedLead.assignedAgent}`,
+    sender: 'bot'
+  });
+
+  // Update user profile with lead information (only valid preference fields)
+  await memoryService.updateUserPreferences(visitorId, {
+    priceRange: leadData.budget_qualification,
+    timeline: leadData.timeline_qualification
+  });
+}
+
+/**
+ * Extract contact information from flow data string
+ */
+function extractContactFromFlowData(contactString: string): { name: string; email: string } {
+  const emailMatch = contactString.match(/([^\s]+@[^\s]+\.[^\s]+)/);
+  const email = emailMatch ? emailMatch[1] : '';
+  
+  // Extract name (everything before the email)
+  const name = contactString.replace(/\s*-\s*[^\s]+@[^\s]+\.[^\s]+.*/, '').trim();
+  
+  return {
+    name: name || 'Nome não fornecido',
+    email: email
+  };
 }

@@ -72,11 +72,33 @@ const FLOW_DEFINITIONS: { [flowId: string]: FlowDefinition } = {
   lead_qualification: {
     id: 'lead_qualification',
     name: 'Lead Qualification',
-    description: 'Qualify potential leads through BANT methodology',
+    description: 'Qualify potential leads through BANT methodology with complete contact capture',
     canInterrupt: true,
     resumeMessage: 'Vamos continuar a recolher algumas informações para melhor o ajudar.',
-    initialStep: 'budget_qualification',
+    initialStep: 'contact_collection',
     steps: {
+      contact_collection: {
+        id: 'contact_collection',
+        type: 'question',
+        message: 'Para lhe oferecer o melhor atendimento, preciso do seu nome e email:',
+        options: ['Exemplo: Maria Silva - maria@email.com'],
+        validation: (input: string) => {
+          const emailRegex = /\S+@\S+\.\S+/;
+          return emailRegex.test(input) || 'Por favor, forneça nome e email válido (ex: Maria Silva - maria@email.com)';
+        },
+        nextStep: 'phone_collection'
+      },
+      phone_collection: {
+        id: 'phone_collection',
+        type: 'question',
+        message: 'Qual é o seu número de telefone para contacto?',
+        options: ['Exemplo: +351 912 345 678'],
+        validation: (input: string) => {
+          const phoneRegex = /[\d\s\+\-\(\)]{9,}/;
+          return phoneRegex.test(input) || 'Por favor, forneça um número de telefone válido';
+        },
+        nextStep: 'budget_qualification'
+      },
       budget_qualification: {
         id: 'budget_qualification',
         type: 'question',
@@ -107,14 +129,21 @@ const FLOW_DEFINITIONS: { [flowId: string]: FlowDefinition } = {
         message: 'Qual é o seu prazo ideal para concretizar esta compra?',
         options: ['Imediatamente', 'Nos próximos 3 meses', 'Até ao final do ano', 'Sem pressa específica'],
         validation: (input: string) => input.length > 0,
-        nextStep: 'completion'
+        nextStep: 'qualification_scoring'
       },
-      completion: {
-        id: 'completion',
+      qualification_scoring: {
+        id: 'qualification_scoring',
+        type: 'action',
+        message: 'A processar a sua qualificação...',
+        nextStep: 'agent_handoff'
+      },
+      agent_handoff: {
+        id: 'agent_handoff',
         type: 'completion',
-        message: 'Obrigado pelas informações! Com base no seu perfil, posso oferecer-lhe um atendimento mais personalizado.',
+        message: 'Excelente! Com base no seu perfil, vou conectá-lo com um dos nossos especialistas que entrará em contacto consigo nas próximas 24 horas. Também vai receber um email com informações personalizadas.',
         onComplete: async (data: any) => {
           console.log('Lead qualification completed with data:', data);
+          // This will trigger lead scoring and agent notification
         }
       }
     }
@@ -123,7 +152,7 @@ const FLOW_DEFINITIONS: { [flowId: string]: FlowDefinition } = {
   visit_scheduling: {
     id: 'visit_scheduling',
     name: 'Visit Scheduling',
-    description: 'Schedule property visits',
+    description: 'Schedule property visits with calendar integration',
     canInterrupt: false,
     initialStep: 'visit_type',
     steps: {
@@ -133,22 +162,53 @@ const FLOW_DEFINITIONS: { [flowId: string]: FlowDefinition } = {
         message: 'Que tipo de visita prefere?',
         options: ['Visita presencial', 'Visita virtual', 'Ambas as opções me interessam'],
         validation: (input: string) => input.length > 0,
-        nextStep: 'contact_preference'
+        nextStep: 'contact_info'
       },
-      contact_preference: {
-        id: 'contact_preference',
+      contact_info: {
+        id: 'contact_info',
         type: 'question',
-        message: 'Como prefere que entremos em contacto para agendar?',
-        options: ['Telefone', 'Email', 'WhatsApp'],
+        message: 'Para agendar a visita, preciso do seu nome e email:',
+        options: ['Exemplo: João Silva - joao@email.com'],
+        validation: (input: string) => {
+          const emailRegex = /\S+@\S+\.\S+/;
+          return emailRegex.test(input) || 'Por favor, forneça nome e email válido (ex: João Silva - joao@email.com)';
+        },
+        nextStep: 'phone_number'
+      },
+      phone_number: {
+        id: 'phone_number',
+        type: 'question',
+        message: 'Qual é o seu número de telefone?',
+        options: ['Exemplo: +351 912 345 678'],
+        validation: (input: string) => {
+          const phoneRegex = /[\d\s\+\-\(\)]{9,}/;
+          return phoneRegex.test(input) || 'Por favor, forneça um número de telefone válido';
+        },
+        nextStep: 'preferred_date'
+      },
+      preferred_date: {
+        id: 'preferred_date',
+        type: 'question',
+        message: 'Quando prefere fazer a visita?',
+        options: ['Amanhã', 'Esta semana', 'Próxima semana', 'Tenho flexibilidade'],
+        validation: (input: string) => input.length > 0,
+        nextStep: 'preferred_time'
+      },
+      preferred_time: {
+        id: 'preferred_time',
+        type: 'question',
+        message: 'Que período do dia prefere?',
+        options: ['Manhã (9h-12h)', 'Tarde (14h-17h)', 'Final do dia (17h-19h)', 'Qualquer horário'],
         validation: (input: string) => input.length > 0,
         nextStep: 'completion'
       },
       completion: {
         id: 'completion',
         type: 'completion',
-        message: 'Perfeito! Vamos processar o seu pedido de visita e entraremos em contacto brevemente.',
+        message: 'Excelente! A sua visita foi agendada. Vai receber um email de confirmação com os detalhes e um convite para adicionar ao seu calendário.',
         onComplete: async (data: any) => {
           console.log('Visit scheduling completed with data:', data);
+          // This will trigger calendar invite generation
         }
       }
     }
