@@ -363,6 +363,26 @@ export default function Chatbot({ flatId: propFlatId }: ChatbotProps) {
     initializeMemoryService();
   }, [flatId, pathname, sessionId]);
 
+  // Helper function to convert budget selection to database key
+  const getBudgetRangeKey = (budget: string): string => {
+    switch (budget) {
+      case '100k-200k':
+        return 'under_200k';
+      case '200k-300k':
+        return '200k_300k';
+      case '300k-400k':
+        return '300k_400k';
+      case '400k+':
+        return 'over_400k';
+      case 'flexible':
+        return 'flexible_budget';
+      case 'need_advice':
+        return 'need_advice';
+      default:
+        return 'no_budget';
+    }
+  };
+
   // Calculate lead score based on collected data
   const calculateLeadScore = (data: LeadQualificationData): number => {
     let score = 0;
@@ -370,10 +390,12 @@ export default function Chatbot({ flatId: propFlatId }: ChatbotProps) {
     // Budget scoring (40% of total score)
     if (data.budget_range) {
       const budgetScores: { [key: string]: number } = {
-        'under_200k': 20,
+        'under_200k': 25,
         '200k_300k': 35,
         '300k_400k': 40,
         'over_400k': 40,
+        'flexible_budget': 30,
+        'need_advice': 20,
         'no_budget': 10
       };
       score += budgetScores[data.budget_range] || 0;
@@ -875,7 +897,7 @@ export default function Chatbot({ flatId: propFlatId }: ChatbotProps) {
           },
           leadScore: calculateLeadScore({
             ...leadData,
-            budget_range: updatedQualification.budget === '< 300k' ? 'under_300k' : '300k_400k'
+            budget_range: getBudgetRangeKey(updatedQualification.budget || '')
           }),
           flatId: flatId
         })
@@ -886,7 +908,7 @@ export default function Chatbot({ flatId: propFlatId }: ChatbotProps) {
 
     // Redirect to filtered listings after 2 seconds
     setTimeout(() => {
-      const budgetParam = updatedQualification.budget === '< 300k' ? 'under_300k' : 'under_400k';
+      const budgetParam = getBudgetRangeKey(updatedQualification.budget || '');
       const typologyParam = updatedQualification.typology;
       router.push(`/imoveis/evergreen-pure?budget=${budgetParam}&typology=${typologyParam}`);
       setIsSheetOpen(false);
@@ -1083,20 +1105,48 @@ export default function Chatbot({ flatId: propFlatId }: ChatbotProps) {
             {/* Budget Selection */}
             {apartmentQualification.step === 'budget' && (
               <div className="mb-4">
-                <div className="flex flex-wrap gap-2">
-                  <button 
-                    type="button" 
-                    className="px-4 py-3 rounded bg-primary text-white text-sm hover:bg-primary/80 transition"
-                    onClick={() => handleBudgetSelection('< 300k')}
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    className="px-3 py-3 rounded bg-primary text-white text-sm hover:bg-primary/80 transition"
+                    onClick={() => handleBudgetSelection('100k-200k')}
                   >
-                    💰 Até 300.000€
+                    💰 100k - 200k€
                   </button>
-                  <button 
-                    type="button" 
-                    className="px-4 py-3 rounded bg-primary text-white text-sm hover:bg-primary/80 transition"
-                    onClick={() => handleBudgetSelection('< 400k')}
+                  <button
+                    type="button"
+                    className="px-3 py-3 rounded bg-primary text-white text-sm hover:bg-primary/80 transition"
+                    onClick={() => handleBudgetSelection('200k-300k')}
                   >
-                    💰 Até 400.000€
+                    💰 200k - 300k€
+                  </button>
+                  <button
+                    type="button"
+                    className="px-3 py-3 rounded bg-primary text-white text-sm hover:bg-primary/80 transition"
+                    onClick={() => handleBudgetSelection('300k-400k')}
+                  >
+                    💰 300k - 400k€
+                  </button>
+                  <button
+                    type="button"
+                    className="px-3 py-3 rounded bg-primary text-white text-sm hover:bg-primary/80 transition"
+                    onClick={() => handleBudgetSelection('400k+')}
+                  >
+                    💰 Acima de 400k€
+                  </button>
+                  <button
+                    type="button"
+                    className="px-3 py-3 rounded bg-primary text-white text-sm hover:bg-primary/80 transition text-xs"
+                    onClick={() => handleBudgetSelection('flexible')}
+                  >
+                    🤔 Orçamento flexível
+                  </button>
+                  <button
+                    type="button"
+                    className="px-3 py-3 rounded bg-primary text-white text-sm hover:bg-primary/80 transition text-xs"
+                    onClick={() => handleBudgetSelection('need_advice')}
+                  >
+                    💡 Preciso de ajuda
                   </button>
                 </div>
               </div>

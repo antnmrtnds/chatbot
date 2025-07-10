@@ -477,7 +477,7 @@ Use the detailed information provided below to answer questions about this speci
 ${shouldQualifyLead && userShowsInterest ? `
 IMPORTANT: The user seems interested and this is a good time to qualify them as a lead.
 After answering their question, ask ONE of these qualification questions naturally:
-- "Qual é o seu orçamento aproximado para este investimento?"
+- "Qual é o seu orçamento aproximado para este investimento? Por exemplo, está a considerar uma faixa entre 100k-200k€, 200k-300k€, 300k-400k€, ou acima de 400k€?"
 - "Quando está a pensar fazer a compra?"
 - "Quantas pessoas vão viver no apartamento?"
 - "Já tem financiamento aprovado ou precisa de ajuda com o processo?"

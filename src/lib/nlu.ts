@@ -376,10 +376,31 @@ export class NLUService {
   private normalizeBudgetRange(budget: string): string {
     const normalized = budget.toLowerCase();
     
-    if (normalized.includes('200') || normalized.includes('300')) {
-      return 'under_300k';
+    // Handle specific budget range patterns
+    if (normalized.includes('100k-200k') || normalized.includes('100-200')) {
+      return 'under_200k';
     }
-    if (normalized.includes('300') || normalized.includes('400')) {
+    if (normalized.includes('200k-300k') || normalized.includes('200-300')) {
+      return '200k_300k';
+    }
+    if (normalized.includes('300k-400k') || normalized.includes('300-400')) {
+      return '300k_400k';
+    }
+    if (normalized.includes('400k+') || normalized.includes('acima de 400') || normalized.includes('above 400')) {
+      return 'over_400k';
+    }
+    if (normalized.includes('flexível') || normalized.includes('flexible')) {
+      return 'flexible_budget';
+    }
+    if (normalized.includes('ajuda') || normalized.includes('advice') || normalized.includes('help')) {
+      return 'need_advice';
+    }
+    
+    // Legacy support for existing patterns
+    if (normalized.includes('200') && normalized.includes('300')) {
+      return '200k_300k';
+    }
+    if (normalized.includes('300') && normalized.includes('400')) {
       return '300k_400k';
     }
     if (normalized.includes('400') || normalized.includes('500')) {
@@ -391,7 +412,8 @@ export class NLUService {
     if (numMatch) {
       const num = parseFloat(numMatch[1]);
       if (normalized.includes('k') || normalized.includes('mil')) {
-        if (num < 300) return 'under_300k';
+        if (num < 200) return 'under_200k';
+        if (num < 300) return '200k_300k';
         if (num <= 400) return '300k_400k';
         return 'over_400k';
       }
