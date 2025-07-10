@@ -25,11 +25,18 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MessageCircle, Loader2, Mic, StopCircle } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import visitorTracker from "@/lib/visitorTracker";
+import { memoryService } from "@/lib/memoryService";
 
 type Message = {
   text: string;
   sender: "user" | "bot";
   timestamp: Date;
+  nluData?: {
+    intent: string;
+    confidence: number;
+    entities: Array<{type: string; value: string}>;
+    response_type: string;
+  };
 };
 
 type LeadQualificationData = {
@@ -220,7 +227,11 @@ export default function Chatbot({ flatId: propFlatId }: ChatbotProps) {
   const flatId = getFlatIdFromPath();
   console.log('Chatbot flatId:', flatId);
   
+  // Session management for memory service
+  const [sessionId] = useState(() => `session-${visitorTracker.visitorId}-${Date.now()}`);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [contextualSuggestions, setContextualSuggestions] = useState<string[]>([]);
+  const [userPreferences, setUserPreferences] = useState<any>({});
   
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -232,6 +243,12 @@ export default function Chatbot({ flatId: propFlatId }: ChatbotProps) {
     typology?: string;
     step?: 'budget' | 'typology' | 'complete';
   }>({});
+  const [activeFlow, setActiveFlow] = useState<{
+    active: boolean;
+    flowType?: string;
+    currentStep?: string;
+    options?: string[];
+  }>({ active: false });
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const [isRecording, setIsRecording] = useState(false);
@@ -264,23 +281,87 @@ export default function Chatbot({ flatId: propFlatId }: ChatbotProps) {
   }, [messages]);
 
   useEffect(() => {
-    // Display welcome message when the component mounts
-    const welcomeMessage = flatId 
-      ? `Estou à sua disposição caso tenha questões relativas ao apartamento ${flatId}.`
-      : "Olá! Sou o seu assistente virtual. Como posso ajudá-lo a encontrar a sua casa de sonho?";
-    
+    // Initialize memory service and load user profile
+    const initializeMemoryService = async () => {
+      try {
+        // Load user profile to get preferences and conversation history
+        const profile = await memoryService.getUserProfile(visitorTracker.visitorId);
+        setUserPreferences(profile.preferences);
+        
+        // Get conversation context
+        const context = await memoryService.getConversationContext(sessionId, visitorTracker.visitorId);
+        
+        // If we have previous conversation history, load recent messages
+        if (context.messages.length > 0) {
+          const recentMessages = context.messages.slice(-5).map(msg => ({
+            text: msg.text,
+            sender: msg.sender,
+            timestamp: msg.timestamp,
+            nluData: msg.intent ? {
+              intent: msg.intent,
+              confidence: 0.8,
+              entities: msg.entities || [],
+              response_type: 'contextual'
+            } : undefined
+          }));
+          
+          // Add welcome message with context awareness
+          const welcomeMessage = flatId
+            ? `Bem-vindo de volta! Estou à sua disposição para questões sobre o apartamento ${flatId}.`
+            : profile.preferences.priceRange || profile.preferences.propertyType
+              ? "Bem-vindo de volta! Com base nas suas preferências anteriores, posso ajudá-lo a encontrar a propriedade ideal."
+              : "Olá! Sou o seu assistente virtual. Como posso ajudá-lo a encontrar a sua casa de sonho?";
+          
+          setMessages([
+            {
+              text: welcomeMessage,
+              sender: "bot",
+              timestamp: new Date(),
+            },
+            ...recentMessages
+          ]);
+        } else {
+          // First time visitor - standard welcome
+          const welcomeMessage = flatId
+            ? `Estou à sua disposição caso tenha questões relativas ao apartamento ${flatId}.`
+            : "Olá! Sou o seu assistente virtual. Como posso ajudá-lo a encontrar a sua casa de sonho?";
+          
+          setMessages([
+            {
+              text: welcomeMessage,
+              sender: "bot",
+              timestamp: new Date(),
+            },
+          ]);
+        }
+        
+        // Get initial contextual suggestions
+        const suggestions = memoryService.getContextualSuggestions(sessionId, visitorTracker.visitorId);
+        setContextualSuggestions(suggestions);
+        
+      } catch (error) {
+        console.error('Error initializing memory service:', error);
+        // Fallback to standard welcome message
+        const welcomeMessage = flatId
+          ? `Estou à sua disposição caso tenha questões relativas ao apartamento ${flatId}.`
+          : "Olá! Sou o seu assistente virtual. Como posso ajudá-lo a encontrar a sua casa de sonho?";
+        
+        setMessages([
+          {
+            text: welcomeMessage,
+            sender: "bot",
+            timestamp: new Date(),
+          },
+        ]);
+      }
+    };
+
     console.log('Chatbot initialized with flatId:', flatId);
+    console.log('Session ID:', sessionId);
     console.log('Current pathname:', pathname);
-    console.log('Setting welcome message:', welcomeMessage);
     
-    setMessages([
-      {
-        text: welcomeMessage,
-        sender: "bot",
-        timestamp: new Date(),
-      },
-    ]);
-  }, [flatId, pathname]);
+    initializeMemoryService();
+  }, [flatId, pathname, sessionId]);
 
   // Calculate lead score based on collected data
   const calculateLeadScore = (data: LeadQualificationData): number => {
@@ -417,6 +498,105 @@ export default function Chatbot({ flatId: propFlatId }: ChatbotProps) {
     return null;
   };
 
+  // Generate smart suggestions based on detected intent and avoid redundant suggestions
+  const generateSmartSuggestions = (intent: string, entities: Array<{type: string; value: string}>, lastUserMessage?: string): string[] => {
+    const lowerLastMessage = lastUserMessage?.toLowerCase() || '';
+    
+    // Helper function to check if suggestion is redundant
+    const isRedundant = (suggestion: string): boolean => {
+      const suggestionLower = suggestion.toLowerCase();
+      
+      // Check for price-related redundancy
+      if ((suggestionLower.includes('preço') || suggestionLower.includes('price')) &&
+          (lowerLastMessage.includes('preço') || lowerLastMessage.includes('price') || lowerLastMessage.includes('qual é o preço'))) {
+        return true;
+      }
+      
+      // Check for area-related redundancy
+      if ((suggestionLower.includes('área') || suggestionLower.includes('tipologia')) &&
+          (lowerLastMessage.includes('área') || lowerLastMessage.includes('tipologia') || lowerLastMessage.includes('quais são as áreas'))) {
+        return true;
+      }
+      
+      // Check for visit-related redundancy
+      if (suggestionLower.includes('visita') && lowerLastMessage.includes('visita')) {
+        return true;
+      }
+      
+      // Check for apartment listing redundancy
+      if (suggestionLower.includes('ver apartamentos') &&
+          (lowerLastMessage.includes('apartamentos disponíveis') || lowerLastMessage.includes('ver apartamentos'))) {
+        return true;
+      }
+      
+      return false;
+    };
+
+    let suggestions: string[] = [];
+    
+    switch (intent) {
+      case 'project_info':
+        suggestions = [
+          '📍 Localização e comodidades',
+          '🏗️ Estado da construção',
+          '🏠 Ver apartamentos disponíveis',
+          '💰 Opções de financiamento'
+        ];
+        break;
+      
+      case 'payment_plans':
+        suggestions = [
+          '🏦 Simulação de crédito habitação',
+          '📊 Planos de pagamento disponíveis',
+          '💼 Falar com consultor financeiro',
+          '📋 Documentos necessários'
+        ];
+        break;
+      
+      case 'apartment_inquiry':
+        const hasApartmentId = entities.some(e => e.type === 'apartment_id');
+        if (hasApartmentId) {
+          suggestions = [
+            '📐 Áreas e tipologia',
+            '💰 Preço deste apartamento',
+            '📅 Agendar visita',
+            '🏠 Ver outros apartamentos',
+            '🏗️ Estado da construção',
+            '📍 Localização e comodidades'
+          ];
+        } else {
+          suggestions = [
+            '🏠 Ver apartamentos disponíveis',
+            '🔍 Filtrar por tipologia',
+            '💰 Filtrar por preço',
+            '📅 Agendar visita virtual'
+          ];
+        }
+        break;
+      
+      case 'register_interest':
+        suggestions = [
+          '📞 Pedir contacto imediato',
+          '📅 Agendar reunião',
+          '📧 Receber informações por email',
+          '📋 Descarregar brochura'
+        ];
+        break;
+      
+      default:
+        suggestions = [
+          '🏠 Ver apartamentos disponíveis',
+          '📍 Localização e comodidades',
+          '💰 Opções de financiamento',
+          '📅 Agendar visita'
+        ];
+        break;
+    }
+    
+    // Filter out redundant suggestions
+    return suggestions.filter(suggestion => !isRedundant(suggestion));
+  };
+
   useEffect(() => {
     // Initialize SpeechRecognition
     const SpeechRecognition =
@@ -547,6 +727,7 @@ export default function Chatbot({ flatId: propFlatId }: ChatbotProps) {
           messages: newMessages.map(m => ({ text: m.text, sender: m.sender })),
           flatId: flatId,
           visitorId: visitorTracker.visitorId,
+          sessionId: sessionId,
           leadData: leadData,
           leadScore: calculateLeadScore(leadData)
         }),
@@ -560,20 +741,48 @@ export default function Chatbot({ flatId: propFlatId }: ChatbotProps) {
         setQualificationStep(botResponse.qualification_step);
       }
 
+      // Log NLU results for debugging
+      if (botResponse.nlu_result) {
+        console.log('NLU Analysis:', botResponse.nlu_result);
+      }
+
       if (botMessageText.includes("[LEAD_FORM]")) {
         setIsLeadModalOpen(true);
       } else {
         await playAudio(botMessageText);
       }
 
-      setMessages((prev) => [
-        ...prev,
-        {
-          text: botMessageText.replace("[LEAD_FORM]", " "),
-          sender: "bot",
-          timestamp: new Date(),
-        },
-      ]);
+      const botMessage: Message = {
+        text: botMessageText.replace("[LEAD_FORM]", " "),
+        sender: "bot",
+        timestamp: new Date(),
+        nluData: botResponse.nlu_result
+      };
+
+      setMessages((prev) => [...prev, botMessage]);
+
+      // Update contextual suggestions from memory service
+      if (botResponse.suggestions && botResponse.suggestions.length > 0) {
+        setContextualSuggestions(botResponse.suggestions);
+      } else if (botResponse.nlu_result && botResponse.nlu_result.intent !== 'greeting') {
+        // Fallback to generated suggestions if memory service doesn't provide any
+        const suggestions = generateSmartSuggestions(
+          botResponse.nlu_result.intent,
+          botResponse.nlu_result.entities || [],
+          messageText
+        );
+        setContextualSuggestions(suggestions.slice(0, 4));
+      }
+
+      // Update user preferences if provided in response context
+      if (botResponse.context?.userPreferences) {
+        setUserPreferences(botResponse.context.userPreferences);
+      }
+
+      // Log context information for debugging
+      if (botResponse.context) {
+        console.log('Updated context:', botResponse.context);
+      }
     } catch (error) {
       console.error(error);
       setMessages((prev) => [
@@ -722,73 +931,140 @@ export default function Chatbot({ flatId: propFlatId }: ChatbotProps) {
             {messages.filter(m => m.sender === 'user').length === 0 && !apartmentQualification.step && (
               <div className="mb-6">
                 <div className="flex flex-wrap gap-2">
-                  {flatId ? (
-                    <>
-                      <button type="button" className="px-3 py-2 rounded bg-primary text-white text-sm hover:bg-primary/80 transition" onClick={() => handleSuggestionClick(`💰 Qual é o preço do apartamento ${flatId}?`)}>
-                        💰 Preço deste apartamento
+                  {/* Show contextual suggestions if available */}
+                  {contextualSuggestions.length > 0 ? (
+                    contextualSuggestions.map((suggestion, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        className="px-3 py-2 rounded bg-primary text-white text-sm hover:bg-primary/80 transition"
+                        onClick={() => handleSuggestionClick(suggestion)}
+                      >
+                        {suggestion}
                       </button>
-                      <button type="button" className="px-3 py-2 rounded bg-primary text-white text-sm hover:bg-primary/80 transition" onClick={() => handleSuggestionClick(`📐 Quais são as áreas do apartamento ${flatId}?`)}>
-                        📐 Áreas e tipologia
-                      </button>
-                      <button type="button" className="px-3 py-2 rounded bg-primary text-white text-sm hover:bg-primary/80 transition" onClick={() => handleSuggestionClick('📅 Agendar visita virtual/presencial')}>
-                        📅 Agendar visita
-                      </button>
-                      <button type="button" className="px-3 py-2 rounded bg-primary text-white text-sm hover:bg-primary/80 transition" onClick={() => handleSuggestionClick('🏠 Ver outros apartamentos disponíveis')}>
-                        🏠 Ver outros apartamentos
-                      </button>
-                    </>
+                    ))
                   ) : (
-                    <>
-                      <button type="button" className="px-3 py-2 rounded bg-primary text-white text-sm hover:bg-primary/80 transition" onClick={() => handleSuggestionClick('🏠 Ver apartamentos disponíveis')}>
-                        🏠 Ver apartamentos disponíveis
-                      </button>
-                      <button type="button" className="px-3 py-2 rounded bg-primary text-white text-sm hover:bg-primary/80 transition" onClick={() => handleSuggestionClick('📅 Agendar visita virtual/presencial')}>
-                        📅 Agendar visita virtual/presencial
-                      </button>
-                      <button type="button" className="px-3 py-2 rounded bg-primary text-white text-sm hover:bg-primary/80 transition" onClick={() => handleSuggestionClick('💰 Opções de financiamento')}>
-                        💰 Opções de financiamento
-                      </button>
-                      <button type="button" className="px-3 py-2 rounded bg-primary text-white text-sm hover:bg-primary/80 transition" onClick={() => handleSuggestionClick('📍 Localização e comodidades')}>
-                        📍 Localização e comodidades
-                      </button>
-                    </>
+                    /* Fallback to default suggestions */
+                    flatId ? (
+                      <>
+                        <button type="button" className="px-3 py-2 rounded bg-primary text-white text-sm hover:bg-primary/80 transition" onClick={() => handleSuggestionClick(`💰 Qual é o preço do apartamento ${flatId}?`)}>
+                          💰 Preço deste apartamento
+                        </button>
+                        <button type="button" className="px-3 py-2 rounded bg-primary text-white text-sm hover:bg-primary/80 transition" onClick={() => handleSuggestionClick(`📐 Quais são as áreas do apartamento ${flatId}?`)}>
+                          📐 Áreas e tipologia
+                        </button>
+                        <button type="button" className="px-3 py-2 rounded bg-primary text-white text-sm hover:bg-primary/80 transition" onClick={() => handleSuggestionClick('📅 Agendar visita virtual/presencial')}>
+                          📅 Agendar visita
+                        </button>
+                        <button type="button" className="px-3 py-2 rounded bg-primary text-white text-sm hover:bg-primary/80 transition" onClick={() => handleSuggestionClick('🏠 Ver outros apartamentos disponíveis')}>
+                          🏠 Ver outros apartamentos
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button type="button" className="px-3 py-2 rounded bg-primary text-white text-sm hover:bg-primary/80 transition" onClick={() => handleSuggestionClick('🏠 Ver apartamentos disponíveis')}>
+                          🏠 Ver apartamentos disponíveis
+                        </button>
+                        <button type="button" className="px-3 py-2 rounded bg-primary text-white text-sm hover:bg-primary/80 transition" onClick={() => handleSuggestionClick('📅 Agendar visita virtual/presencial')}>
+                          📅 Agendar visita virtual/presencial
+                        </button>
+                        <button type="button" className="px-3 py-2 rounded bg-primary text-white text-sm hover:bg-primary/80 transition" onClick={() => handleSuggestionClick('💰 Opções de financiamento')}>
+                          💰 Opções de financiamento
+                        </button>
+                        <button type="button" className="px-3 py-2 rounded bg-primary text-white text-sm hover:bg-primary/80 transition" onClick={() => handleSuggestionClick('📍 Localização e comodidades')}>
+                          📍 Localização e comodidades
+                        </button>
+                      </>
+                    )
                   )}
                 </div>
+                
+                {/* Show user preferences if available */}
+                {Object.keys(userPreferences).length > 0 && (
+                  <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+                    <p className="text-sm text-blue-800 font-medium mb-2">Suas preferências:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {userPreferences.priceRange && (
+                        <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded">
+                          💰 {userPreferences.priceRange}
+                        </span>
+                      )}
+                      {userPreferences.propertyType && (
+                        <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded">
+                          🏠 {userPreferences.propertyType}
+                        </span>
+                      )}
+                      {userPreferences.timeline && (
+                        <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded">
+                          📅 {userPreferences.timeline}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
             
             {messages.map((msg, index) => (
-              <div
-                key={index}
-                className={`flex items-start gap-3 ${
-                  msg.sender === "user" ? "justify-end" : ""
-                }`}
-              >
-                {msg.sender === "bot" && (
-                  <Avatar>
-                    <AvatarImage src="/viriato-logo.svg" />
-                    <AvatarFallback>V</AvatarFallback>
-                  </Avatar>
-                )}
+              <div key={index}>
                 <div
-                  className={`max-w-xs rounded-lg px-4 py-2 ${
-                    msg.sender === "user"
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted"
+                  className={`flex items-start gap-3 ${
+                    msg.sender === "user" ? "justify-end" : ""
                   }`}
                 >
-                  <p className="text-sm whitespace-pre-line">{msg.text}</p>
-                  <p className="text-xs text-right mt-1 opacity-70">
-                    {msg.timestamp.toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </p>
+                  {msg.sender === "bot" && (
+                    <Avatar>
+                      <AvatarImage src="/viriato-logo.svg" />
+                      <AvatarFallback>V</AvatarFallback>
+                    </Avatar>
+                  )}
+                  <div
+                    className={`max-w-xs rounded-lg px-4 py-2 ${
+                      msg.sender === "user"
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted"
+                    }`}
+                  >
+                    <p className="text-sm whitespace-pre-line">{msg.text}</p>
+                    {/* Show NLU debug info in development */}
+                    {process.env.NODE_ENV === 'development' && msg.nluData && msg.sender === "bot" && (
+                      <div className="text-xs mt-2 p-2 bg-gray-100 rounded text-gray-600">
+                        <div>Intent: {msg.nluData.intent} ({(msg.nluData.confidence * 100).toFixed(1)}%)</div>
+                        {msg.nluData.entities.length > 0 && (
+                          <div>Entities: {msg.nluData.entities.map(e => `${e.type}:${e.value}`).join(', ')}</div>
+                        )}
+                      </div>
+                    )}
+                    <p className="text-xs text-right mt-1 opacity-70">
+                      {msg.timestamp.toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </p>
+                  </div>
+                  {msg.sender === "user" && (
+                    <Avatar>
+                      <AvatarFallback>U</AvatarFallback>
+                    </Avatar>
+                  )}
                 </div>
-                {msg.sender === "user" && (
-                  <Avatar>
-                    <AvatarFallback>U</AvatarFallback>
-                  </Avatar>
+                
+                {/* Show contextual suggestions after bot messages */}
+                {msg.sender === "bot" && index === messages.length - 1 && !isLoading && contextualSuggestions.length > 0 && (
+                  <div className="mt-3 ml-12">
+                    <div className="flex flex-wrap gap-2">
+                      {contextualSuggestions.slice(0, 3).map((suggestion, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          className="px-3 py-1 rounded-full bg-gray-100 text-gray-700 text-xs hover:bg-gray-200 transition"
+                          onClick={() => handleSuggestionClick(suggestion)}
+                        >
+                          {suggestion}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 )}
               </div>
             ))}
