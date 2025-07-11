@@ -393,6 +393,29 @@ export function RagChatbot({
       NODE_ENV: process.env.NODE_ENV
     });
     
+    // Update context with apartment information if on apartment page
+    if (match) {
+      const flatId = match[1];
+      const apartmentContext: PageContext = {
+        url: currentUrl,
+        pageType: 'property',
+        semanticId: `apartment-${flatId}`,
+        propertyId: flatId,
+        propertyType: 'apartment',
+        title: `Apartamento ${flatId} - Evergreen Pure`,
+        description: `Informações sobre o apartamento ${flatId}`,
+        keywords: ['apartamento', flatId, 'evergreen', 'pure'],
+        features: [],
+        timeOnPage: 0,
+      };
+      
+      if (!currentContext || currentContext.propertyId !== flatId) {
+        setCurrentContext(apartmentContext);
+        onContextUpdate?.(apartmentContext);
+        console.log('[RagChatbot] Updated context for apartment:', flatId);
+      }
+    }
+    
     // For testing purposes, always allow auto-open on flat pages (ignore hasAutoOpened)
     if (match && !isOpen) {
       const flatId = match[1];
@@ -441,7 +464,7 @@ export function RagChatbot({
         setAutoOpenTimer(null);
       }
     };
-  }, [isOpen, hasAutoOpened, currentContext, onAnalyticsEvent]);
+  }, [isOpen, hasAutoOpened, currentContext, onAnalyticsEvent, onContextUpdate]);
 
   // Handle auto-open message display
   useEffect(() => {
@@ -577,14 +600,7 @@ export function RagChatbot({
         }
       }
 
-      // Check for lead capture trigger
-      if (
-        features.progressiveLeadCapture &&
-        !leadCaptured &&
-        (messageCount + 1 >= config.leadCaptureThreshold || data.highIntent)
-      ) {
-        setShowLeadCapture(true);
-      }
+      // Lead capture functionality disabled
 
     } catch (error) {
       console.error('Error sending message:', error);
@@ -1019,91 +1035,6 @@ export function RagChatbot({
               </div>
             )}
 
-            {/* Lead Capture Form - Inline */}
-            {showLeadCapture && !showWelcome && !showNameInput && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-                <div className="flex items-center mb-3">
-                  <Bot className="h-5 w-5 mr-2" style={{ color: theme.primaryColor }} />
-                  <h3 className="font-semibold text-blue-900">Gostaria de receber mais informações?</h3>
-                </div>
-                <form onSubmit={handleLeadFormSubmit} className="space-y-3">
-                  <div>
-                    <Input
-                      value={leadFormData.name}
-                      onChange={(e) => setLeadFormData(prev => ({ ...prev, name: e.target.value }))}
-                      placeholder="Nome *"
-                      required
-                      className="text-sm"
-                    />
-                  </div>
-                  
-                  <div>
-                    <Input
-                      type="email"
-                      value={leadFormData.email}
-                      onChange={(e) => setLeadFormData(prev => ({ ...prev, email: e.target.value }))}
-                      placeholder="Email *"
-                      required
-                      className="text-sm"
-                    />
-                  </div>
-                  
-                  <div>
-                    <Input
-                      value={leadFormData.phone}
-                      onChange={(e) => setLeadFormData(prev => ({ ...prev, phone: e.target.value }))}
-                      placeholder="Telefone"
-                      className="text-sm"
-                    />
-                  </div>
-                  
-                  <div>
-                    <select
-                      value={leadFormData.budget}
-                      onChange={(e) => setLeadFormData(prev => ({ ...prev, budget: e.target.value }))}
-                      className="w-full p-2 border rounded-md text-sm"
-                    >
-                      <option value="">Orçamento (opcional)</option>
-                      <option value="<200k">Até €200.000</option>
-                      <option value="200k-400k">€200.000 - €400.000</option>
-                      <option value="400k-600k">€400.000 - €600.000</option>
-                      <option value=">600k">Mais de €600.000</option>
-                    </select>
-                  </div>
-                  
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      id="marketing-inline"
-                      checked={leadFormData.marketingConsent}
-                      onChange={(e) => setLeadFormData(prev => ({ ...prev, marketingConsent: e.target.checked }))}
-                      className="text-sm"
-                    />
-                    <label htmlFor="marketing-inline" className="text-xs text-gray-600">
-                      Aceito receber comunicações de marketing
-                    </label>
-                  </div>
-                  
-                  <div className="flex space-x-2 pt-2">
-                    <Button
-                      type="submit"
-                      className="flex-1 text-sm py-2"
-                      style={{ backgroundColor: theme.primaryColor }}
-                    >
-                      Enviar
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setShowLeadCapture(false)}
-                      className="text-sm py-2"
-                    >
-                      Cancelar
-                    </Button>
-                  </div>
-                </form>
-              </div>
-            )}
 
             {/* Chat Messages */}
             {!showWelcome && !showNameInput && (
@@ -1153,7 +1084,7 @@ export function RagChatbot({
                 ))}
                 
                 {/* Show suggestions after welcome message */}
-                {messages.length === 1 && !showLeadCapture && (
+                {messages.length === 1 && (
                   <div className="space-y-3 mt-4">
                     <div className="grid grid-cols-1 gap-2">
                       {[
