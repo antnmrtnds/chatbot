@@ -211,6 +211,9 @@ export function RagChatbot({
     ragEnabled: true,
   },
 }: RagChatbotProps) {
+  // Debug: Component mounting
+  console.log('[RagChatbot] Component mounting/re-rendering');
+  
   // State
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -243,6 +246,11 @@ export function RagChatbot({
     bedrooms: '',
     budget: '',
   });
+
+  // State for auto-open functionality
+  const [autoOpenTimer, setAutoOpenTimer] = useState<NodeJS.Timeout | null>(null);
+  const [hasAutoOpened, setHasAutoOpened] = useState(false);
+  const [autoOpenMessage, setAutoOpenMessage] = useState<string | null>(null);
 
   // Refs
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -286,6 +294,7 @@ export function RagChatbot({
             setLeadCaptured(parsedState.leadCaptured || false);
             setShowWelcome(parsedState.showWelcome !== undefined ? parsedState.showWelcome : true);
             setShowNameInput(parsedState.showNameInput !== undefined ? parsedState.showNameInput : false);
+            setHasAutoOpened(parsedState.hasAutoOpened || false);
             
             console.log('[RagChatbot] Restored chat state from localStorage:', {
               visitorName: parsedState.visitorName,
@@ -321,6 +330,7 @@ export function RagChatbot({
       leadCaptured,
       showWelcome,
       showNameInput,
+      hasAutoOpened,
       lastActivity: new Date().toISOString(),
     };
 
@@ -329,7 +339,7 @@ export function RagChatbot({
     } catch (error) {
       console.error('[RagChatbot] Error saving chat state:', error);
     }
-  }, [messages, visitorName, messageCount, leadCaptured, showWelcome, showNameInput]);
+  }, [messages, visitorName, messageCount, leadCaptured, showWelcome, showNameInput, hasAutoOpened]);
 
   useEffect(() => {
     if (pageContext) {
@@ -363,6 +373,112 @@ export function RagChatbot({
       recognitionRef.current = recognition;
     }
   }, [features.voiceInput]);
+
+  // Auto-open timer for flat pages
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    // Check if we're on a flat page
+    const currentUrl = window.location.pathname;
+    const flatPageRegex = /\/imoveis\/evergreen-pure\/([A-Z]\d+)$/;
+    const match = currentUrl.match(flatPageRegex);
+    
+    console.log('[RagChatbot] Auto-open check:', {
+      currentUrl,
+      match: match ? match[1] : null,
+      isOpen,
+      hasAutoOpened,
+      currentContext: currentContext?.pageType,
+      windowLocation: window.location.href,
+      NODE_ENV: process.env.NODE_ENV
+    });
+    
+    // For testing purposes, always allow auto-open on flat pages (ignore hasAutoOpened)
+    if (match && !isOpen) {
+      const flatId = match[1];
+      const TIMER_DELAY = 3000; // 3 seconds for testing
+      
+      console.log('[RagChatbot] Auto-open timer set for flat:', flatId, 'delay:', TIMER_DELAY);
+      
+      // Set 3-second timer for testing
+      const timer = setTimeout(() => {
+        console.log('[RagChatbot] Auto-opening chatbot for flat:', flatId);
+        setAutoOpenMessage(`Em que posso ajudá-lo em relação ao apartamento ${flatId}?`);
+        setIsOpen(true);
+        setHasAutoOpened(true);
+        
+        // Track auto-open event
+        ragVisitorTracker.trackChatOpened(
+          window.location.href,
+          currentContext
+        );
+        
+        onAnalyticsEvent?.({
+          category: 'chatbot',
+          action: 'auto_opened',
+          label: 'flat_page_timer',
+          properties: {
+            flatId,
+            timeOnPage: TIMER_DELAY / 1000,
+            trigger: 'auto_open_flat_page'
+          }
+        });
+      }, TIMER_DELAY);
+      
+      setAutoOpenTimer(timer);
+    } else {
+      console.log('[RagChatbot] Auto-open skipped because:', {
+        noMatch: !match,
+        chatIsOpen: isOpen,
+        alreadyAutoOpened: hasAutoOpened
+      });
+    }
+    
+    // Cleanup timer on unmount or dependency change
+    return () => {
+      if (autoOpenTimer) {
+        clearTimeout(autoOpenTimer);
+        setAutoOpenTimer(null);
+      }
+    };
+  }, [isOpen, hasAutoOpened, currentContext, onAnalyticsEvent]);
+
+  // Handle auto-open message display
+  useEffect(() => {
+    if (autoOpenMessage && isOpen && !showWelcome && !showNameInput) {
+      const autoMessage: Message = {
+        id: `auto-${Date.now()}`,
+        content: autoOpenMessage,
+        role: 'assistant',
+        timestamp: new Date(),
+      };
+      
+      setMessages(prev => [...prev, autoMessage]);
+      setAutoOpenMessage(null); // Clear after adding
+    }
+  }, [autoOpenMessage, isOpen, showWelcome, showNameInput]);
+
+  // URL change detection to reset auto-open state
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    const handleUrlChange = () => {
+      // Reset auto-open state on URL change
+      setHasAutoOpened(false);
+      setAutoOpenMessage(null);
+      if (autoOpenTimer) {
+        clearTimeout(autoOpenTimer);
+        setAutoOpenTimer(null);
+      }
+    };
+    
+    // Listen for popstate (back/forward navigation)
+    window.addEventListener('popstate', handleUrlChange);
+    
+    return () => {
+      window.removeEventListener('popstate', handleUrlChange);
+    };
+  }, [autoOpenTimer]);
 
   // Handlers
   const handleSendMessage = useCallback(async (content: string) => {
@@ -630,6 +746,14 @@ export function RagChatbot({
     setPreferencesData({ bedrooms: '', budget: '' });
     setInputValue('');
     
+    // Reset auto-open state
+    setHasAutoOpened(false);
+    setAutoOpenMessage(null);
+    if (autoOpenTimer) {
+      clearTimeout(autoOpenTimer);
+      setAutoOpenTimer(null);
+    }
+    
     // Clear localStorage
     if (typeof window !== 'undefined') {
       localStorage.removeItem('rag_chat_state');
@@ -647,7 +771,28 @@ export function RagChatbot({
       action: 'new_chat_started',
       label: 'reset_conversation',
     });
-  }, [onAnalyticsEvent, currentContext]);
+  }, [onAnalyticsEvent, currentContext, autoOpenTimer]);
+
+  const handleManualOpen = useCallback(() => {
+    if (autoOpenTimer) {
+      clearTimeout(autoOpenTimer);
+      setAutoOpenTimer(null);
+    }
+    setIsOpen(true);
+    setHasAutoOpened(true); // Prevent auto-open after manual open
+    
+    // Track manual chat opened
+    ragVisitorTracker.trackChatOpened(
+      typeof window !== 'undefined' ? window.location.href : '/',
+      currentContext
+    );
+  }, [autoOpenTimer, currentContext]);
+
+  const handleManualClose = useCallback(() => {
+    setIsOpen(false);
+    // Reset auto-open state when manually closed
+    setHasAutoOpened(false);
+  }, []);
 
   const handlePreferencesSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
@@ -769,14 +914,7 @@ export function RagChatbot({
       {/* Floating Widget Button */}
       {!isOpen && (
         <Button
-          onClick={() => {
-            setIsOpen(true);
-            // Track chat opened
-            ragVisitorTracker.trackChatOpened(
-              typeof window !== 'undefined' ? window.location.href : '/',
-              currentContext
-            );
-          }}
+          onClick={handleManualOpen}
           className={`fixed ${positionClasses[position]} z-50 h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-all duration-200`}
           style={{
             backgroundColor: theme.primaryColor,
@@ -823,7 +961,7 @@ export function RagChatbot({
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setIsOpen(false)}
+                onClick={handleManualClose}
                 className="h-8 w-8 p-0"
               >
                 <X className="h-4 w-4" />
