@@ -26,7 +26,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { MessageCircle, X, Send, Mic, MicOff, User, Bot, Navigation } from 'lucide-react';
+import { MessageCircle, X, Send, Mic, MicOff, User, Bot, Navigation, RefreshCw } from 'lucide-react';
 
 // Types
 export interface RagChatbotProps {
@@ -629,6 +629,39 @@ export function RagChatbot({
     });
   }, [nameInputValue, onAnalyticsEvent, currentContext]);
 
+  const handleStartNewChat = useCallback(() => {
+    // Clear all chat state
+    setMessages([]);
+    setVisitorName('');
+    setMessageCount(0);
+    setLeadCaptured(false);
+    setShowWelcome(true);
+    setShowNameInput(false);
+    setNameInputValue('');
+    setShowLeadCapture(false);
+    setIsCollectingPreferences(false);
+    setPreferencesData({ bedrooms: '', budget: '' });
+    setInputValue('');
+    
+    // Clear localStorage
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('rag_chat_state');
+    }
+    
+    // Track new chat started
+    ragVisitorTracker.trackConversationStarted(
+      typeof window !== 'undefined' ? window.location.href : '/',
+      currentContext
+    );
+    
+    // Track analytics
+    onAnalyticsEvent?.({
+      category: 'chatbot',
+      action: 'new_chat_started',
+      label: 'reset_conversation',
+    });
+  }, [onAnalyticsEvent, currentContext]);
+
   const handlePreferencesSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
     const { bedrooms, budget } = preferencesData;
@@ -788,14 +821,27 @@ export function RagChatbot({
                 </Badge>
               )}
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsOpen(false)}
-              className="h-8 w-8 p-0"
-            >
-              <X className="h-4 w-4" />
-            </Button>
+            <div className="flex items-center space-x-1">
+              {!showWelcome && !showNameInput && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleStartNewChat}
+                  className="h-8 w-8 p-0"
+                  title="Nova conversa"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                </Button>
+              )}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsOpen(false)}
+                className="h-8 w-8 p-0"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
           </CardHeader>
 
           {/* Messages */}
@@ -974,16 +1020,6 @@ export function RagChatbot({
                           minute: '2-digit',
                         })}
                       </span>
-                      {message.metadata?.ragSources && (
-                        <div className="mt-2 text-xs text-gray-500">
-                          <p className="font-semibold">Sources:</p>
-                          <ul className="list-disc list-inside">
-                            {message.metadata.ragSources.map((source, i) => (
-                              <li key={i}>{source}</li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
                     </div>
                     {message.role === 'user' && (
                       <User className="h-6 w-6 rounded-full flex-shrink-0" />
