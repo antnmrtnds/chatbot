@@ -156,8 +156,7 @@ export default function EvergreenPureLanding() {
             </Button>
             <Button
               size="lg"
-              variant="outline"
-              className="border-white text-white hover:bg-white/10 px-8 py-4"
+              className="border-2 border-white text-white hover:bg-white hover:text-teal-900 px-8 py-4 bg-transparent"
             >
               AGENDAR VISITA
             </Button>
