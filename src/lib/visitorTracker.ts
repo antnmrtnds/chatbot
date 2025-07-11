@@ -36,6 +36,7 @@ class VisitorTracker {
   sessionData: VisitorSession;
   private fingerprintHash: string = '';
   private isInitialized: boolean = false;
+  private uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
   constructor() {
     this.visitorId = '';
@@ -52,9 +53,10 @@ class VisitorTracker {
 
   private async initialize() {
     if (typeof window === 'undefined') {
-      this.visitorId = '00000000-0000-0000-0000-000000000000';
+      this.visitorId = '00000000-0000-0000-0000-000000000000'; // Valid UUID for SSR
       this.fingerprintId = 'ssr-fingerprint';
       this.sessionData.sessionId = 'ssr-session';
+      this.isInitialized = true; // Set to true for SSR as well
       console.log('[VisitorTracker] Not running in browser, using SSR fallback IDs.');
       return;
     }
@@ -63,14 +65,22 @@ class VisitorTracker {
       const fingerprint = await this.generateDeviceFingerprint();
       this.fingerprintHash = await this.hashFingerprint(fingerprint);
       this.fingerprintId = this.fingerprintHash;
+      
       // Get or create visitor ID using multiple methods
-      this.visitorId = await this.getOrCreateVisitorId();
+      const newVisitorId = await this.getOrCreateVisitorId();
+      if (!this.isValidUUID(newVisitorId)) {
+        throw new Error('Generated visitor ID is not a valid UUID.');
+      }
+      this.visitorId = newVisitorId;
+
       // Initialize session
       this.sessionData.sessionId = this.generateSessionId();
       this.sessionData.referrer = document.referrer;
       this.sessionData.utmParams = this.extractUtmParams();
+      
       // Store fingerprint and visitor mapping
       await this.storeVisitorFingerprint();
+      
       this.isInitialized = true;
       console.log('[VisitorTracker] Initialized:', {
         visitorId: this.visitorId,
@@ -79,12 +89,16 @@ class VisitorTracker {
       });
     } catch (error) {
       console.error('[VisitorTracker] Error initializing:', error);
-      // Fallback to basic UUID
-      this.visitorId = this.generateFallbackId();
+      // Fallback to a newly generated UUID if initialization fails
+      this.visitorId = crypto.randomUUID();
       this.fingerprintId = 'fallback-fingerprint';
       this.sessionData.sessionId = 'fallback-session';
-      this.isInitialized = true;
+      this.isInitialized = true; // Ensure it's initialized even on error
     }
+  }
+
+  private isValidUUID(uuid: string): boolean {
+    return this.uuidRegex.test(uuid);
   }
 
   private async generateDeviceFingerprint(): Promise<DeviceFingerprint> {
@@ -316,8 +330,9 @@ class VisitorTracker {
     return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   }
 
+  // Ensure fallback ID is also a valid UUID
   private generateFallbackId(): string {
-    return `fallback-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    return crypto.randomUUID();
   }
 
   private extractUtmParams(): Record<string, string> {
@@ -374,7 +389,11 @@ class VisitorTracker {
   }
 
   async sendToSupabase(eventType: string, data: any) {
-    if (!this.isInitialized) return;
+    // Ensure tracker is initialized and visitorId is a valid UUID before sending to Supabase
+    if (!this.isInitialized || !this.isValidUUID(this.visitorId)) {
+      console.warn(`[VisitorTracker] Skipping Supabase send: Not initialized or invalid visitorId (${this.visitorId})`);
+      return;
+    }
 
     try {
       if (eventType === 'page_view') {
@@ -391,11 +410,26 @@ class VisitorTracker {
 
         if (error) {
           console.error('[VisitorTracker] Error sending page view to Supabase:', error);
+          console.error('[VisitorTracker] Page view data that failed:', {
+            p_visitor_id: this.visitorId,
+            p_page_url: url,
+            p_flat_id: flatId,
+            p_fingerprint_id: this.fingerprintHash,
+            p_session_id: this.sessionData.sessionId,
+            p_referrer: this.sessionData.referrer,
+            p_utm_params: this.sessionData.utmParams,
+          });
         } else {
           console.log('[VisitorTracker] Successfully sent page view for', url);
         }
       } else if (eventType === 'interaction') {
         const { type, details } = data;
+        console.log('[VisitorTracker] Sending interaction to Supabase:', {
+          p_visitor_id: this.visitorId,
+          p_interaction_type: type,
+          p_details: details,
+          p_session_id: this.sessionData.sessionId,
+        });
         const { error } = await supabase.rpc('track_interaction', {
           p_visitor_id: this.visitorId,
           p_interaction_type: type,
