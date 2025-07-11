@@ -1,12 +1,12 @@
 'use client';
 
-import React from 'react';
+import React, { Suspense } from 'react';
 import RagChatbot from '@/components/RagChatbot';
 import { usePageContext } from '@/lib/pageContextManager';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
-export default function RagDemoPage() {
+function RagDemoContent() {
   const { context, updateContext } = usePageContext();
 
   // Simulate different page contexts for testing
@@ -216,5 +216,20 @@ export default function RagDemoPage() {
         />
       </div>
     </div>
+  );
+}
+
+export default function RagDemoPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 p-8 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading RAG Demo...</p>
+        </div>
+      </div>
+    }>
+      <RagDemoContent />
+    </Suspense>
   );
 }
