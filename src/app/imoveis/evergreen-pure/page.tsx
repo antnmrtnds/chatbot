@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Bath, Bed, Car, MapPin, Building2, ArrowRight, Filter } from "lucide-react";
 import { usePageContext } from '@/lib/pageContextManager';
+import { RagChatbot } from '@/components/RagChatbot';
 
 interface FlatData {
   id: string;
@@ -322,6 +323,8 @@ function EvergreenPureContent() {
           </p>
         </div>
       </div>
+      
+      <RagChatbot position="bottom-right" />
     </div>
   );
 }

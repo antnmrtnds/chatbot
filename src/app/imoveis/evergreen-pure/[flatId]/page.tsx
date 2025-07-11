@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Bath, Bed, Car, MapPin, Building2, Heart, Share2, Calendar, Info } from "lucide-react";
 import Link from "next/link";
-import SimpleApartmentChatbot from '@/components/SimpleApartmentChatbot';
+import { RagChatbot } from '@/components/RagChatbot';
 import { Suspense } from 'react';
 
 interface PageProps {
@@ -248,7 +248,7 @@ function FlatPageContent({ flatId }: { flatId: string }) {
         </div>
       </div>
       
-      <SimpleApartmentChatbot position="bottom-right" />
+      <RagChatbot position="bottom-right" />
     </div>
   );
 }

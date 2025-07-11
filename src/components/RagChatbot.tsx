@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import visitorTracker from '@/lib/visitorTracker';
 
 // Web Speech API types
 declare global {
@@ -430,11 +429,7 @@ export function RagChatbot({
         setIsOpen(true);
         setHasAutoOpened(true);
         
-        // Track auto-open event
-        visitorTracker.trackChatOpened(
-          window.location.href,
-          currentContext
-        );
+        // Track auto-open event (removed visitor tracking)
         
         onAnalyticsEvent?.({
           category: 'chatbot',
@@ -519,12 +514,7 @@ export function RagChatbot({
     setIsLoading(true);
     setMessageCount(prev => prev + 1);
 
-    // Track message sent with new RAG visitor tracker
-    visitorTracker.trackMessageSent(
-      content.trim(),
-      typeof window !== 'undefined' ? window.location.href : '/',
-      currentContext
-    );
+    // Track message sent (removed visitor tracking)
 
     // Track analytics
     onAnalyticsEvent?.({
@@ -548,8 +538,8 @@ export function RagChatbot({
         body: JSON.stringify({
           message: content,
           context: currentContext,
-          visitorId: visitorTracker.getVisitorId() || visitorId,
-          sessionId: visitorTracker.getSessionId() || sessionId,
+          visitorId: visitorId,
+          sessionId: sessionId,
           conversationHistory: messages.slice(-5), // Last 5 messages for context
           ragEnabled: features.ragEnabled,
         }),
@@ -648,12 +638,7 @@ export function RagChatbot({
       consentTimestamp: new Date().toISOString(),
     };
 
-    // Track lead captured with new RAG visitor tracker
-    visitorTracker.trackLeadCaptured(
-      fullLeadData,
-      typeof window !== 'undefined' ? window.location.href : '/',
-      currentContext
-    );
+    // Track lead captured (removed visitor tracking)
 
     onLeadCapture?.(fullLeadData);
     setLeadCaptured(true);
@@ -699,11 +684,7 @@ export function RagChatbot({
     setShowWelcome(false);
     setShowNameInput(true);
     
-    // Track with new RAG visitor tracker
-    visitorTracker.trackConversationStarted(
-      typeof window !== 'undefined' ? window.location.href : '/',
-      currentContext
-    );
+    // Track conversation started (removed visitor tracking)
     
     // Track analytics
     onAnalyticsEvent?.({
@@ -720,12 +701,7 @@ export function RagChatbot({
     setShowNameInput(false);
     setNameInputValue('');
     
-    // Track name provided with new RAG visitor tracker
-    visitorTracker.trackNameProvided(
-      nameInputValue.trim(),
-      typeof window !== 'undefined' ? window.location.href : '/',
-      currentContext
-    );
+    // Track name provided (removed visitor tracking)
     
     // Add welcome message with name
     const welcomeMessage: Message = {
@@ -775,11 +751,7 @@ export function RagChatbot({
       localStorage.removeItem('rag_chat_state');
     }
     
-    // Track new chat started
-    visitorTracker.trackConversationStarted(
-      typeof window !== 'undefined' ? window.location.href : '/',
-      currentContext
-    );
+    // Track new chat started (removed visitor tracking)
     
     // Track analytics
     onAnalyticsEvent?.({
@@ -797,11 +769,7 @@ export function RagChatbot({
     setIsOpen(true);
     setHasAutoOpened(true); // Prevent auto-open after manual open
     
-    // Track manual chat opened
-    visitorTracker.trackChatOpened(
-      typeof window !== 'undefined' ? window.location.href : '/',
-      currentContext
-    );
+    // Track manual chat opened (removed visitor tracking)
   }, [autoOpenTimer, currentContext]);
 
   const handleManualClose = useCallback(() => {
@@ -880,12 +848,7 @@ export function RagChatbot({
     };
     setMessages(prev => [...prev, confirmationMessage]);
 
-    // Track preferences collected as a message sent event
-    visitorTracker.trackMessageSent(
-      `Preferences collected: ${bedrooms} apartment with budget ${budgetText}`,
-      typeof window !== 'undefined' ? window.location.href : '/',
-      currentContext
-    );
+    // Track preferences collected (removed visitor tracking)
 
     setTimeout(() => {
       if (typeof window !== 'undefined') {
