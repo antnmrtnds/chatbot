@@ -27,7 +27,12 @@ interface FlatData {
 function EvergreenPureContent() {
   const searchParams = useSearchParams();
   const [filteredFlats, setFilteredFlats] = useState<FlatData[]>([]);
-  const [activeFilters, setActiveFilters] = useState<{budget?: string, typology?: string}>({});
+  const [activeFilters, setActiveFilters] = useState<{
+    maxPrice?: string,
+    bedrooms?: string,
+    budget?: string,
+    typology?: string
+  }>({});
 
   // Sample flat data - in a real app, this would come from your database
   const flats: FlatData[] = [
@@ -43,24 +48,59 @@ function EvergreenPureContent() {
   ];
 
   useEffect(() => {
+    const maxPrice = searchParams.get('maxPrice');
+    const bedrooms = searchParams.get('bedrooms');
     const budget = searchParams.get('budget');
     const typology = searchParams.get('typology');
     
-    setActiveFilters({ budget: budget || undefined, typology: typology || undefined });
+    setActiveFilters({
+      maxPrice: maxPrice || undefined,
+      bedrooms: bedrooms || undefined,
+      budget: budget || undefined,
+      typology: typology || undefined
+    });
     
     let filtered = [...flats];
     
-    // Apply budget filter
+    // Apply budget filter (legacy maxPrice format)
+    if (maxPrice) {
+      filtered = filtered.filter(flat => flat.priceValue <= parseInt(maxPrice));
+    }
+    
+    // Apply budget filter (new budget format from chatbot)
     if (budget) {
-      if (budget === 'under_300k') {
-        filtered = filtered.filter(flat => flat.priceValue < 300000);
-      } else if (budget === 'under_400k') {
-        filtered = filtered.filter(flat => flat.priceValue < 400000);
+      switch (budget) {
+        case 'under_200k':
+          filtered = filtered.filter(flat => flat.priceValue <= 200000);
+          break;
+        case '200k_300k':
+          filtered = filtered.filter(flat => flat.priceValue > 200000 && flat.priceValue <= 300000);
+          break;
+        case '300k_400k':
+          filtered = filtered.filter(flat => flat.priceValue > 300000 && flat.priceValue <= 400000);
+          break;
+        case 'over_400k':
+          filtered = filtered.filter(flat => flat.priceValue > 400000);
+          break;
+        case 'flexible_budget':
+        case 'need_advice':
+          // Don't filter for flexible budget or need advice
+          break;
       }
     }
     
-    // Apply typology filter
-    if (typology && typology !== 'all') {
+    // Apply typology filter (legacy bedrooms format)
+    if (bedrooms) {
+      if (bedrooms.includes('+')) {
+        const minBedrooms = parseInt(bedrooms.replace('+', ''));
+        filtered = filtered.filter(flat => parseInt(flat.typology.replace('T', '')) >= minBedrooms);
+      } else {
+        filtered = filtered.filter(flat => flat.typology === `T${bedrooms}`);
+      }
+    }
+    
+    // Apply typology filter (new typology format from chatbot)
+    if (typology) {
       if (typology === 'Duplex') {
         filtered = filtered.filter(flat => flat.typology === 'Duplex');
       } else {
@@ -79,16 +119,50 @@ function EvergreenPureContent() {
 
   const getFilterText = () => {
     const filters = [];
+    
+    // Handle legacy maxPrice format
+    if (activeFilters.maxPrice) {
+      filters.push(`Até €${parseInt(activeFilters.maxPrice).toLocaleString('pt-PT')}`);
+    }
+    
+    // Handle new budget format from chatbot
     if (activeFilters.budget) {
-      if (activeFilters.budget === 'under_300k') {
-        filters.push('Até 300.000€');
-      } else if (activeFilters.budget === 'under_400k') {
-        filters.push('Até 400.000€');
+      switch (activeFilters.budget) {
+        case 'under_200k':
+          filters.push('Até €200.000');
+          break;
+        case '200k_300k':
+          filters.push('€200.000 - €300.000');
+          break;
+        case '300k_400k':
+          filters.push('€300.000 - €400.000');
+          break;
+        case 'over_400k':
+          filters.push('Acima de €400.000');
+          break;
+        case 'flexible_budget':
+          filters.push('Orçamento flexível');
+          break;
+        case 'need_advice':
+          filters.push('Preciso de aconselhamento');
+          break;
       }
     }
-    if (activeFilters.typology && activeFilters.typology !== 'all') {
+    
+    // Handle legacy bedrooms format
+    if (activeFilters.bedrooms) {
+      if (activeFilters.bedrooms.includes('+')) {
+        filters.push(`T${activeFilters.bedrooms.replace('+', '')} ou mais`);
+      } else {
+        filters.push(`T${activeFilters.bedrooms}`);
+      }
+    }
+    
+    // Handle new typology format from chatbot
+    if (activeFilters.typology) {
       filters.push(activeFilters.typology);
     }
+    
     return filters.join(' • ');
   };
 
@@ -125,7 +199,7 @@ function EvergreenPureContent() {
         </div>
 
         {/* Active Filters */}
-        {(activeFilters.budget || activeFilters.typology) && (
+        {(activeFilters.maxPrice || activeFilters.bedrooms || activeFilters.budget || activeFilters.typology) && (
           <div className="mb-6 flex items-center justify-center gap-4">
             <div className="flex items-center gap-2 bg-blue-50 px-4 py-2 rounded-full">
               <Filter size={16} className="text-blue-600" />

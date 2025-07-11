@@ -237,6 +237,13 @@ export function RagChatbot({
   const [visitorName, setVisitorName] = useState('');
   const [nameInputValue, setNameInputValue] = useState('');
 
+  // State for preferences collection
+  const [isCollectingPreferences, setIsCollectingPreferences] = useState(false);
+  const [preferencesData, setPreferencesData] = useState({
+    bedrooms: '',
+    budget: '',
+  });
+
   // Refs
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -622,8 +629,112 @@ export function RagChatbot({
     });
   }, [nameInputValue, onAnalyticsEvent, currentContext]);
 
+  const handlePreferencesSubmit = useCallback((e: React.FormEvent) => {
+    e.preventDefault();
+    const { bedrooms, budget } = preferencesData;
+    if (!bedrooms || !budget) return;
+
+    // Helper function to convert budget selection to database key
+    const getBudgetRangeKey = (budget: string): string => {
+      switch (budget) {
+        case '200000':
+          return 'under_200k';
+        case '300000':
+          return '200k_300k';
+        case '400000':
+          return '300k_400k';
+        case '500000':
+          return 'over_400k';
+        case 'flexible':
+          return 'flexible_budget';
+        case 'need_advice':
+          return 'need_advice';
+        default:
+          return 'no_budget';
+      }
+    };
+
+    const baseUrl = '/imoveis/evergreen-pure';
+    const params = new URLSearchParams();
+    
+    // Add budget filter
+    const budgetParam = getBudgetRangeKey(budget);
+    params.append('budget', budgetParam);
+    
+    // Add typology filter
+    params.append('typology', bedrooms);
+
+    const redirectUrl = `${baseUrl}?${params.toString()}`;
+
+    // Create confirmation message based on budget type
+    let budgetText = '';
+    switch (budget) {
+      case '200000':
+        budgetText = 'até €200.000';
+        break;
+      case '300000':
+        budgetText = 'entre €200.000 - €300.000';
+        break;
+      case '400000':
+        budgetText = 'entre €300.000 - €400.000';
+        break;
+      case '500000':
+        budgetText = 'acima de €400.000';
+        break;
+      case 'flexible':
+        budgetText = 'com orçamento flexível';
+        break;
+      case 'need_advice':
+        budgetText = 'para aconselhamento sobre orçamento';
+        break;
+      default:
+        budgetText = 'dentro do seu orçamento';
+    }
+
+    const confirmationMessage: Message = {
+      id: Date.now().toString(),
+      content: `Perfeito! A guardar as suas preferências e a redirecioná-lo para apartamentos ${bedrooms} ${budgetText}...`,
+      role: 'assistant',
+      timestamp: new Date(),
+    };
+    setMessages(prev => [...prev, confirmationMessage]);
+
+    // Track preferences collected as a message sent event
+    ragVisitorTracker.trackMessageSent(
+      `Preferences collected: ${bedrooms} apartment with budget ${budgetText}`,
+      typeof window !== 'undefined' ? window.location.href : '/',
+      currentContext
+    );
+
+    setTimeout(() => {
+      if (typeof window !== 'undefined') {
+        window.location.href = redirectUrl;
+      }
+    }, 2000);
+
+    setIsCollectingPreferences(false);
+    setPreferencesData({ bedrooms: '', budget: '' });
+  }, [preferencesData, currentContext]);
+
   const handleSuggestionClick = useCallback((suggestion: string) => {
-    handleSendMessage(suggestion);
+    if (suggestion === "Unidades disponíveis") {
+      const userMessage: Message = {
+        id: Date.now().toString(),
+        content: suggestion,
+        role: 'user',
+        timestamp: new Date(),
+      };
+      const botMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        content: 'Perfeito! Para lhe mostrar os apartamentos mais adequados, preciso de saber algumas preferências.\n\nQual é o seu orçamento aproximado?',
+        role: 'assistant',
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, userMessage, botMessage]);
+      setIsCollectingPreferences(true);
+    } else {
+      handleSendMessage(suggestion);
+    }
   }, [handleSendMessage]);
 
   const positionClasses = {
@@ -906,6 +1017,129 @@ export function RagChatbot({
                 <div ref={messagesEndRef} />
               </>
             )}
+
+            {isCollectingPreferences && (
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <form onSubmit={handlePreferencesSubmit} className="space-y-4">
+                  <div>
+                    <label htmlFor="budget" className="block text-sm font-medium text-gray-700 mb-2">
+                      Orçamento aproximado
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        className={`p-2 text-sm rounded border ${
+                          preferencesData.budget === '200000'
+                            ? 'bg-blue-500 text-white border-blue-500'
+                            : 'bg-white border-gray-300 hover:bg-gray-50'
+                        }`}
+                        onClick={() => setPreferencesData(prev => ({ ...prev, budget: '200000' }))}
+                      >
+                        💰 100k - 200k€
+                      </button>
+                      <button
+                        type="button"
+                        className={`p-2 text-sm rounded border ${
+                          preferencesData.budget === '300000'
+                            ? 'bg-blue-500 text-white border-blue-500'
+                            : 'bg-white border-gray-300 hover:bg-gray-50'
+                        }`}
+                        onClick={() => setPreferencesData(prev => ({ ...prev, budget: '300000' }))}
+                      >
+                        💰 200k - 300k€
+                      </button>
+                      <button
+                        type="button"
+                        className={`p-2 text-sm rounded border ${
+                          preferencesData.budget === '400000'
+                            ? 'bg-blue-500 text-white border-blue-500'
+                            : 'bg-white border-gray-300 hover:bg-gray-50'
+                        }`}
+                        onClick={() => setPreferencesData(prev => ({ ...prev, budget: '400000' }))}
+                      >
+                        💰 300k - 400k€
+                      </button>
+                      <button
+                        type="button"
+                        className={`p-2 text-sm rounded border ${
+                          preferencesData.budget === '500000'
+                            ? 'bg-blue-500 text-white border-blue-500'
+                            : 'bg-white border-gray-300 hover:bg-gray-50'
+                        }`}
+                        onClick={() => setPreferencesData(prev => ({ ...prev, budget: '500000' }))}
+                      >
+                        💰 Acima de 400k€
+                      </button>
+                      <button
+                        type="button"
+                        className={`p-2 text-sm rounded border ${
+                          preferencesData.budget === 'flexible'
+                            ? 'bg-blue-500 text-white border-blue-500'
+                            : 'bg-white border-gray-300 hover:bg-gray-50'
+                        }`}
+                        onClick={() => setPreferencesData(prev => ({ ...prev, budget: 'flexible' }))}
+                      >
+                        🤔 Orçamento flexível
+                      </button>
+                      <button
+                        type="button"
+                        className={`p-2 text-sm rounded border ${
+                          preferencesData.budget === 'need_advice'
+                            ? 'bg-blue-500 text-white border-blue-500'
+                            : 'bg-white border-gray-300 hover:bg-gray-50'
+                        }`}
+                        onClick={() => setPreferencesData(prev => ({ ...prev, budget: 'need_advice' }))}
+                      >
+                        💡 Preciso de ajuda
+                      </button>
+                    </div>
+                  </div>
+                  {preferencesData.budget && (
+                    <div>
+                      <label htmlFor="bedrooms" className="block text-sm font-medium text-gray-700 mb-2">
+                        Que tipologia procura?
+                      </label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {['T0', 'T1', 'T2', 'T3', 'T4', 'Duplex'].map((typology) => (
+                          <button
+                            key={typology}
+                            type="button"
+                            className={`p-2 text-sm rounded border ${
+                              preferencesData.bedrooms === typology
+                                ? 'bg-blue-500 text-white border-blue-500'
+                                : 'bg-white border-gray-300 hover:bg-gray-50'
+                            }`}
+                            onClick={() => setPreferencesData(prev => ({ ...prev, bedrooms: typology }))}
+                          >
+                            🏠 {typology}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  <div className="flex justify-end space-x-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setIsCollectingPreferences(false);
+                        setPreferencesData({ bedrooms: '', budget: '' });
+                      }}
+                    >
+                      Cancelar
+                    </Button>
+                    <Button
+                      type="submit"
+                      style={{ backgroundColor: theme.primaryColor }}
+                      disabled={!preferencesData.budget || !preferencesData.bedrooms}
+                    >
+                      Ver Unidades
+                    </Button>
+                  </div>
+                </form>
+              </div>
+            )}
+            
             <div ref={messagesEndRef} />
           </CardContent>
 
