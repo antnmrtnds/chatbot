@@ -2,14 +2,10 @@ import type { Metadata } from "next";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import "./globals.css";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
-import AppTracker from "@/components/AppTracker";
-import { Suspense } from "react";
 
 export const metadata: Metadata = {
-  title: "Viriato - Imobiliária em Aveiro",
-  description: "Encontre o seu imóvel ideal em Aveiro com a Viriato. Apartamentos, moradias e escritórios para venda e arrendamento.",
+  title: "Evergreen Pure - Apartamentos em Aveiro",
+  description: "Evergreen Pure - 16 apartamentos modernos em Santa Joana, Aveiro. Tipologias T1, T2, T3 com arquitetura contemporânea.",
 };
 
 export default function RootLayout({
@@ -20,16 +16,9 @@ export default function RootLayout({
   return (
     <html lang="pt">
       <body
-        className={`${GeistSans.variable} ${GeistMono.variable} antialiased min-h-screen flex flex-col`}
+        className={`${GeistSans.variable} ${GeistMono.variable} antialiased`}
       >
-        <Header />
-        <main className="flex-1">
-          {children}
-        </main>
-        <Footer />
-        <Suspense fallback={null}>
-          <AppTracker />
-        </Suspense>
+        {children}
       </body>
     </html>
   );
