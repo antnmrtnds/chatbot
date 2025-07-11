@@ -31,10 +31,7 @@ import { MessageCircle, X, Send, Mic, MicOff, User, Bot, Navigation, RefreshCw }
 export interface RagChatbotProps {
   config?: ChatbotConfig;
   pageContext?: PageContext;
-  visitorId?: string;
-  sessionId?: string;
   onNavigate?: (url: string, context?: NavigationContext) => void;
-  onLeadCapture?: (leadData: LeadCaptureData) => void;
   onContextUpdate?: (context: PageContext) => void;
   onAnalyticsEvent?: (event: AnalyticsEvent) => void;
   theme?: ChatbotTheme;
@@ -44,14 +41,12 @@ export interface RagChatbotProps {
     voiceOutput?: boolean;
     mediaRendering?: boolean;
     navigationCommands?: boolean;
-    progressiveLeadCapture?: boolean;
     contextAwareness?: boolean;
     ragEnabled?: boolean;
   };
 }
 
 export interface ChatbotConfig {
-  leadCaptureThreshold: number;
   maxMessagesPerSession: number;
   sessionTimeoutMinutes: number;
   ragConfig: {
@@ -60,9 +55,6 @@ export interface ChatbotConfig {
     maxRetrievedDocs: number;
     hybridSearch: boolean;
   };
-  gdprCompliant: boolean;
-  cookieConsent: boolean;
-  dataRetentionDays: number;
   debounceMs: number;
   maxConcurrentRequests: number;
   cacheResponses: boolean;
@@ -98,20 +90,6 @@ export interface Message {
   };
 }
 
-export interface LeadCaptureData {
-  name?: string;
-  email?: string;
-  phone?: string;
-  budget?: string;
-  propertyType?: string;
-  timeline?: string;
-  captureReason: 'threshold' | 'explicit' | 'high_intent' | 'navigation';
-  conversationContext: string[];
-  pageContext: PageContext;
-  gdprConsent: boolean;
-  marketingConsent: boolean;
-  consentTimestamp: string;
-}
 
 export interface NavigationContext {
   command: string;
@@ -151,7 +129,6 @@ export interface ChatbotTheme {
 
 // Default configuration
 const defaultConfig: ChatbotConfig = {
-  leadCaptureThreshold: 4,
   maxMessagesPerSession: 50,
   sessionTimeoutMinutes: 30,
   ragConfig: {
@@ -160,9 +137,6 @@ const defaultConfig: ChatbotConfig = {
     maxRetrievedDocs: 5,
     hybridSearch: true,
   },
-  gdprCompliant: true,
-  cookieConsent: true,
-  dataRetentionDays: 365,
   debounceMs: 300,
   maxConcurrentRequests: 3,
   cacheResponses: true,
@@ -192,10 +166,7 @@ const defaultTheme: ChatbotTheme = {
 export function RagChatbot({
   config = defaultConfig,
   pageContext,
-  visitorId,
-  sessionId,
   onNavigate,
-  onLeadCapture,
   onContextUpdate,
   onAnalyticsEvent,
   theme = defaultTheme,
@@ -205,7 +176,6 @@ export function RagChatbot({
     voiceOutput: false,
     mediaRendering: true,
     navigationCommands: true,
-    progressiveLeadCapture: true,
     contextAwareness: true,
     ragEnabled: true,
   },
@@ -219,26 +189,9 @@ export function RagChatbot({
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
-  const [showLeadCapture, setShowLeadCapture] = useState(false);
-  const [leadFormData, setLeadFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    budget: '',
-    propertyType: '',
-    timeline: '',
-    marketingConsent: false,
-  });
   const [messageCount, setMessageCount] = useState(0);
-  const [leadCaptured, setLeadCaptured] = useState(false);
   const [currentContext, setCurrentContext] = useState<PageContext | null>(pageContext || null);
   
-  // New visitor onboarding states
-  const [showWelcome, setShowWelcome] = useState(true);
-  const [showNameInput, setShowNameInput] = useState(false);
-  const [visitorName, setVisitorName] = useState('');
-  const [nameInputValue, setNameInputValue] = useState('');
-
   // State for preferences collection
   const [isCollectingPreferences, setIsCollectingPreferences] = useState(false);
   const [preferencesData, setPreferencesData] = useState({
@@ -286,20 +239,13 @@ export function RagChatbot({
           }));
           
           // Only restore if we have meaningful state to restore
-          if (parsedState.visitorName || restoredMessages.length > 0) {
+          if (restoredMessages.length > 0) {
             setMessages(restoredMessages);
-            setVisitorName(parsedState.visitorName || '');
             setMessageCount(parsedState.messageCount || 0);
-            setLeadCaptured(parsedState.leadCaptured || false);
-            setShowWelcome(parsedState.showWelcome !== undefined ? parsedState.showWelcome : true);
-            setShowNameInput(parsedState.showNameInput !== undefined ? parsedState.showNameInput : false);
             setHasAutoOpened(parsedState.hasAutoOpened || false);
             
             console.log('[RagChatbot] Restored chat state from localStorage:', {
-              visitorName: parsedState.visitorName,
               messagesCount: restoredMessages.length,
-              showWelcome: parsedState.showWelcome,
-              showNameInput: parsedState.showNameInput
             });
           } else {
             console.log('[RagChatbot] No meaningful state to restore, using defaults');
@@ -324,11 +270,7 @@ export function RagChatbot({
 
     const chatState = {
       messages,
-      visitorName,
       messageCount,
-      leadCaptured,
-      showWelcome,
-      showNameInput,
       hasAutoOpened,
       lastActivity: new Date().toISOString(),
     };
@@ -338,7 +280,7 @@ export function RagChatbot({
     } catch (error) {
       console.error('[RagChatbot] Error saving chat state:', error);
     }
-  }, [messages, visitorName, messageCount, leadCaptured, showWelcome, showNameInput, hasAutoOpened]);
+  }, [messages, messageCount, hasAutoOpened]);
 
   useEffect(() => {
     if (pageContext) {
@@ -463,7 +405,7 @@ export function RagChatbot({
 
   // Handle auto-open message display
   useEffect(() => {
-    if (autoOpenMessage && isOpen && !showWelcome && !showNameInput) {
+    if (autoOpenMessage && isOpen) {
       const autoMessage: Message = {
         id: `auto-${Date.now()}`,
         content: autoOpenMessage,
@@ -474,7 +416,7 @@ export function RagChatbot({
       setMessages(prev => [...prev, autoMessage]);
       setAutoOpenMessage(null); // Clear after adding
     }
-  }, [autoOpenMessage, isOpen, showWelcome, showNameInput]);
+  }, [autoOpenMessage, isOpen]);
 
   // URL change detection to reset auto-open state
   useEffect(() => {
@@ -538,8 +480,6 @@ export function RagChatbot({
         body: JSON.stringify({
           message: content,
           context: currentContext,
-          visitorId: visitorId,
-          sessionId: sessionId,
           conversationHistory: messages.slice(-5), // Last 5 messages for context
           ragEnabled: features.ragEnabled,
         }),
@@ -590,8 +530,6 @@ export function RagChatbot({
         }
       }
 
-      // Lead capture functionality disabled
-
     } catch (error) {
       console.error('Error sending message:', error);
       
@@ -610,12 +548,8 @@ export function RagChatbot({
     isLoading,
     messageCount,
     currentContext,
-    visitorId,
-    sessionId,
     messages,
     features,
-    config.leadCaptureThreshold,
-    leadCaptured,
     onAnalyticsEvent,
     onNavigate,
   ]);
@@ -627,113 +561,11 @@ export function RagChatbot({
     recognitionRef.current.start();
   }, [isListening]);
 
-  const handleLeadCapture = useCallback((leadData: Partial<LeadCaptureData>) => {
-    const fullLeadData: LeadCaptureData = {
-      ...leadData,
-      captureReason: 'threshold',
-      conversationContext: messages.map(m => m.content),
-      pageContext: currentContext!,
-      gdprConsent: true,
-      marketingConsent: leadData.marketingConsent || false,
-      consentTimestamp: new Date().toISOString(),
-    };
-
-    // Track lead captured (removed visitor tracking)
-
-    onLeadCapture?.(fullLeadData);
-    setLeadCaptured(true);
-    setShowLeadCapture(false);
-    setLeadFormData({
-      name: '',
-      email: '',
-      phone: '',
-      budget: '',
-      propertyType: '',
-      timeline: '',
-      marketingConsent: false,
-    });
-
-    // Add confirmation message
-    const confirmationMessage: Message = {
-      id: Date.now().toString(),
-      content: `Obrigado ${leadData.name}! Recebemos as suas informações e entraremos em contacto em breve. Como posso continuar a ajudá-lo?`,
-      role: 'assistant',
-      timestamp: new Date(),
-    };
-    setMessages(prev => [...prev, confirmationMessage]);
-
-    // Track analytics
-    onAnalyticsEvent?.({
-      category: 'chatbot',
-      action: 'lead_captured',
-      label: fullLeadData.captureReason,
-      properties: {
-        messageCount,
-        pageContext: currentContext,
-      },
-    });
-  }, [messages, currentContext, messageCount, onLeadCapture, onAnalyticsEvent]);
-
-  const handleLeadFormSubmit = useCallback((e: React.FormEvent) => {
-    e.preventDefault();
-    handleLeadCapture(leadFormData);
-  }, [leadFormData, handleLeadCapture]);
-
-  // New visitor onboarding handlers
-  const handleStartConversation = useCallback(() => {
-    setShowWelcome(false);
-    setShowNameInput(true);
-    
-    // Track conversation started (removed visitor tracking)
-    
-    // Track analytics
-    onAnalyticsEvent?.({
-      category: 'chatbot',
-      action: 'start_conversation',
-      label: 'welcome_flow',
-    });
-  }, [onAnalyticsEvent, currentContext]);
-
-  const handleNameSubmit = useCallback(() => {
-    if (!nameInputValue.trim()) return;
-    
-    setVisitorName(nameInputValue.trim());
-    setShowNameInput(false);
-    setNameInputValue('');
-    
-    // Track name provided (removed visitor tracking)
-    
-    // Add welcome message with name
-    const welcomeMessage: Message = {
-      id: Date.now().toString(),
-      content: `Olá ${nameInputValue.trim()}! 👋 Bem-vindo à Viriato. Como posso ajudá-lo hoje?`,
-      role: 'assistant',
-      timestamp: new Date(),
-    };
-    
-    setMessages([welcomeMessage]);
-    
-    // Track analytics
-    onAnalyticsEvent?.({
-      category: 'chatbot',
-      action: 'name_provided',
-      label: 'onboarding_complete',
-      properties: {
-        hasName: true,
-      },
-    });
-  }, [nameInputValue, onAnalyticsEvent, currentContext]);
 
   const handleStartNewChat = useCallback(() => {
     // Clear all chat state
     setMessages([]);
-    setVisitorName('');
     setMessageCount(0);
-    setLeadCaptured(false);
-    setShowWelcome(true);
-    setShowNameInput(false);
-    setNameInputValue('');
-    setShowLeadCapture(false);
     setIsCollectingPreferences(false);
     setPreferencesData({ bedrooms: '', budget: '' });
     setInputValue('');
@@ -926,17 +758,15 @@ export function RagChatbot({
               )}
             </div>
             <div className="flex items-center space-x-1">
-              {!showWelcome && !showNameInput && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleStartNewChat}
-                  className="h-8 w-8 p-0"
-                  title="Nova conversa"
-                >
-                  <RefreshCw className="h-4 w-4" />
-                </Button>
-              )}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleStartNewChat}
+                className="h-8 w-8 p-0"
+                title="Nova conversa"
+              >
+                <RefreshCw className="h-4 w-4" />
+              </Button>
               <Button
                 variant="ghost"
                 size="sm"
@@ -950,57 +780,8 @@ export function RagChatbot({
 
           {/* Messages */}
           <CardContent className="flex-1 overflow-y-auto p-4 space-y-4">
-            {/* Welcome Screen */}
-            {showWelcome && (
-              <div className="text-center mt-8">
-                <Bot className="h-12 w-12 mx-auto mb-4" style={{ color: theme.primaryColor }} />
-                <h3 className="text-lg font-semibold mb-2">Assistente Viriato</h3>
-                <p className="text-gray-600 mb-6">We typically reply in a few minutes</p>
-                <Button
-                  onClick={handleStartConversation}
-                  className="w-full flex items-center justify-center gap-2"
-                  style={{ backgroundColor: theme.primaryColor }}
-                >
-                  Iniciar Conversa
-                  <Send className="h-4 w-4" />
-                </Button>
-              </div>
-            )}
-
-            {/* Name Input Screen */}
-            {showNameInput && (
-              <div className="mt-8">
-                <Bot className="h-8 w-8 mx-auto mb-4" style={{ color: theme.primaryColor }} />
-                <h3 className="text-lg font-semibold mb-4 text-center">Como posso chamá-lo?</h3>
-                <div className="space-y-4">
-                  <Input
-                    value={nameInputValue}
-                    onChange={(e) => setNameInputValue(e.target.value)}
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        handleNameSubmit();
-                      }
-                    }}
-                    placeholder="* Nome"
-                    className="w-full"
-                  />
-                  <Button
-                    onClick={handleNameSubmit}
-                    disabled={!nameInputValue.trim()}
-                    className="w-full flex items-center justify-center gap-2"
-                    style={{ backgroundColor: theme.primaryColor }}
-                  >
-                    <Send className="h-4 w-4" />
-                    Iniciar Conversa
-                  </Button>
-                </div>
-              </div>
-            )}
-
-
             {/* Chat Messages */}
-            {!showWelcome && !showNameInput && (
+            {messages.length > 0 ? (
               <>
                 {messages.map(message => (
                   <div
@@ -1046,7 +827,7 @@ export function RagChatbot({
                   </div>
                 ))}
                 
-                {/* Show suggestions after welcome message */}
+                {/* Show suggestions after first message */}
                 {messages.length === 1 && (
                   <div className="space-y-3 mt-4">
                     <div className="grid grid-cols-1 gap-2">
@@ -1071,6 +852,12 @@ export function RagChatbot({
                 )}
                 <div ref={messagesEndRef} />
               </>
+            ) : (
+              <div className="text-center mt-8">
+                <Bot className="h-12 w-12 mx-auto mb-4" style={{ color: theme.primaryColor }} />
+                <h3 className="text-lg font-semibold mb-2">Assistente Viriato</h3>
+                <p className="text-gray-600 mb-6">Como posso ajudá-lo hoje?</p>
+              </div>
             )}
 
             {isCollectingPreferences && (
@@ -1199,8 +986,7 @@ export function RagChatbot({
           </CardContent>
 
           {/* Input Area */}
-          {!showWelcome && !showNameInput && (
-            <div className="p-4 border-t">
+          <div className="p-4 border-t">
               <div className="flex space-x-2">
                 <Input
                   ref={inputRef}
@@ -1238,8 +1024,7 @@ export function RagChatbot({
                   <Send className="h-4 w-4" />
                 </Button>
               </div>
-            </div>
-          )}
+          </div>
         </Card>
       )}
 
