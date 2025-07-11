@@ -249,6 +249,81 @@ export function RagChatbot({
     }
   }, [messages]);
 
+  // Load persisted chat state on component mount
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    try {
+      // Load persisted chat state
+      const savedState = localStorage.getItem('rag_chat_state');
+      if (savedState) {
+        const parsedState = JSON.parse(savedState);
+        
+        // Check if the saved state is recent (within session timeout)
+        const lastActivity = new Date(parsedState.lastActivity);
+        const now = new Date();
+        const sessionTimeoutMs = config.sessionTimeoutMinutes * 60 * 1000;
+        
+        if (now.getTime() - lastActivity.getTime() < sessionTimeoutMs) {
+          // Restore state with proper date conversion
+          const restoredMessages = (parsedState.messages || []).map((msg: any) => ({
+            ...msg,
+            timestamp: new Date(msg.timestamp)
+          }));
+          
+          // Only restore if we have meaningful state to restore
+          if (parsedState.visitorName || restoredMessages.length > 0) {
+            setMessages(restoredMessages);
+            setVisitorName(parsedState.visitorName || '');
+            setMessageCount(parsedState.messageCount || 0);
+            setLeadCaptured(parsedState.leadCaptured || false);
+            setShowWelcome(parsedState.showWelcome !== undefined ? parsedState.showWelcome : true);
+            setShowNameInput(parsedState.showNameInput !== undefined ? parsedState.showNameInput : false);
+            
+            console.log('[RagChatbot] Restored chat state from localStorage:', {
+              visitorName: parsedState.visitorName,
+              messagesCount: restoredMessages.length,
+              showWelcome: parsedState.showWelcome,
+              showNameInput: parsedState.showNameInput
+            });
+          } else {
+            console.log('[RagChatbot] No meaningful state to restore, using defaults');
+          }
+        } else {
+          // Clear expired state
+          localStorage.removeItem('rag_chat_state');
+          console.log('[RagChatbot] Cleared expired chat state');
+        }
+      } else {
+        console.log('[RagChatbot] No saved chat state found');
+      }
+    } catch (error) {
+      console.error('[RagChatbot] Error loading persisted state:', error);
+      localStorage.removeItem('rag_chat_state');
+    }
+  }, [config.sessionTimeoutMinutes]);
+
+  // Save chat state to localStorage whenever it changes
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const chatState = {
+      messages,
+      visitorName,
+      messageCount,
+      leadCaptured,
+      showWelcome,
+      showNameInput,
+      lastActivity: new Date().toISOString(),
+    };
+
+    try {
+      localStorage.setItem('rag_chat_state', JSON.stringify(chatState));
+    } catch (error) {
+      console.error('[RagChatbot] Error saving chat state:', error);
+    }
+  }, [messages, visitorName, messageCount, leadCaptured, showWelcome, showNameInput]);
+
   useEffect(() => {
     if (pageContext) {
       setCurrentContext(pageContext);
@@ -724,6 +799,60 @@ export function RagChatbot({
             {/* Chat Messages */}
             {!showWelcome && !showNameInput && (
               <>
+                {messages.map(message => (
+                  <div
+                    key={message.id}
+                    className={`flex items-end gap-2 ${
+                      message.role === 'user' ? 'justify-end' : 'justify-start'
+                    }`}
+                  >
+                    {message.role === 'assistant' && (
+                      <Bot
+                        className="h-6 w-6 rounded-full flex-shrink-0"
+                        style={{ color: theme.primaryColor }}
+                      />
+                    )}
+                    <div
+                      className={`max-w-xs md:max-w-md lg:max-w-lg rounded-lg px-3 py-2 text-sm shadow-md ${
+                        message.role === 'user'
+                          ? 'bg-blue-500 text-white'
+                          : 'bg-gray-100 text-gray-800'
+                      }`}
+                      style={{
+                        backgroundColor:
+                          message.role === 'user'
+                            ? theme.primaryColor
+                            : theme.backgroundColor,
+                        color:
+                          message.role === 'user'
+                            ? theme.backgroundColor
+                            : theme.textColor,
+                      }}
+                    >
+                      <p>{message.content}</p>
+                      <span className="text-xs text-gray-400 mt-1 block">
+                        {new Date(message.timestamp).toLocaleTimeString([], {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </span>
+                      {message.metadata?.ragSources && (
+                        <div className="mt-2 text-xs text-gray-500">
+                          <p className="font-semibold">Sources:</p>
+                          <ul className="list-disc list-inside">
+                            {message.metadata.ragSources.map((source, i) => (
+                              <li key={i}>{source}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                    {message.role === 'user' && (
+                      <User className="h-6 w-6 rounded-full flex-shrink-0" />
+                    )}
+                  </div>
+                ))}
+                
                 {/* Show suggestions after welcome message */}
                 {messages.length === 1 && !showLeadCapture && (
                   <div className="space-y-3 mt-4">
@@ -747,65 +876,13 @@ export function RagChatbot({
                     </div>
                   </div>
                 )}
+                <div ref={messagesEndRef} />
               </>
             )}
-
-            {!showWelcome && !showNameInput && messages.map((message) => (
-              <div
-                key={message.id}
-                className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
-                <div
-                  className={`max-w-[80%] rounded-lg p-3 ${
-                    message.role === 'user'
-                      ? 'bg-blue-500 text-white'
-                      : 'bg-gray-100 text-gray-900'
-                  }`}
-                  style={
-                    message.role === 'user'
-                      ? { backgroundColor: theme.primaryColor }
-                      : {}
-                  }
-                >
-                  <div className="flex items-start space-x-2">
-                    {message.role === 'assistant' && (
-                      <Bot className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                    )}
-                    {message.role === 'user' && (
-                      <User className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                    )}
-                    <div className="flex-1">
-                      <p className="text-sm">{message.content}</p>
-                      {message.metadata?.ragSources && (
-                        <div className="mt-2 text-xs opacity-75">
-                          <p>Fontes: {message.metadata.ragSources.join(', ')}</p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-
-            {isLoading && (
-              <div className="flex justify-start">
-                <div className="bg-gray-100 rounded-lg p-3 max-w-[80%]">
-                  <div className="flex items-center space-x-2">
-                    <Bot className="h-4 w-4" />
-                    <div className="flex space-x-1">
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
             <div ref={messagesEndRef} />
           </CardContent>
 
-          {/* Input - Only show after onboarding */}
+          {/* Input Area */}
           {!showWelcome && !showNameInput && (
             <div className="p-4 border-t">
               <div className="flex space-x-2">
