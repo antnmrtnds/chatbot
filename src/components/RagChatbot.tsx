@@ -24,7 +24,6 @@ interface SpeechRecognition extends EventTarget {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { MessageCircle, X, Send, Mic, MicOff, User, Bot, Navigation } from 'lucide-react';
 
@@ -218,6 +217,15 @@ export function RagChatbot({
   const [isLoading, setIsLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [showLeadCapture, setShowLeadCapture] = useState(false);
+  const [leadFormData, setLeadFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    budget: '',
+    propertyType: '',
+    timeline: '',
+    marketingConsent: false,
+  });
   const [messageCount, setMessageCount] = useState(0);
   const [leadCaptured, setLeadCaptured] = useState(false);
   const [currentContext, setCurrentContext] = useState<PageContext | null>(pageContext || null);
@@ -407,6 +415,24 @@ export function RagChatbot({
     onLeadCapture?.(fullLeadData);
     setLeadCaptured(true);
     setShowLeadCapture(false);
+    setLeadFormData({
+      name: '',
+      email: '',
+      phone: '',
+      budget: '',
+      propertyType: '',
+      timeline: '',
+      marketingConsent: false,
+    });
+
+    // Add confirmation message
+    const confirmationMessage: Message = {
+      id: Date.now().toString(),
+      content: `Obrigado ${leadData.name}! Recebemos as suas informações e entraremos em contacto em breve. Como posso continuar a ajudá-lo?`,
+      role: 'assistant',
+      timestamp: new Date(),
+    };
+    setMessages(prev => [...prev, confirmationMessage]);
 
     // Track analytics
     onAnalyticsEvent?.({
@@ -419,6 +445,11 @@ export function RagChatbot({
       },
     });
   }, [messages, currentContext, messageCount, onLeadCapture, onAnalyticsEvent]);
+
+  const handleLeadFormSubmit = useCallback((e: React.FormEvent) => {
+    e.preventDefault();
+    handleLeadCapture(leadFormData);
+  }, [leadFormData, handleLeadCapture]);
 
   // New visitor onboarding handlers
   const handleStartConversation = useCallback(() => {
@@ -569,11 +600,97 @@ export function RagChatbot({
               </div>
             )}
 
+            {/* Lead Capture Form - Inline */}
+            {showLeadCapture && !showWelcome && !showNameInput && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                <div className="flex items-center mb-3">
+                  <Bot className="h-5 w-5 mr-2" style={{ color: theme.primaryColor }} />
+                  <h3 className="font-semibold text-blue-900">Gostaria de receber mais informações?</h3>
+                </div>
+                <form onSubmit={handleLeadFormSubmit} className="space-y-3">
+                  <div>
+                    <Input
+                      value={leadFormData.name}
+                      onChange={(e) => setLeadFormData(prev => ({ ...prev, name: e.target.value }))}
+                      placeholder="Nome *"
+                      required
+                      className="text-sm"
+                    />
+                  </div>
+                  
+                  <div>
+                    <Input
+                      type="email"
+                      value={leadFormData.email}
+                      onChange={(e) => setLeadFormData(prev => ({ ...prev, email: e.target.value }))}
+                      placeholder="Email *"
+                      required
+                      className="text-sm"
+                    />
+                  </div>
+                  
+                  <div>
+                    <Input
+                      value={leadFormData.phone}
+                      onChange={(e) => setLeadFormData(prev => ({ ...prev, phone: e.target.value }))}
+                      placeholder="Telefone"
+                      className="text-sm"
+                    />
+                  </div>
+                  
+                  <div>
+                    <select
+                      value={leadFormData.budget}
+                      onChange={(e) => setLeadFormData(prev => ({ ...prev, budget: e.target.value }))}
+                      className="w-full p-2 border rounded-md text-sm"
+                    >
+                      <option value="">Orçamento (opcional)</option>
+                      <option value="<200k">Até €200.000</option>
+                      <option value="200k-400k">€200.000 - €400.000</option>
+                      <option value="400k-600k">€400.000 - €600.000</option>
+                      <option value=">600k">Mais de €600.000</option>
+                    </select>
+                  </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="marketing-inline"
+                      checked={leadFormData.marketingConsent}
+                      onChange={(e) => setLeadFormData(prev => ({ ...prev, marketingConsent: e.target.checked }))}
+                      className="text-sm"
+                    />
+                    <label htmlFor="marketing-inline" className="text-xs text-gray-600">
+                      Aceito receber comunicações de marketing
+                    </label>
+                  </div>
+                  
+                  <div className="flex space-x-2 pt-2">
+                    <Button
+                      type="submit"
+                      className="flex-1 text-sm py-2"
+                      style={{ backgroundColor: theme.primaryColor }}
+                    >
+                      Enviar
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setShowLeadCapture(false)}
+                      className="text-sm py-2"
+                    >
+                      Cancelar
+                    </Button>
+                  </div>
+                </form>
+              </div>
+            )}
+
             {/* Chat Messages */}
             {!showWelcome && !showNameInput && (
               <>
                 {/* Show suggestions after welcome message */}
-                {messages.length === 1 && (
+                {messages.length === 1 && !showLeadCapture && (
                   <div className="space-y-3 mt-4">
                     <div className="grid grid-cols-1 gap-2">
                       {[
@@ -698,108 +815,9 @@ export function RagChatbot({
         </Card>
       )}
 
-      {/* Lead Capture Modal */}
-      <Dialog open={showLeadCapture} onOpenChange={setShowLeadCapture}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Gostaria de receber mais informações?</DialogTitle>
-          </DialogHeader>
-          <LeadCaptureForm onSubmit={handleLeadCapture} onCancel={() => setShowLeadCapture(false)} />
-        </DialogContent>
-      </Dialog>
     </>
   );
 }
 
-// Lead Capture Form Component
-function LeadCaptureForm({
-  onSubmit,
-  onCancel,
-}: {
-  onSubmit: (data: Partial<LeadCaptureData>) => void;
-  onCancel: () => void;
-}) {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    budget: '',
-    propertyType: '',
-    timeline: '',
-    marketingConsent: false,
-  });
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSubmit(formData);
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <label className="block text-sm font-medium mb-1">Nome</label>
-        <Input
-          value={formData.name}
-          onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-          required
-        />
-      </div>
-      
-      <div>
-        <label className="block text-sm font-medium mb-1">Email</label>
-        <Input
-          type="email"
-          value={formData.email}
-          onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-          required
-        />
-      </div>
-      
-      <div>
-        <label className="block text-sm font-medium mb-1">Telefone</label>
-        <Input
-          value={formData.phone}
-          onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-        />
-      </div>
-      
-      <div>
-        <label className="block text-sm font-medium mb-1">Orçamento</label>
-        <select
-          value={formData.budget}
-          onChange={(e) => setFormData(prev => ({ ...prev, budget: e.target.value }))}
-          className="w-full p-2 border rounded-md"
-        >
-          <option value="">Selecione...</option>
-          <option value="<200k">Até €200.000</option>
-          <option value="200k-400k">€200.000 - €400.000</option>
-          <option value="400k-600k">€400.000 - €600.000</option>
-          <option value=">600k">Mais de €600.000</option>
-        </select>
-      </div>
-      
-      <div className="flex items-center space-x-2">
-        <input
-          type="checkbox"
-          id="marketing"
-          checked={formData.marketingConsent}
-          onChange={(e) => setFormData(prev => ({ ...prev, marketingConsent: e.target.checked }))}
-        />
-        <label htmlFor="marketing" className="text-sm">
-          Aceito receber comunicações de marketing
-        </label>
-      </div>
-      
-      <div className="flex space-x-2">
-        <Button type="submit" className="flex-1">
-          Enviar
-        </Button>
-        <Button type="button" variant="outline" onClick={onCancel}>
-          Cancelar
-        </Button>
-      </div>
-    </form>
-  );
-}
 
 export default RagChatbot;
