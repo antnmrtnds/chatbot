@@ -6,7 +6,15 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "setup-rag": "npx tsx scripts/setup-rag.ts",
+    "verify-rag": "npx tsx scripts/verify-rag-setup.ts",
+    "index-documents": "npx tsx scripts/index-documents.ts",
+    "create-function": "npx tsx scripts/create-function.ts",
+    "create-tables": "npx tsx scripts/create-tables.ts",
+    "create-rag-tables": "npx tsx scripts/create-rag-tables-only.ts",
+    "diagnose-db": "npx tsx scripts/diagnose-db.ts",
+    "test-production": "npx tsx scripts/test-production.ts"
   },
   "dependencies": {
     "@opentelemetry/api": "^1.9.0",
@@ -40,6 +48,7 @@
     "eslint-config-next": "15.3.4",
     "postcss": "^8.5.6",
     "tailwindcss": "^3.4.0",
+    "tsx": "^4.7.0",
     "typescript": "^5"
   }
 }
