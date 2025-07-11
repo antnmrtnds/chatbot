@@ -16,7 +16,7 @@ function HomeContent() {
       <FeaturedProperties />
       <CtaSection />
       <RagChatbot
-        pageContext={context}
+        pageContext={context || undefined}
         visitorId={`visitor-${Date.now()}`}
         sessionId={`session-${Date.now()}`}
         features={{
