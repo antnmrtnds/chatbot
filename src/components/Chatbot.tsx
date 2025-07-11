@@ -515,6 +515,16 @@ export default function Chatbot({ flatId: propFlatId }: ChatbotProps) {
   const generateNavigationResponse = (query: string): { text: string; url?: string } | null => {
     const lowerQuery = query.toLowerCase();
     
+    // Handle specific apartment navigation requests (e.g., "Mostra-me o flat A01")
+    const apartmentIdMatch = lowerQuery.match(/(?:flat|apartamento)\s*([a-z]\d+)/i);
+    if (apartmentIdMatch && (lowerQuery.includes('mostra-me') || lowerQuery.includes('mostrar') || lowerQuery.includes('ver'))) {
+      const requestedFlatId = apartmentIdMatch[1].toUpperCase();
+      return {
+        text: `A redirecioná-lo para o apartamento ${requestedFlatId}... Por favor, aguarde.`,
+        url: `/imoveis/evergreen-pure/${requestedFlatId}`
+      };
+    }
+    
     // Handle "outros apartamentos" - redirect to listing even if on specific apartment page
     if (lowerQuery.includes('outros apartamentos') || lowerQuery.includes('ver outros')) {
       return {
@@ -523,14 +533,9 @@ export default function Chatbot({ flatId: propFlatId }: ChatbotProps) {
       };
     }
     
-    // If we're on a specific apartment page, don't redirect for apartment queries
-    // Let the API handle apartment-specific questions with context
-    if (flatId && (lowerQuery.includes('apartamento') || lowerQuery.includes('disponível') || lowerQuery.includes('preço') || lowerQuery.includes('preco'))) {
-      return null; // Let the API handle it with apartment context
-    }
-    
     // Only redirect to apartment listing if we're NOT on a specific apartment page
-    if (!flatId && (lowerQuery.includes('apartamento') || lowerQuery.includes('disponível'))) {
+    // and the query is about general apartment availability
+    if (!flatId && (lowerQuery.includes('apartamentos disponíveis') || lowerQuery.includes('ver apartamentos'))) {
       return {
         text: "A redirecioná-lo para a nossa página de apartamentos... Por favor, aguarde.",
         url: "/imoveis/evergreen-pure"
@@ -791,11 +796,14 @@ export default function Chatbot({ flatId: propFlatId }: ChatbotProps) {
       }
 
       // Check if user is expressing interest in contact but hasn't provided details
+      // Only trigger contact form for explicit contact requests, not navigation queries
       const lowerMessage = messageText.toLowerCase();
+      
+      // Check for explicit contact intent keywords (very specific)
       const contactIntentKeywords = [
         'quero ser contactado', 'contactem-me', 'liguem-me', 'enviem informações',
-        'quero mais informações', 'interessado', 'gostaria de saber mais',
-        'agendar visita', 'marcar reunião', 'falar com alguém'
+        'quero mais informações sobre contacto', 'interessado em ser contactado',
+        'marcar reunião', 'falar com alguém', 'preciso de ajuda com contacto'
       ];
       
       if (contactIntentKeywords.some(keyword => lowerMessage.includes(keyword))) {

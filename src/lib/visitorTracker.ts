@@ -564,6 +564,18 @@ class VisitorTracker {
   } {
     const contactInfo: any = {};
 
+    // First check if this is a navigation query - if so, don't extract contact details
+    const lowerText = text.toLowerCase();
+    const navigationKeywords = [
+      'mostra-me', 'mostrar', 'ver', 'quero ver', 'leva-me', 'navegar',
+      'apartamento', 'flat', 'outros apartamentos', 'disponível', 'disponivel',
+      'redirecionar', 'ir para', 'levar-me'
+    ];
+    
+    if (navigationKeywords.some(keyword => lowerText.includes(keyword))) {
+      return {}; // Return empty object for navigation queries
+    }
+
     // Email pattern
     const emailMatch = text.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
     if (emailMatch) {
@@ -576,18 +588,20 @@ class VisitorTracker {
       contactInfo.phone = phoneMatch[0].replace(/\s/g, '');
     }
 
-    // Name pattern - look for name before email or at start of message
-    if (contactInfo.email) {
-      const beforeEmail = text.substring(0, text.indexOf(contactInfo.email)).trim();
-      const nameMatch = beforeEmail.match(/([A-ZÁÀÂÃÉÊÍÓÔÕÚÇ][a-záàâãéêíóôõúç]+(?:\s+[A-ZÁÀÂÃÉÊÍÓÔÕÚÇ][a-záàâãéêíóôõúç]+)*)/);
-      if (nameMatch) {
-        contactInfo.name = nameMatch[1];
-      }
-    } else {
-      // Look for name patterns at the beginning
-      const nameMatch = text.match(/^([A-ZÁÀÂÃÉÊÍÓÔÕÚÇ][a-záàâãéêíóôõúç]+(?:\s+[A-ZÁÀÂÃÉÊÍÓÔÕÚÇ][a-záàâãéêíóôõúç]+)*)/);
-      if (nameMatch) {
-        contactInfo.name = nameMatch[1];
+    // Name pattern - only extract if we have email or phone (more reliable)
+    if (contactInfo.email || contactInfo.phone) {
+      if (contactInfo.email) {
+        const beforeEmail = text.substring(0, text.indexOf(contactInfo.email)).trim();
+        const nameMatch = beforeEmail.match(/([A-ZÁÀÂÃÉÊÍÓÔÕÚÇ][a-záàâãéêíóôõúç]+(?:\s+[A-ZÁÀÂÃÉÊÍÓÔÕÚÇ][a-záàâãéêíóôõúç]+)*)/);
+        if (nameMatch) {
+          contactInfo.name = nameMatch[1];
+        }
+      } else if (contactInfo.phone) {
+        const beforePhone = text.substring(0, text.indexOf(contactInfo.phone)).trim();
+        const nameMatch = beforePhone.match(/([A-ZÁÀÂÃÉÊÍÓÔÕÚÇ][a-záàâãéêíóôõúç]+(?:\s+[A-ZÁÀÂÃÉÊÍÓÔÕÚÇ][a-záàâãéêíóôõúç]+)*)/);
+        if (nameMatch) {
+          contactInfo.name = nameMatch[1];
+        }
       }
     }
 
