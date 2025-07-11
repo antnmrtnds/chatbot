@@ -1,3 +1,5 @@
+'use client';
+
 import Image from "next/image";
 import {
   Card,
@@ -10,7 +12,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Bath, Bed, Car, MapPin, Building2, Heart, Share2, Calendar, Info } from "lucide-react";
 import Link from "next/link";
-import Chatbot from '@/components/Chatbot';
+import RagChatbot from '@/components/RagChatbot';
+import { Suspense } from 'react';
 
 interface PageProps {
   params: {
@@ -18,8 +21,24 @@ interface PageProps {
   };
 }
 
-export default function FlatPage({ params }: PageProps) {
-  const { flatId } = params;
+function FlatPageContent({ flatId }: { flatId: string }) {
+  // Get flat details based on flatId
+  const getFlatDetails = (id: string) => {
+    const flats: Record<string, any> = {
+      'A01': { block: 'A', floor: '0', typology: 'T2', price: '€ 280.000', priceValue: 280000 },
+      'A02': { block: 'A', floor: '1', typology: 'T3', price: '€ 320.000', priceValue: 320000 },
+      'A03': { block: 'A', floor: '2', typology: 'T2', price: '€ 290.000', priceValue: 290000 },
+      'A04': { block: 'A', floor: '3', typology: 'T3', price: '€ 330.000', priceValue: 330000 },
+      'B01': { block: 'B', floor: '0', typology: 'T1', price: '€ 220.000', priceValue: 220000 },
+      'B02': { block: 'B', floor: '1', typology: 'T2', price: '€ 285.000', priceValue: 285000 },
+      'B03': { block: 'B', floor: '2', typology: 'T3', price: '€ 325.000', priceValue: 325000 },
+      'B04': { block: 'B', floor: '3', typology: 'T3', price: '€ 380.000', priceValue: 380000 },
+      'B05': { block: 'B', floor: '4', typology: 'Duplex', price: '€ 390.000', priceValue: 390000 },
+    };
+    return flats[id] || { block: 'A', floor: '0', typology: 'T2', price: 'Consultar', priceValue: 0 };
+  };
+
+  const flatDetails = getFlatDetails(flatId);
 
   return (
     <div className="bg-gray-50">
@@ -228,7 +247,59 @@ export default function FlatPage({ params }: PageProps) {
           </div>
         </div>
       </div>
-      <Chatbot flatId={flatId} />
+      
+      <RagChatbot
+        pageContext={{
+          url: `/imoveis/evergreen-pure/${flatId}`,
+          pageType: 'property',
+          semanticId: `property_${flatId}`,
+          title: `Evergreen Pure - Apartamento ${flatId}`,
+          propertyId: flatId,
+          propertyType: flatDetails.typology,
+          priceRange: flatDetails.priceValue > 0 ?
+            (flatDetails.priceValue < 300000 ? '200k-300k' : '300k-400k') : undefined,
+          features: ['garagem', 'elevador', 'em_construcao'],
+        }}
+        visitorId={`visitor-${Date.now()}`}
+        sessionId={`session-${Date.now()}`}
+        features={{
+          ragEnabled: true,
+          contextAwareness: true,
+          progressiveLeadCapture: true,
+          voiceInput: true,
+          navigationCommands: true,
+        }}
+        onLeadCapture={(leadData) => {
+          console.log(`Lead captured for apartment ${flatId}:`, leadData);
+          // Send to your CRM or analytics
+        }}
+        onAnalyticsEvent={(event) => {
+          console.log(`Analytics event for apartment ${flatId}:`, event);
+          // Send to your analytics platform
+        }}
+        onNavigate={(url, navContext) => {
+          console.log('Navigation requested:', url, navContext);
+          window.location.href = url;
+        }}
+        position="bottom-right"
+      />
     </div>
   );
-} 
+}
+
+export default function FlatPage({ params }: PageProps) {
+  const { flatId } = params;
+
+  return (
+    <Suspense fallback={
+      <div className="bg-gray-50 min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-gray-600">Carregando apartamento...</p>
+        </div>
+      </div>
+    }>
+      <FlatPageContent flatId={flatId} />
+    </Suspense>
+  );
+}
