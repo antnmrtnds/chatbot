@@ -23,7 +23,7 @@ export interface RagResponse {
 
 export interface PageContext {
   url: string;
-  pageType: 'home' | 'property' | 'listing' | 'about' | 'contact' | 'blog';
+  pageType: 'home' | 'property' | 'listing' | 'about' | 'contact' | 'blog' | 'general';
   semanticId: string;
   title?: string;
   description?: string;
@@ -101,17 +101,32 @@ export class RagService {
       // 1. Analyze user intent and extract entities
       const intentAnalysis = await this.analyzeIntent(query.message, query.context);
       
-      // 2. Generate embedding for the query
+      // 2. Check if this is a property listing request first
+      if (this.isPropertyListingRequest(intentAnalysis, query.message)) {
+        const navigationCommand = this.buildEvergreenPureNavigation(intentAnalysis.entities);
+        
+        return {
+          message: 'Perfeito! Vou mostrar-lhe as unidades disponíveis que correspondem às suas preferências.',
+          sources: [],
+          confidence: 0.9,
+          intent: intentAnalysis.intent,
+          entities: intentAnalysis.entities,
+          navigationCommand,
+          highIntent: true,
+        };
+      }
+      
+      // 3. Generate embedding for the query
       const queryEmbedding = await this.generateEmbedding(query.message);
       
-      // 3. Retrieve relevant documents
+      // 4. Retrieve relevant documents
       const relevantDocs = await this.retrieveDocuments(
         queryEmbedding,
         query.context,
         intentAnalysis.intent
       );
       
-      // 4. Generate response using RAG
+      // 5. Generate response using RAG
       const response = await this.generateResponse(
         query.message,
         relevantDocs,
@@ -120,14 +135,14 @@ export class RagService {
         intentAnalysis
       );
       
-      // 5. Check for navigation commands
+      // 6. Check for navigation commands
       const navigationCommand = this.extractNavigationCommand(
         response,
         intentAnalysis,
         query.context
       );
       
-      // 6. Determine if this is high-intent interaction
+      // 7. Determine if this is high-intent interaction
       const highIntent = this.isHighIntent(intentAnalysis, query.message);
       
       return {
@@ -155,8 +170,12 @@ export class RagService {
   private async analyzeIntent(message: string, context?: PageContext) {
     const prompt = `
 Analyze the following user message and extract:
-1. Intent (property_search, property_info, pricing, scheduling, general_info, navigation)
+1. Intent (property_search, property_info, pricing, scheduling, general_info, navigation, listing_request)
 2. Entities (property types, locations, price ranges, features, etc.)
+
+Special attention to listing requests:
+- "unidades disponíveis", "apartamentos disponíveis", "ver apartamentos" = listing_request intent
+- Extract property preferences like T2, T3, budget ranges (200k-300k, etc.)
 
 Context: ${context ? JSON.stringify(context) : 'None'}
 User Message: "${message}"
@@ -169,7 +188,9 @@ Respond in JSON format:
     "location": "...",
     "price_range": "...",
     "features": [...],
-    "timeline": "..."
+    "timeline": "...",
+    "budget_min": "...",
+    "budget_max": "..."
   },
   "confidence": 0.0-1.0
 }
@@ -371,6 +392,11 @@ Extracted Entities: ${JSON.stringify(intentAnalysis?.entities || {})}
       }
     }
 
+    // Check for property listing requests - redirect to Evergreen Pure with filters
+    if (this.isPropertyListingRequest(intentAnalysis, response)) {
+      return this.buildEvergreenPureNavigation(intentAnalysis.entities);
+    }
+
     // Check for implicit navigation suggestions in response
     const navigationPatterns = [
       { pattern: /ver (esta|a) propriedade/i, url: context?.propertyId ? `/imoveis/${context.propertyId}` : '/imoveis' },
@@ -390,6 +416,66 @@ Extracted Entities: ${JSON.stringify(intentAnalysis?.entities || {})}
     }
 
     return undefined;
+  }
+
+  /**
+   * Check if this is a property listing request
+   */
+  private isPropertyListingRequest(intentAnalysis: any, userMessage: string): boolean {
+    const listingKeywords = [
+      'unidades disponíveis', 'apartamentos disponíveis', 'ver apartamentos',
+      'mostrar apartamentos', 'listar apartamentos', 'propriedades disponíveis',
+      'ver propriedades', 'mostrar propriedades', 'listar propriedades',
+      'ver unidades', 'mostrar unidades', 'disponibilidade'
+    ];
+
+    const listingIntents = ['property_search', 'property_info', 'listing_request'];
+
+    return (
+      listingIntents.includes(intentAnalysis.intent) ||
+      listingKeywords.some(keyword =>
+        userMessage.toLowerCase().includes(keyword.toLowerCase())
+      ) ||
+      (intentAnalysis.entities?.property_type && intentAnalysis.intent === 'property_search')
+    );
+  }
+
+  /**
+   * Build navigation URL for Evergreen Pure with filters
+   */
+  private buildEvergreenPureNavigation(entities: any): NavigationCommand {
+    const params = new URLSearchParams();
+    
+    // Apply budget filter
+    if (entities.price_range) {
+      const priceRange = entities.price_range.toLowerCase();
+      if (priceRange.includes('300') && !priceRange.includes('400')) {
+        params.set('budget', 'under_300k');
+      } else if (priceRange.includes('400')) {
+        params.set('budget', 'under_400k');
+      }
+    }
+    
+    // Apply typology filter
+    if (entities.property_type) {
+      const propertyType = entities.property_type.toUpperCase();
+      if (['T1', 'T2', 'T3', 'DUPLEX'].includes(propertyType)) {
+        params.set('typology', propertyType);
+      }
+    }
+
+    const baseUrl = '/imoveis/evergreen-pure';
+    const queryString = params.toString();
+    const finalUrl = queryString ? `${baseUrl}?${queryString}` : baseUrl;
+
+    return {
+      command: 'navigate_to_evergreen_listings',
+      url: finalUrl,
+      context: {
+        filters: entities,
+        message: 'Redirecionando para as unidades disponíveis que correspondem às suas preferências...'
+      },
+    };
   }
 
   /**

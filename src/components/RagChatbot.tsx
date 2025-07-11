@@ -432,12 +432,39 @@ export function RagChatbot({
 
       // Check for navigation commands
       if (features.navigationCommands && data.navigationCommand) {
-        onNavigate?.(data.navigationCommand.url, {
-          command: data.navigationCommand.command,
-          targetPage: data.navigationCommand.url,
-          reason: 'user_request',
-          context: data.navigationCommand.context,
-        });
+        // If it's a listing request, show a brief message and then navigate
+        if (data.navigationCommand.command === 'navigate_to_evergreen_listings') {
+          const navigationMessage: Message = {
+            id: (Date.now() + 2).toString(),
+            content: data.navigationCommand.context?.message || 'Redirecionando para as unidades disponíveis...',
+            role: 'assistant',
+            timestamp: new Date(),
+          };
+          
+          setMessages(prev => [...prev, navigationMessage]);
+          
+          // Navigate after a short delay to show the message
+          setTimeout(() => {
+            if (typeof window !== 'undefined') {
+              window.location.href = data.navigationCommand.url;
+            } else {
+              onNavigate?.(data.navigationCommand.url, {
+                command: data.navigationCommand.command,
+                targetPage: data.navigationCommand.url,
+                reason: 'user_request',
+                context: data.navigationCommand.context,
+              });
+            }
+          }, 1500);
+        } else {
+          // Handle other navigation commands normally
+          onNavigate?.(data.navigationCommand.url, {
+            command: data.navigationCommand.command,
+            targetPage: data.navigationCommand.url,
+            reason: 'user_request',
+            context: data.navigationCommand.context,
+          });
+        }
       }
 
       // Check for lead capture trigger

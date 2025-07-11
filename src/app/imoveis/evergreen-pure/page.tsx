@@ -13,7 +13,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Bath, Bed, Car, MapPin, Building2, ArrowRight, Filter } from "lucide-react";
-import RagChatbot from '@/components/RagChatbot';
 import { usePageContext } from '@/lib/pageContextManager';
 
 interface FlatData {
@@ -249,41 +248,6 @@ function EvergreenPureContent() {
           </p>
         </div>
       </div>
-      
-      <RagChatbot
-        pageContext={{
-          url: '/imoveis/evergreen-pure',
-          pageType: 'listing',
-          semanticId: 'listing_evergreen_pure',
-          title: 'Evergreen Pure - Apartamentos Disponíveis',
-          propertyType: activeFilters.typology || undefined,
-          priceRange: activeFilters.budget === 'under_300k' ? '200k-300k' :
-                     activeFilters.budget === 'under_400k' ? '200k-400k' : undefined,
-          features: ['garagem', 'elevador', 'em_construcao'],
-        }}
-        visitorId={`visitor-${Date.now()}`}
-        sessionId={`session-${Date.now()}`}
-        features={{
-          ragEnabled: true,
-          contextAwareness: true,
-          progressiveLeadCapture: true,
-          voiceInput: true,
-          navigationCommands: true,
-        }}
-        onLeadCapture={(leadData) => {
-          console.log('Lead captured on Evergreen Pure listing:', leadData);
-          // Send to your CRM or analytics
-        }}
-        onAnalyticsEvent={(event) => {
-          console.log('Analytics event on listing page:', event);
-          // Send to your analytics platform
-        }}
-        onNavigate={(url, navContext) => {
-          console.log('Navigation requested:', url, navContext);
-          window.location.href = url;
-        }}
-        position="bottom-right"
-      />
     </div>
   );
 }
