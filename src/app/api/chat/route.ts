@@ -569,6 +569,7 @@ ${contextText}
             .from("visitor_interactions")
             .insert({
               lead_id: leadId,
+              visitor_id: visitorId,
               interaction_type: "chat_message",
               points_awarded: 5,
               details: { message: userMessage.text, leadScore: leadScore },

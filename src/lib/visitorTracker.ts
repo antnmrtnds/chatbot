@@ -410,7 +410,7 @@ class VisitorTracker {
 
         if (error) {
           console.error('[VisitorTracker] Error sending page view to Supabase:', error);
-          console.error('[VisitorTracker] Page view data that failed:', {
+          console.error('[VisitorTracker] Page view data that failed:', JSON.stringify({
             p_visitor_id: this.visitorId,
             p_page_url: url,
             p_flat_id: flatId,
@@ -418,18 +418,18 @@ class VisitorTracker {
             p_session_id: this.sessionData.sessionId,
             p_referrer: this.sessionData.referrer,
             p_utm_params: this.sessionData.utmParams,
-          });
+          }, null, 2));
         } else {
           console.log('[VisitorTracker] Successfully sent page view for', url);
         }
       } else if (eventType === 'interaction') {
         const { type, details } = data;
-        console.log('[VisitorTracker] Sending interaction to Supabase:', {
+        console.log('[VisitorTracker] Sending interaction to Supabase:', JSON.stringify({
           p_visitor_id: this.visitorId,
           p_interaction_type: type,
           p_details: details,
           p_session_id: this.sessionData.sessionId,
-        });
+        }, null, 2));
         const { error } = await supabase.rpc('track_interaction', {
           p_visitor_id: this.visitorId,
           p_interaction_type: type,

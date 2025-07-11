@@ -46,6 +46,7 @@ export async function POST(request: NextRequest) {
           .from("visitor_interactions")
           .insert({
             lead_id: leadId,
+            visitor_id: visitorId,
             interaction_type: "lead_submission",
             points_awarded: 50,
             details: { name, email, flatId, purchaseTimeframe },
@@ -141,6 +142,7 @@ export async function PATCH(request: NextRequest) {
         .from("visitor_interactions")
         .insert({
           lead_id: updatedLead.id,
+          visitor_id: visitorId,
           interaction_type: "lead_qualification",
           points_awarded: 10,
           details: { leadData, leadScore, flatId },
