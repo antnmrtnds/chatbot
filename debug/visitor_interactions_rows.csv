@@ -1,4 +1,0 @@
-id,lead_id,interaction_type,points_awarded,details,created_at
-2,6709a770-2149-4aa9-ac01-897d06c4a4b3,page_view,1,"{""url"": ""/"", ""flat_id"": null, ""referrer"": """", ""session_id"": ""1752223452286-fygicfxdp"", ""utm_params"": {}, ""is_new_session"": true}",2025-07-11 08:59:22.921809+00
-11,6709a770-2149-4aa9-ac01-897d06c4a4b3,page_view,1,"{""url"": ""/imoveis/evergreen-pure?budget=under_200k&typology=T1"", ""flat_id"": null, ""referrer"": """", ""session_id"": ""1752224363481-g8b8lnaws"", ""utm_params"": {}, ""is_new_session"": false}",2025-07-11 08:59:41.62987+00
-15,6709a770-2149-4aa9-ac01-897d06c4a4b3,page_view,1,"{""url"": ""/imoveis/evergreen-pure/B01"", ""flat_id"": ""B01"", ""referrer"": """", ""session_id"": ""1752224363481-g8b8lnaws"", ""utm_params"": {}, ""is_new_session"": false}",2025-07-11 08:59:45.359516+00
