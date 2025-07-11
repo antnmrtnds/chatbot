@@ -1,0 +1,911 @@
+[VisitorTracker] Generated fingerprint hash: ec1de26e1a8ef787...
+90-7ae8529da7641f0f.js:1 [VisitorTracker] Found visitorId in localStorage: de16716a-8fd4-470b-b37d-79d04d052ac7
+layout-67e11bcb31db77b4.js:6 Tracking enhanced page view for: /
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: undefined
+954-97929645f2a259d4.js:1 Chatbot initialized with flatId: undefined
+954-97929645f2a259d4.js:1 Session ID: session--1752224363461
+954-97929645f2a259d4.js:1 Current pathname: /
+90-7ae8529da7641f0f.js:1 [VisitorTracker] Stored visitorId in all storage methods: de16716a-8fd4-470b-b37d-79d04d052ac7
+/the-unique?_rsc=1wtp7:1 
+            
+            
+           Failed to load resource: the server responded with a status of 404 ()Understand this error
+/projetos?_rsc=1wtp7:1 
+            
+            
+           Failed to load resource: the server responded with a status of 404 ()Understand this error
+/arrendamento?_rsc=1wtp7:1 
+            
+            
+           Failed to load resource: the server responded with a status of 404 ()Understand this error
+/pesquisa?_rsc=1wtp7:1 
+            
+            
+           Failed to load resource: the server responded with a status of 404 ()Understand this error
+/sobre?_rsc=1wtp7:1 
+            
+            
+           Failed to load resource: the server responded with a status of 404 ()Understand this error
+nflssyblldwruktqftvl.supabase.co/rest/v1/leads_tracking?select=*&visitor_id=eq.:1 
+            
+            
+           Failed to load resource: the server responded with a status of 400 ()Understand this error
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: undefined
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: undefined
+90-7ae8529da7641f0f.js:1 [VisitorTracker] Initialized: Object
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: undefined
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: undefined
+90-7ae8529da7641f0f.js:1 [VisitorTracker] Sending interaction to Supabase: {
+  "p_visitor_id": "de16716a-8fd4-470b-b37d-79d04d052ac7",
+  "p_interaction_type": "button_click",
+  "p_details": {
+    "element": "BUTTON",
+    "text": "Fechar",
+    "url": "/"
+  },
+  "p_session_id": "1752224363481-g8b8lnaws"
+}
+nflssyblldwruktqftvl.supabase.co/rest/v1/rpc/track_interaction:1 
+            
+            
+           Failed to load resource: the server responded with a status of 400 ()Understand this error
+hook.js:608 [VisitorTracker] Error sending interaction to Supabase: Objectcode: "23514"details: nullhint: nullmessage: "new row for relation \"visitor_interactions\" violates check constraint \"valid_interaction_type\""[[Prototype]]: Object
+overrideMethod @ hook.js:608Understand this error
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: undefined
+90-7ae8529da7641f0f.js:1 [VisitorTracker] Sending interaction to Supabase: {
+  "p_visitor_id": "de16716a-8fd4-470b-b37d-79d04d052ac7",
+  "p_interaction_type": "button_click",
+  "p_details": {
+    "element": "BUTTON",
+    "text": "",
+    "url": "/"
+  },
+  "p_session_id": "1752224363481-g8b8lnaws"
+}
+nflssyblldwruktqftvl.supabase.co/rest/v1/rpc/track_interaction:1 
+            
+            
+           Failed to load resource: the server responded with a status of 400 ()Understand this error
+hook.js:608 [VisitorTracker] Error sending interaction to Supabase: Objectcode: "23514"details: nullhint: nullmessage: "new row for relation \"visitor_interactions\" violates check constraint \"valid_interaction_type\""[[Prototype]]: Object
+overrideMethod @ hook.js:608Understand this error
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: undefined
+90-7ae8529da7641f0f.js:1 [VisitorTracker] Sending interaction to Supabase: {
+  "p_visitor_id": "de16716a-8fd4-470b-b37d-79d04d052ac7",
+  "p_interaction_type": "button_click",
+  "p_details": {
+    "element": "BUTTON",
+    "text": "🏠 Ver apartamentos disponíveis",
+    "url": "/"
+  },
+  "p_session_id": "1752224363481-g8b8lnaws"
+}
+nflssyblldwruktqftvl.supabase.co/rest/v1/rpc/track_interaction:1 
+            
+            
+           Failed to load resource: the server responded with a status of 400 ()Understand this error
+hook.js:608 [VisitorTracker] Error sending interaction to Supabase: Objectcode: "23514"details: nullhint: nullmessage: "new row for relation \"visitor_interactions\" violates check constraint \"valid_interaction_type\""[[Prototype]]: Object
+overrideMethod @ hook.js:608Understand this error
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: undefined
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: undefined
+90-7ae8529da7641f0f.js:1 [VisitorTracker] Sending interaction to Supabase: {
+  "p_visitor_id": "de16716a-8fd4-470b-b37d-79d04d052ac7",
+  "p_interaction_type": "button_click",
+  "p_details": {
+    "element": "BUTTON",
+    "text": "💰 100k - 200k€",
+    "url": "/"
+  },
+  "p_session_id": "1752224363481-g8b8lnaws"
+}
+nflssyblldwruktqftvl.supabase.co/rest/v1/rpc/track_interaction:1 
+            
+            
+           Failed to load resource: the server responded with a status of 400 ()Understand this error
+hook.js:608 [VisitorTracker] Error sending interaction to Supabase: Objectcode: "23514"details: nullhint: nullmessage: "new row for relation \"visitor_interactions\" violates check constraint \"valid_interaction_type\""[[Prototype]]: Object
+overrideMethod @ hook.js:608Understand this error
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: undefined
+90-7ae8529da7641f0f.js:1 [VisitorTracker] Sending interaction to Supabase: {
+  "p_visitor_id": "de16716a-8fd4-470b-b37d-79d04d052ac7",
+  "p_interaction_type": "button_click",
+  "p_details": {
+    "element": "BUTTON",
+    "text": "🏠 T1",
+    "url": "/"
+  },
+  "p_session_id": "1752224363481-g8b8lnaws"
+}
+nflssyblldwruktqftvl.supabase.co/rest/v1/rpc/track_interaction:1 
+            
+            
+           Failed to load resource: the server responded with a status of 400 ()Understand this error
+hook.js:608 [VisitorTracker] Error sending interaction to Supabase: Objectcode: "23514"details: nullhint: nullmessage: "new row for relation \"visitor_interactions\" violates check constraint \"valid_interaction_type\""[[Prototype]]: Object
+overrideMethod @ hook.js:608Understand this error
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: undefined
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: undefined
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: undefined
+layout-67e11bcb31db77b4.js:6 Tracking enhanced page view for: /imoveis/evergreen-pure?budget=under_200k&typology=T1
+90-7ae8529da7641f0f.js:1 [VisitorTracker] Sending interaction to Supabase: {
+  "p_visitor_id": "de16716a-8fd4-470b-b37d-79d04d052ac7",
+  "p_interaction_type": "page_type_view",
+  "p_details": {
+    "pageType": "property_listing",
+    "url": "/imoveis/evergreen-pure?budget=under_200k&typology=T1",
+    "timestamp": 1752224378324
+  },
+  "p_session_id": "1752224363481-g8b8lnaws"
+}
+954-97929645f2a259d4.js:1 Chatbot initialized with flatId: undefined
+954-97929645f2a259d4.js:1 Session ID: session--1752224363461
+954-97929645f2a259d4.js:1 Current pathname: /imoveis/evergreen-pure
+/imoveis?_rsc=1u1kf:1 
+            
+            
+           Failed to load resource: the server responded with a status of 404 ()Understand this error
+nflssyblldwruktqftvl.supabase.co/rest/v1/rpc/track_interaction:1 
+            
+            
+           Failed to load resource: the server responded with a status of 400 ()Understand this error
+hook.js:608 [VisitorTracker] Error sending interaction to Supabase: Objectcode: "23514"details: nullhint: nullmessage: "new row for relation \"visitor_interactions\" violates check constraint \"valid_interaction_type\""[[Prototype]]: Object
+overrideMethod @ hook.js:608Understand this error
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: undefined
+90-7ae8529da7641f0f.js:1 [VisitorTracker] Successfully sent page view for /imoveis/evergreen-pure?budget=under_200k&typology=T1
+90-7ae8529da7641f0f.js:1 [VisitorTracker] Sending interaction to Supabase: {
+  "p_visitor_id": "de16716a-8fd4-470b-b37d-79d04d052ac7",
+  "p_interaction_type": "scroll_depth_25",
+  "p_details": {
+    "depth": 50
+  },
+  "p_session_id": "1752224363481-g8b8lnaws"
+}
+90-7ae8529da7641f0f.js:1 [VisitorTracker] Sending interaction to Supabase: {
+  "p_visitor_id": "de16716a-8fd4-470b-b37d-79d04d052ac7",
+  "p_interaction_type": "scroll_depth_50",
+  "p_details": {
+    "depth": 51
+  },
+  "p_session_id": "1752224363481-g8b8lnaws"
+}
+nflssyblldwruktqftvl.supabase.co/rest/v1/rpc/track_interaction:1 
+            
+            
+           Failed to load resource: the server responded with a status of 400 ()Understand this error
+hook.js:608 [VisitorTracker] Error sending interaction to Supabase: Objectcode: "23514"details: nullhint: nullmessage: "new row for relation \"visitor_interactions\" violates check constraint \"valid_interaction_type\""[[Prototype]]: Object
+overrideMethod @ hook.js:608Understand this error
+nflssyblldwruktqftvl.supabase.co/rest/v1/rpc/track_interaction:1 
+            
+            
+           Failed to load resource: the server responded with a status of 400 ()Understand this error
+hook.js:608 [VisitorTracker] Error sending interaction to Supabase: Objectcode: "23514"details: nullhint: nullmessage: "new row for relation \"visitor_interactions\" violates check constraint \"valid_interaction_type\""[[Prototype]]: Object
+overrideMethod @ hook.js:608Understand this error
+/resolucao-litigios?_rsc=1u1kf:1 
+            
+            
+           Failed to load resource: the server responded with a status of 404 ()Understand this error
+/responsabilidade-social?_rsc=1u1kf:1 
+            
+            
+           Failed to load resource: the server responded with a status of 404 ()Understand this error
+/livro-reclamacoes?_rsc=1u1kf:1 
+            
+            
+           Failed to load resource: the server responded with a status of 404 ()Understand this error
+90-7ae8529da7641f0f.js:1 [VisitorTracker] Sending interaction to Supabase: {
+  "p_visitor_id": "de16716a-8fd4-470b-b37d-79d04d052ac7",
+  "p_interaction_type": "button_click",
+  "p_details": {
+    "element": "BUTTON",
+    "text": "Ver Detalhes",
+    "url": "/imoveis/evergreen-pure?budget=under_200k&typology=T1"
+  },
+  "p_session_id": "1752224363481-g8b8lnaws"
+}
+nflssyblldwruktqftvl.supabase.co/rest/v1/rpc/track_interaction:1 
+            
+            
+           Failed to load resource: the server responded with a status of 400 ()Understand this error
+hook.js:608 [VisitorTracker] Error sending interaction to Supabase: Objectcode: "23514"details: nullhint: nullmessage: "new row for relation \"visitor_interactions\" violates check constraint \"valid_interaction_type\""[[Prototype]]: Object
+overrideMethod @ hook.js:608Understand this error
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot initialized with flatId: B01
+954-97929645f2a259d4.js:1 Session ID: session-de16716a-8fd4-470b-b37d-79d04d052ac7-1752224382048
+954-97929645f2a259d4.js:1 Current pathname: /imoveis/evergreen-pure/B01
+layout-67e11bcb31db77b4.js:6 Tracking enhanced page view for: /imoveis/evergreen-pure/B01
+90-7ae8529da7641f0f.js:1 [VisitorTracker] Sending interaction to Supabase: {
+  "p_visitor_id": "de16716a-8fd4-470b-b37d-79d04d052ac7",
+  "p_interaction_type": "page_type_view",
+  "p_details": {
+    "pageType": "property_detail",
+    "url": "/imoveis/evergreen-pure/B01",
+    "timestamp": 1752224382055
+  },
+  "p_session_id": "1752224363481-g8b8lnaws"
+}
+954-97929645f2a259d4.js:1 Chatbot initialized with flatId: B01
+954-97929645f2a259d4.js:1 Session ID: session--1752224363461
+954-97929645f2a259d4.js:1 Current pathname: /imoveis/evergreen-pure/B01
+90-7ae8529da7641f0f.js:1 [VisitorTracker] Sending interaction to Supabase: {
+  "p_visitor_id": "de16716a-8fd4-470b-b37d-79d04d052ac7",
+  "p_interaction_type": "scroll_depth_25",
+  "p_details": {
+    "depth": 40
+  },
+  "p_session_id": "1752224363481-g8b8lnaws"
+}
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+90-7ae8529da7641f0f.js:1 [VisitorTracker] Successfully sent page view for /imoveis/evergreen-pure/B01
+nflssyblldwruktqftvl.supabase.co/rest/v1/rpc/track_interaction:1 
+            
+            
+           Failed to load resource: the server responded with a status of 400 ()Understand this error
+hook.js:608 [VisitorTracker] Error sending interaction to Supabase: Objectcode: "23514"details: nullhint: nullmessage: "new row for relation \"visitor_interactions\" violates check constraint \"valid_interaction_type\""[[Prototype]]: Object
+overrideMethod @ hook.js:608Understand this error
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+nflssyblldwruktqftvl.supabase.co/rest/v1/rpc/track_interaction:1 
+            
+            
+           Failed to load resource: the server responded with a status of 400 ()Understand this error
+hook.js:608 [VisitorTracker] Error sending interaction to Supabase: Objectcode: "23514"details: nullhint: nullmessage: "new row for relation \"visitor_interactions\" violates check constraint \"valid_interaction_type\""[[Prototype]]: Object
+overrideMethod @ hook.js:608Understand this error
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+90-7ae8529da7641f0f.js:1 [VisitorTracker] Sending interaction to Supabase: {
+  "p_visitor_id": "de16716a-8fd4-470b-b37d-79d04d052ac7",
+  "p_interaction_type": "button_click",
+  "p_details": {
+    "element": "BUTTON",
+    "text": "Fechar",
+    "url": "/imoveis/evergreen-pure/B01"
+  },
+  "p_session_id": "1752224363481-g8b8lnaws"
+}
+nflssyblldwruktqftvl.supabase.co/rest/v1/rpc/track_interaction:1 
+            
+            
+           Failed to load resource: the server responded with a status of 400 ()Understand this error
+hook.js:608 [VisitorTracker] Error sending interaction to Supabase: Objectcode: "23514"details: nullhint: nullmessage: "new row for relation \"visitor_interactions\" violates check constraint \"valid_interaction_type\""[[Prototype]]: Object
+overrideMethod @ hook.js:608Understand this error
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+90-7ae8529da7641f0f.js:1 [VisitorTracker] Sending interaction to Supabase: {
+  "p_visitor_id": "de16716a-8fd4-470b-b37d-79d04d052ac7",
+  "p_interaction_type": "button_click",
+  "p_details": {
+    "element": "BUTTON",
+    "text": "",
+    "url": "/imoveis/evergreen-pure/B01"
+  },
+  "p_session_id": "1752224363481-g8b8lnaws"
+}
+nflssyblldwruktqftvl.supabase.co/rest/v1/rpc/track_interaction:1 
+            
+            
+           Failed to load resource: the server responded with a status of 400 ()Understand this error
+hook.js:608 [VisitorTracker] Error sending interaction to Supabase: Objectcode: "23514"details: nullhint: nullmessage: "new row for relation \"visitor_interactions\" violates check constraint \"valid_interaction_type\""[[Prototype]]: Object
+overrideMethod @ hook.js:608Understand this error
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+90-7ae8529da7641f0f.js:1 [VisitorTracker] Sending interaction to Supabase: {
+  "p_visitor_id": "de16716a-8fd4-470b-b37d-79d04d052ac7",
+  "p_interaction_type": "button_click",
+  "p_details": {
+    "element": "BUTTON",
+    "text": "📅 Agendar visita",
+    "url": "/imoveis/evergreen-pure/B01"
+  },
+  "p_session_id": "1752224363481-g8b8lnaws"
+}
+nflssyblldwruktqftvl.supabase.co/rest/v1/rpc/track_interaction:1 
+            
+            
+           Failed to load resource: the server responded with a status of 400 ()Understand this error
+hook.js:608 [VisitorTracker] Error sending interaction to Supabase: Objectcode: "23514"details: nullhint: nullmessage: "new row for relation \"visitor_interactions\" violates check constraint \"valid_interaction_type\""[[Prototype]]: Object
+overrideMethod @ hook.js:608Understand this error
+954-97929645f2a259d4.js:1 NLU Analysis: Object
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+/api/text-to-speech:1 
+            
+            
+           Failed to load resource: the server responded with a status of 401 ()Understand this error
+hook.js:608 Error: Failed to convert text to speech
+    at eb (954-97929645f2a259d4.js:1:14101)
+    at async eh (954-97929645f2a259d4.js:1:14980)
+overrideMethod @ hook.js:608Understand this error
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+90-7ae8529da7641f0f.js:1 [VisitorTracker] Sending interaction to Supabase: {
+  "p_visitor_id": "de16716a-8fd4-470b-b37d-79d04d052ac7",
+  "p_interaction_type": "form_interaction",
+  "p_details": {
+    "element": "INPUT",
+    "formId": "",
+    "url": "/imoveis/evergreen-pure/B01"
+  },
+  "p_session_id": "1752224363481-g8b8lnaws"
+}
+nflssyblldwruktqftvl.supabase.co/rest/v1/rpc/track_interaction:1 
+            
+            
+           Failed to load resource: the server responded with a status of 400 ()Understand this error
+hook.js:608 [VisitorTracker] Error sending interaction to Supabase: Object
+overrideMethod @ hook.js:608Understand this error
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+90-7ae8529da7641f0f.js:1 [VisitorTracker] Sending interaction to Supabase: {
+  "p_visitor_id": "de16716a-8fd4-470b-b37d-79d04d052ac7",
+  "p_interaction_type": "form_interaction",
+  "p_details": {
+    "element": "BUTTON",
+    "formId": "",
+    "url": "/imoveis/evergreen-pure/B01"
+  },
+  "p_session_id": "1752224363481-g8b8lnaws"
+}
+90-7ae8529da7641f0f.js:1 [VisitorTracker] Sending interaction to Supabase: {
+  "p_visitor_id": "de16716a-8fd4-470b-b37d-79d04d052ac7",
+  "p_interaction_type": "button_click",
+  "p_details": {
+    "element": "BUTTON",
+    "text": "Enviar",
+    "url": "/imoveis/evergreen-pure/B01"
+  },
+  "p_session_id": "1752224363481-g8b8lnaws"
+}
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+nflssyblldwruktqftvl.supabase.co/rest/v1/rpc/track_interaction:1 
+            
+            
+           Failed to load resource: the server responded with a status of 400 ()Understand this error
+hook.js:608 [VisitorTracker] Error sending interaction to Supabase: Objectcode: "23514"details: nullhint: nullmessage: "new row for relation \"visitor_interactions\" violates check constraint \"valid_interaction_type\""[[Prototype]]: Object
+overrideMethod @ hook.js:608Understand this error
+nflssyblldwruktqftvl.supabase.co/rest/v1/rpc/track_interaction:1 
+            
+            
+           Failed to load resource: the server responded with a status of 400 ()Understand this error
+hook.js:608 [VisitorTracker] Error sending interaction to Supabase: Objectcode: "23514"details: nullhint: nullmessage: "new row for relation \"visitor_interactions\" violates check constraint \"valid_interaction_type\""[[Prototype]]: Object
+overrideMethod @ hook.js:608Understand this error
+954-97929645f2a259d4.js:1 NLU Analysis: Object
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+/api/text-to-speech:1 
+            
+            
+           Failed to load resource: the server responded with a status of 401 ()Understand this error
+hook.js:608 Error: Failed to convert text to speech
+    at eb (954-97929645f2a259d4.js:1:14101)
+    at async eh (954-97929645f2a259d4.js:1:14980)
+overrideMethod @ hook.js:608Understand this error
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+90-7ae8529da7641f0f.js:1 [VisitorTracker] Sending interaction to Supabase: {
+  "p_visitor_id": "de16716a-8fd4-470b-b37d-79d04d052ac7",
+  "p_interaction_type": "form_interaction",
+  "p_details": {
+    "element": "INPUT",
+    "formId": "",
+    "url": "/imoveis/evergreen-pure/B01"
+  },
+  "p_session_id": "1752224363481-g8b8lnaws"
+}
+nflssyblldwruktqftvl.supabase.co/rest/v1/rpc/track_interaction:1 
+            
+            
+           Failed to load resource: the server responded with a status of 400 ()Understand this error
+hook.js:608 [VisitorTracker] Error sending interaction to Supabase: Objectcode: "23514"details: nullhint: nullmessage: "new row for relation \"visitor_interactions\" violates check constraint \"valid_interaction_type\""[[Prototype]]: Object
+overrideMethod @ hook.js:608Understand this error
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+90-7ae8529da7641f0f.js:1 [VisitorTracker] Sending interaction to Supabase: {
+  "p_visitor_id": "de16716a-8fd4-470b-b37d-79d04d052ac7",
+  "p_interaction_type": "form_interaction",
+  "p_details": {
+    "element": "INPUT",
+    "formId": "",
+    "url": "/imoveis/evergreen-pure/B01"
+  },
+  "p_session_id": "1752224363481-g8b8lnaws"
+}
+nflssyblldwruktqftvl.supabase.co/rest/v1/rpc/track_interaction:1 
+            
+            
+           Failed to load resource: the server responded with a status of 400 ()Understand this error
+hook.js:608 [VisitorTracker] Error sending interaction to Supabase: Objectcode: "23514"details: nullhint: nullmessage: "new row for relation \"visitor_interactions\" violates check constraint \"valid_interaction_type\""[[Prototype]]: Object
+overrideMethod @ hook.js:608Understand this error
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+90-7ae8529da7641f0f.js:1 [VisitorTracker] Sending interaction to Supabase: {
+  "p_visitor_id": "de16716a-8fd4-470b-b37d-79d04d052ac7",
+  "p_interaction_type": "form_interaction",
+  "p_details": {
+    "element": "INPUT",
+    "formId": "",
+    "url": "/imoveis/evergreen-pure/B01"
+  },
+  "p_session_id": "1752224363481-g8b8lnaws"
+}
+nflssyblldwruktqftvl.supabase.co/rest/v1/rpc/track_interaction:1 
+            
+            
+           Failed to load resource: the server responded with a status of 400 ()Understand this error
+hook.js:608 [VisitorTracker] Error sending interaction to Supabase: Object
+overrideMethod @ hook.js:608Understand this error
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+90-7ae8529da7641f0f.js:1 [VisitorTracker] Sending interaction to Supabase: {
+  "p_visitor_id": "de16716a-8fd4-470b-b37d-79d04d052ac7",
+  "p_interaction_type": "form_interaction",
+  "p_details": {
+    "element": "BUTTON",
+    "formId": "",
+    "url": "/imoveis/evergreen-pure/B01"
+  },
+  "p_session_id": "1752224363481-g8b8lnaws"
+}
+90-7ae8529da7641f0f.js:1 [VisitorTracker] Sending interaction to Supabase: {
+  "p_visitor_id": "de16716a-8fd4-470b-b37d-79d04d052ac7",
+  "p_interaction_type": "button_click",
+  "p_details": {
+    "element": "BUTTON",
+    "text": "Enviar",
+    "url": "/imoveis/evergreen-pure/B01"
+  },
+  "p_session_id": "1752224363481-g8b8lnaws"
+}
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+nflssyblldwruktqftvl.supabase.co/rest/v1/rpc/track_interaction:1 
+            
+            
+           Failed to load resource: the server responded with a status of 400 ()Understand this error
+hook.js:608 [VisitorTracker] Error sending interaction to Supabase: Object
+overrideMethod @ hook.js:608Understand this error
+nflssyblldwruktqftvl.supabase.co/rest/v1/rpc/track_interaction:1 
+            
+            
+           Failed to load resource: the server responded with a status of 400 ()Understand this error
+hook.js:608 [VisitorTracker] Error sending interaction to Supabase: Object
+overrideMethod @ hook.js:608Understand this error
+954-97929645f2a259d4.js:1 NLU Analysis: Object
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+/api/text-to-speech:1 
+            
+            
+           Failed to load resource: the server responded with a status of 401 ()Understand this error
+hook.js:608 Error: Failed to convert text to speech
+    at eb (954-97929645f2a259d4.js:1:14101)
+    at async eh (954-97929645f2a259d4.js:1:14980)
+overrideMethod @ hook.js:608Understand this error
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+90-7ae8529da7641f0f.js:1 [VisitorTracker] Sending interaction to Supabase: {
+  "p_visitor_id": "de16716a-8fd4-470b-b37d-79d04d052ac7",
+  "p_interaction_type": "form_interaction",
+  "p_details": {
+    "element": "INPUT",
+    "formId": "",
+    "url": "/imoveis/evergreen-pure/B01"
+  },
+  "p_session_id": "1752224363481-g8b8lnaws"
+}
+nflssyblldwruktqftvl.supabase.co/rest/v1/rpc/track_interaction:1 
+            
+            
+           Failed to load resource: the server responded with a status of 400 ()Understand this error
+hook.js:608 [VisitorTracker] Error sending interaction to Supabase: Objectcode: "23514"details: nullhint: nullmessage: "new row for relation \"visitor_interactions\" violates check constraint \"valid_interaction_type\""[[Prototype]]: Object
+overrideMethod @ hook.js:608Understand this error
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+90-7ae8529da7641f0f.js:1 [VisitorTracker] Sending interaction to Supabase: {
+  "p_visitor_id": "de16716a-8fd4-470b-b37d-79d04d052ac7",
+  "p_interaction_type": "form_interaction",
+  "p_details": {
+    "element": "BUTTON",
+    "formId": "",
+    "url": "/imoveis/evergreen-pure/B01"
+  },
+  "p_session_id": "1752224363481-g8b8lnaws"
+}
+90-7ae8529da7641f0f.js:1 [VisitorTracker] Sending interaction to Supabase: {
+  "p_visitor_id": "de16716a-8fd4-470b-b37d-79d04d052ac7",
+  "p_interaction_type": "button_click",
+  "p_details": {
+    "element": "BUTTON",
+    "text": "Enviar",
+    "url": "/imoveis/evergreen-pure/B01"
+  },
+  "p_session_id": "1752224363481-g8b8lnaws"
+}
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+nflssyblldwruktqftvl.supabase.co/rest/v1/rpc/track_interaction:1 
+            
+            
+           Failed to load resource: the server responded with a status of 400 ()Understand this error
+nflssyblldwruktqftvl.supabase.co/rest/v1/rpc/track_interaction:1 
+            
+            
+           Failed to load resource: the server responded with a status of 400 ()Understand this error
+hook.js:608 [VisitorTracker] Error sending interaction to Supabase: Object
+overrideMethod @ hook.js:608Understand this error
+hook.js:608 [VisitorTracker] Error sending interaction to Supabase: Object
+overrideMethod @ hook.js:608Understand this error
+954-97929645f2a259d4.js:1 NLU Analysis: Object
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+/api/text-to-speech:1 
+            
+            
+           Failed to load resource: the server responded with a status of 401 ()Understand this error
+hook.js:608 Error: Failed to convert text to speech
+    at eb (954-97929645f2a259d4.js:1:14101)
+    at async eh (954-97929645f2a259d4.js:1:14980)
+overrideMethod @ hook.js:608Understand this error
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+90-7ae8529da7641f0f.js:1 [VisitorTracker] Sending interaction to Supabase: {
+  "p_visitor_id": "de16716a-8fd4-470b-b37d-79d04d052ac7",
+  "p_interaction_type": "form_interaction",
+  "p_details": {
+    "element": "INPUT",
+    "formId": "",
+    "url": "/imoveis/evergreen-pure/B01"
+  },
+  "p_session_id": "1752224363481-g8b8lnaws"
+}
+nflssyblldwruktqftvl.supabase.co/rest/v1/rpc/track_interaction:1 
+            
+            
+           Failed to load resource: the server responded with a status of 400 ()Understand this error
+hook.js:608 [VisitorTracker] Error sending interaction to Supabase: Objectcode: "23514"details: nullhint: nullmessage: "new row for relation \"visitor_interactions\" violates check constraint \"valid_interaction_type\""[[Prototype]]: Object
+overrideMethod @ hook.js:608Understand this error
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+90-7ae8529da7641f0f.js:1 [VisitorTracker] Sending interaction to Supabase: {
+  "p_visitor_id": "de16716a-8fd4-470b-b37d-79d04d052ac7",
+  "p_interaction_type": "form_interaction",
+  "p_details": {
+    "element": "BUTTON",
+    "formId": "",
+    "url": "/imoveis/evergreen-pure/B01"
+  },
+  "p_session_id": "1752224363481-g8b8lnaws"
+}
+90-7ae8529da7641f0f.js:1 [VisitorTracker] Sending interaction to Supabase: {
+  "p_visitor_id": "de16716a-8fd4-470b-b37d-79d04d052ac7",
+  "p_interaction_type": "button_click",
+  "p_details": {
+    "element": "BUTTON",
+    "text": "Enviar",
+    "url": "/imoveis/evergreen-pure/B01"
+  },
+  "p_session_id": "1752224363481-g8b8lnaws"
+}
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+nflssyblldwruktqftvl.supabase.co/rest/v1/rpc/track_interaction:1 
+            
+            
+           Failed to load resource: the server responded with a status of 400 ()Understand this error
+hook.js:608 [VisitorTracker] Error sending interaction to Supabase: Objectcode: "23514"details: nullhint: nullmessage: "new row for relation \"visitor_interactions\" violates check constraint \"valid_interaction_type\""[[Prototype]]: Object
+overrideMethod @ hook.js:608Understand this error
+954-97929645f2a259d4.js:1 NLU Analysis: Object
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+nflssyblldwruktqftvl.supabase.co/rest/v1/rpc/track_interaction:1 
+            
+            
+           Failed to load resource: the server responded with a status of 400 ()Understand this error
+hook.js:608 [VisitorTracker] Error sending interaction to Supabase: Objectcode: "23514"details: nullhint: nullmessage: "new row for relation \"visitor_interactions\" violates check constraint \"valid_interaction_type\""[[Prototype]]: Object
+overrideMethod @ hook.js:608Understand this error
+/api/text-to-speech:1 
+            
+            
+           Failed to load resource: the server responded with a status of 401 ()Understand this error
+hook.js:608 Error: Failed to convert text to speech
+    at eb (954-97929645f2a259d4.js:1:14101)
+    at async eh (954-97929645f2a259d4.js:1:14980)
+overrideMethod @ hook.js:608Understand this error
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+90-7ae8529da7641f0f.js:1 [VisitorTracker] Sending interaction to Supabase: {
+  "p_visitor_id": "de16716a-8fd4-470b-b37d-79d04d052ac7",
+  "p_interaction_type": "form_interaction",
+  "p_details": {
+    "element": "INPUT",
+    "formId": "",
+    "url": "/imoveis/evergreen-pure/B01"
+  },
+  "p_session_id": "1752224363481-g8b8lnaws"
+}
+nflssyblldwruktqftvl.supabase.co/rest/v1/rpc/track_interaction:1 
+            
+            
+           Failed to load resource: the server responded with a status of 400 ()Understand this error
+hook.js:608 [VisitorTracker] Error sending interaction to Supabase: Objectcode: "23514"details: nullhint: nullmessage: "new row for relation \"visitor_interactions\" violates check constraint \"valid_interaction_type\""[[Prototype]]: Object
+overrideMethod @ hook.js:608Understand this error
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+90-7ae8529da7641f0f.js:1 [VisitorTracker] Sending interaction to Supabase: {
+  "p_visitor_id": "de16716a-8fd4-470b-b37d-79d04d052ac7",
+  "p_interaction_type": "form_interaction",
+  "p_details": {
+    "element": "BUTTON",
+    "formId": "",
+    "url": "/imoveis/evergreen-pure/B01"
+  },
+  "p_session_id": "1752224363481-g8b8lnaws"
+}
+90-7ae8529da7641f0f.js:1 [VisitorTracker] Sending interaction to Supabase: {
+  "p_visitor_id": "de16716a-8fd4-470b-b37d-79d04d052ac7",
+  "p_interaction_type": "button_click",
+  "p_details": {
+    "element": "BUTTON",
+    "text": "Enviar",
+    "url": "/imoveis/evergreen-pure/B01"
+  },
+  "p_session_id": "1752224363481-g8b8lnaws"
+}
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+nflssyblldwruktqftvl.supabase.co/rest/v1/rpc/track_interaction:1 
+            
+            
+           Failed to load resource: the server responded with a status of 400 ()Understand this error
+hook.js:608 [VisitorTracker] Error sending interaction to Supabase: Objectcode: "23514"details: nullhint: nullmessage: "new row for relation \"visitor_interactions\" violates check constraint \"valid_interaction_type\""[[Prototype]]: Object
+overrideMethod @ hook.js:608Understand this error
+nflssyblldwruktqftvl.supabase.co/rest/v1/rpc/track_interaction:1 
+            
+            
+           Failed to load resource: the server responded with a status of 400 ()Understand this error
+hook.js:608 [VisitorTracker] Error sending interaction to Supabase: Objectcode: "23514"details: nullhint: nullmessage: "new row for relation \"visitor_interactions\" violates check constraint \"valid_interaction_type\""[[Prototype]]: Object
+overrideMethod @ hook.js:608Understand this error
+954-97929645f2a259d4.js:1 NLU Analysis: Object
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+/api/text-to-speech:1 
+            
+            
+           Failed to load resource: the server responded with a status of 401 ()Understand this error
+hook.js:608 Error: Failed to convert text to speech
+    at eb (954-97929645f2a259d4.js:1:14101)
+    at async eh (954-97929645f2a259d4.js:1:14980)
+overrideMethod @ hook.js:608Understand this error
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+90-7ae8529da7641f0f.js:1 [VisitorTracker] Sending interaction to Supabase: {
+  "p_visitor_id": "de16716a-8fd4-470b-b37d-79d04d052ac7",
+  "p_interaction_type": "form_interaction",
+  "p_details": {
+    "element": "INPUT",
+    "formId": "",
+    "url": "/imoveis/evergreen-pure/B01"
+  },
+  "p_session_id": "1752224363481-g8b8lnaws"
+}
+nflssyblldwruktqftvl.supabase.co/rest/v1/rpc/track_interaction:1 
+            
+            
+           Failed to load resource: the server responded with a status of 400 ()Understand this error
+hook.js:608 [VisitorTracker] Error sending interaction to Supabase: Objectcode: "23514"details: nullhint: nullmessage: "new row for relation \"visitor_interactions\" violates check constraint \"valid_interaction_type\""[[Prototype]]: Object
+overrideMethod @ hook.js:608Understand this error
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+90-7ae8529da7641f0f.js:1 [VisitorTracker] Sending interaction to Supabase: {
+  "p_visitor_id": "de16716a-8fd4-470b-b37d-79d04d052ac7",
+  "p_interaction_type": "form_interaction",
+  "p_details": {
+    "element": "BUTTON",
+    "formId": "",
+    "url": "/imoveis/evergreen-pure/B01"
+  },
+  "p_session_id": "1752224363481-g8b8lnaws"
+}
+90-7ae8529da7641f0f.js:1 [VisitorTracker] Sending interaction to Supabase: {
+  "p_visitor_id": "de16716a-8fd4-470b-b37d-79d04d052ac7",
+  "p_interaction_type": "button_click",
+  "p_details": {
+    "element": "BUTTON",
+    "text": "Enviar",
+    "url": "/imoveis/evergreen-pure/B01"
+  },
+  "p_session_id": "1752224363481-g8b8lnaws"
+}
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+nflssyblldwruktqftvl.supabase.co/rest/v1/rpc/track_interaction:1 
+            
+            
+           Failed to load resource: the server responded with a status of 400 ()Understand this error
+hook.js:608 [VisitorTracker] Error sending interaction to Supabase: Object
+overrideMethod @ hook.js:608Understand this error
+nflssyblldwruktqftvl.supabase.co/rest/v1/rpc/track_interaction:1 
+            
+            
+           Failed to load resource: the server responded with a status of 400 ()Understand this error
+hook.js:608 [VisitorTracker] Error sending interaction to Supabase: Object
+overrideMethod @ hook.js:608Understand this error
+954-97929645f2a259d4.js:1 NLU Analysis: Object
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01
+/api/text-to-speech:1 
+            
+            
+           Failed to load resource: the server responded with a status of 401 ()Understand this error
+hook.js:608 Error: Failed to convert text to speech
+    at eb (954-97929645f2a259d4.js:1:14101)
+    at async eh (954-97929645f2a259d4.js:1:14980)
+overrideMethod @ hook.js:608Understand this error
+954-97929645f2a259d4.js:1 Updated context: Object
+954-97929645f2a259d4.js:1 Chatbot URL extraction: Object
+954-97929645f2a259d4.js:1 Chatbot flatId: B01

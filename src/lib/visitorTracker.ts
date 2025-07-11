@@ -414,8 +414,10 @@ class VisitorTracker {
 
     try {
       if (eventType === 'page_view') {
-        const { url, flatId } = data;
-        const { error } = await supabase.rpc('track_page_view', {
+        const { url, flatId, pageType } = data;
+        
+        // Send page view
+        const { error: pageViewError } = await supabase.rpc('track_page_view', {
           p_visitor_id: this.visitorId,
           p_page_url: url,
           p_flat_id: flatId,
@@ -425,19 +427,28 @@ class VisitorTracker {
           p_utm_params: this.sessionData.utmParams,
         });
 
-        if (error) {
-          console.error('[VisitorTracker] Error sending page view to Supabase:', error);
-          console.error('[VisitorTracker] Page view data that failed:', JSON.stringify({
-            p_visitor_id: this.visitorId,
-            p_page_url: url,
-            p_flat_id: flatId,
-            p_fingerprint_id: this.fingerprintHash,
-            p_session_id: this.sessionData.sessionId,
-            p_referrer: this.sessionData.referrer,
-            p_utm_params: this.sessionData.utmParams,
-          }, null, 2));
+        if (pageViewError) {
+          console.error('[VisitorTracker] Error sending page view to Supabase:', pageViewError);
         } else {
           console.log('[VisitorTracker] Successfully sent page view for', url);
+        }
+
+        // Also send page type view if specified
+        if (pageType) {
+          const { error: pageTypeError } = await supabase.rpc('track_interaction', {
+            p_visitor_id: this.visitorId,
+            p_interaction_type: 'page_type_view',
+            p_details: {
+              pageType: pageType,
+              url: url,
+              timestamp: Date.now()
+            },
+            p_session_id: this.sessionData.sessionId,
+          });
+
+          if (pageTypeError) {
+            console.error('[VisitorTracker] Error sending page type view to Supabase:', pageTypeError);
+          }
         }
       } else if (eventType === 'interaction') {
         const { type, details } = data;
@@ -447,6 +458,7 @@ class VisitorTracker {
           p_details: details,
           p_session_id: this.sessionData.sessionId,
         }, null, 2));
+        
         const { error } = await supabase.rpc('track_interaction', {
           p_visitor_id: this.visitorId,
           p_interaction_type: type,
@@ -493,6 +505,93 @@ class VisitorTracker {
     } catch (error) {
       console.error('Error in linkVisitorWithEmail:', error);
     }
+  }
+
+  // Method to update contact details and recalculate lead score
+  async updateContactDetails(contactInfo: {
+    name?: string;
+    email?: string;
+    phone?: string;
+  }): Promise<void> {
+    try {
+      const updateData: any = {
+        updated_at: new Date().toISOString(),
+        last_activity_at: new Date().toISOString(),
+      };
+
+      if (contactInfo.name) {
+        updateData.contact_name = contactInfo.name;
+      }
+      if (contactInfo.email) {
+        updateData.contact_email = contactInfo.email;
+      }
+      if (contactInfo.phone) {
+        updateData.contact_phone = contactInfo.phone;
+      }
+
+      // Update lead status to warm/hot since they provided contact details
+      updateData.lead_status = 'warm';
+
+      const { error } = await supabase
+        .from('leads_tracking')
+        .update(updateData)
+        .eq('visitor_id', this.visitorId);
+
+      if (error) {
+        console.error('Error updating contact details:', error);
+      } else {
+        console.log('Successfully updated contact details:', contactInfo);
+        
+        // Track this as a high-value interaction
+        await this.trackInteraction('contact_form', {
+          contact_provided: true,
+          name: contactInfo.name,
+          email: contactInfo.email,
+          phone: contactInfo.phone,
+          timestamp: Date.now()
+        });
+      }
+    } catch (error) {
+      console.error('Error in updateContactDetails:', error);
+    }
+  }
+
+  // Extract contact details from text using regex patterns
+  extractContactDetails(text: string): {
+    name?: string;
+    email?: string;
+    phone?: string;
+  } {
+    const contactInfo: any = {};
+
+    // Email pattern
+    const emailMatch = text.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
+    if (emailMatch) {
+      contactInfo.email = emailMatch[1];
+    }
+
+    // Phone pattern (Portuguese format)
+    const phoneMatch = text.match(/(\+?351\s?)?([29]\d{8})/);
+    if (phoneMatch) {
+      contactInfo.phone = phoneMatch[0].replace(/\s/g, '');
+    }
+
+    // Name pattern - look for name before email or at start of message
+    if (contactInfo.email) {
+      const beforeEmail = text.substring(0, text.indexOf(contactInfo.email)).trim();
+      const nameMatch = beforeEmail.match(/([A-ZÁÀÂÃÉÊÍÓÔÕÚÇ][a-záàâãéêíóôõúç]+(?:\s+[A-ZÁÀÂÃÉÊÍÓÔÕÚÇ][a-záàâãéêíóôõúç]+)*)/);
+      if (nameMatch) {
+        contactInfo.name = nameMatch[1];
+      }
+    } else {
+      // Look for name patterns at the beginning
+      const nameMatch = text.match(/^([A-ZÁÀÂÃÉÊÍÓÔÕÚÇ][a-záàâãéêíóôõúç]+(?:\s+[A-ZÁÀÂÃÉÊÍÓÔÕÚÇ][a-záàâãéêíóôõúç]+)*)/);
+      if (nameMatch) {
+        contactInfo.name = nameMatch[1];
+      }
+    }
+
+    return contactInfo;
   }
 
   // Get visitor data for analytics

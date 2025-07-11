@@ -24,6 +24,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MessageCircle, Loader2, Mic, StopCircle } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import visitorTracker from "@/lib/visitorTracker";
 import { memoryService } from "@/lib/memoryService";
 
@@ -60,20 +61,35 @@ function LeadCollectionModal({
   isOpen,
   onClose,
   flatId,
+  prefilledData,
 }: {
   isOpen: boolean;
   onClose: () => void;
   flatId?: string;
+  prefilledData?: {
+    name?: string;
+    email?: string;
+    phone?: string;
+  };
 }) {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
+  const [name, setName] = useState(prefilledData?.name || "");
+  const [email, setEmail] = useState(prefilledData?.email || "");
+  const [phone, setPhone] = useState(prefilledData?.phone || "");
   const [message, setMessage] = useState("");
   const [purchaseTimeframe, setPurchaseTimeframe] = useState("Brevemente");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<"success" | "error" | null>(
     null
   );
+
+  // Update form when prefilledData changes
+  useEffect(() => {
+    if (prefilledData) {
+      setName(prefilledData.name || "");
+      setEmail(prefilledData.email || "");
+      setPhone(prefilledData.phone || "");
+    }
+  }, [prefilledData]);
 
   const handleLeadSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -97,8 +113,12 @@ function LeadCollectionModal({
 
       if (!response.ok) throw new Error("Failed to submit lead");
 
-      // Link the visitor with their email for future tracking
-      await visitorTracker.linkVisitorWithEmail(email);
+      // Update contact details in visitor tracker
+      await visitorTracker.updateContactDetails({
+        name,
+        email,
+        phone,
+      });
 
       setSubmitStatus("success");
       setTimeout(() => {
@@ -249,6 +269,19 @@ export default function Chatbot({ flatId: propFlatId }: ChatbotProps) {
     currentStep?: string;
     options?: string[];
   }>({ active: false });
+  const [detectedContactInfo, setDetectedContactInfo] = useState<{
+    name?: string;
+    email?: string;
+    phone?: string;
+  }>({});
+  const [showContactForm, setShowContactForm] = useState(false);
+  const [contactFormData, setContactFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    notes: ''
+  });
+  const [isSubmittingContact, setIsSubmittingContact] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const [isRecording, setIsRecording] = useState(false);
@@ -714,6 +747,71 @@ export default function Chatbot({ flatId: propFlatId }: ChatbotProps) {
     setIsLoading(true);
 
     try {
+      // Extract contact details from the message
+      const contactInfo = visitorTracker.extractContactDetails(messageText);
+      if (contactInfo.email || contactInfo.phone || contactInfo.name) {
+        setDetectedContactInfo(prev => ({ ...prev, ...contactInfo }));
+        
+        // Pre-fill the contact form with detected information
+        setContactFormData(prev => ({
+          ...prev,
+          name: contactInfo.name || prev.name,
+          email: contactInfo.email || prev.email,
+          phone: contactInfo.phone || prev.phone,
+        }));
+        
+        // Update contact details in the database
+        await visitorTracker.updateContactDetails(contactInfo);
+        
+        // Show confirmation message and ask for any missing details
+        const missingDetails = [];
+        if (!contactInfo.name) missingDetails.push('nome');
+        if (!contactInfo.email) missingDetails.push('email');
+        if (!contactInfo.phone) missingDetails.push('telefone');
+        
+        let confirmationMessage;
+        if (missingDetails.length === 0) {
+          confirmationMessage = `Obrigado pelos seus dados de contacto${contactInfo.name ? `, ${contactInfo.name}` : ''}! Guardei as suas informações e um especialista entrará em contacto consigo brevemente.`;
+        } else {
+          confirmationMessage = `Obrigado pelas informações! Para completar o seu pedido, preciso ainda do seu ${missingDetails.join(' e ')}. Pode preencher o formulário que vou abrir?`;
+          setShowContactForm(true);
+        }
+        
+        setMessages((prev) => [
+          ...prev,
+          {
+            text: confirmationMessage,
+            sender: "bot",
+            timestamp: new Date(),
+          },
+        ]);
+        
+        setIsLoading(false);
+        return;
+      }
+
+      // Check if user is expressing interest in contact but hasn't provided details
+      const lowerMessage = messageText.toLowerCase();
+      const contactIntentKeywords = [
+        'quero ser contactado', 'contactem-me', 'liguem-me', 'enviem informações',
+        'quero mais informações', 'interessado', 'gostaria de saber mais',
+        'agendar visita', 'marcar reunião', 'falar com alguém'
+      ];
+      
+      if (contactIntentKeywords.some(keyword => lowerMessage.includes(keyword))) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            text: "Perfeito! Para que possamos contactá-lo, preciso dos seus dados. Pode preencher o formulário que vou abrir?",
+            sender: "bot",
+            timestamp: new Date(),
+          },
+        ]);
+        setShowContactForm(true);
+        setIsLoading(false);
+        return;
+      }
+
       // Check if this is a qualification response
       if (qualificationStep) {
         handleQualificationResponse(messageText, qualificationStep);
@@ -914,6 +1012,68 @@ export default function Chatbot({ flatId: propFlatId }: ChatbotProps) {
       setIsSheetOpen(false);
       setApartmentQualification({});
     }, 2000);
+  };
+
+  const handleContactFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setContactFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleContactFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsSubmittingContact(true);
+
+    try {
+      // Update contact details in visitor tracker
+      await visitorTracker.updateContactDetails({
+        name: contactFormData.name,
+        email: contactFormData.email,
+        phone: contactFormData.phone,
+      });
+
+      // Submit lead with additional notes
+      const response = await fetch("/api/leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: contactFormData.name,
+          email: contactFormData.email,
+          phone: contactFormData.phone,
+          message: contactFormData.notes,
+          flatId,
+          purchaseTimeframe: "Brevemente",
+          visitorId: visitorTracker.visitorId,
+        }),
+      });
+
+      if (!response.ok) throw new Error("Failed to submit contact details");
+
+      // Show success message
+      setMessages((prev) => [
+        ...prev,
+        {
+          text: `Obrigado pelos seus dados de contacto, ${contactFormData.name}! Guardei as suas informações e um especialista entrará em contacto consigo brevemente.`,
+          sender: "bot",
+          timestamp: new Date(),
+        },
+      ]);
+
+      // Reset form and close modal
+      setContactFormData({ name: '', email: '', phone: '', notes: '' });
+      setShowContactForm(false);
+    } catch (error) {
+      console.error('Error submitting contact form:', error);
+      setMessages((prev) => [
+        ...prev,
+        {
+          text: "Desculpe, ocorreu um erro ao guardar os seus dados. Por favor, tente novamente.",
+          sender: "bot",
+          timestamp: new Date(),
+        },
+      ]);
+    } finally {
+      setIsSubmittingContact(false);
+    }
   };
 
   return (
@@ -1204,6 +1364,74 @@ export default function Chatbot({ flatId: propFlatId }: ChatbotProps) {
         onClose={() => setIsLeadModalOpen(false)}
         flatId={flatId}
       />
+
+      {/* Contact Collection Modal */}
+      <Dialog open={showContactForm} onOpenChange={setShowContactForm}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Dados de Contacto</DialogTitle>
+            <DialogDescription>
+              Para melhor o ajudar, por favor forneça os seus dados de contacto:
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleContactFormSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="contact-name">Nome Completo</Label>
+              <Input
+                id="contact-name"
+                name="name"
+                value={contactFormData.name}
+                onChange={handleContactFormChange}
+                placeholder="O seu nome completo"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="contact-email">Email</Label>
+              <Input
+                id="contact-email"
+                name="email"
+                type="email"
+                value={contactFormData.email}
+                onChange={handleContactFormChange}
+                placeholder="exemplo@email.com"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="contact-phone">Telefone</Label>
+              <Input
+                id="contact-phone"
+                name="phone"
+                type="tel"
+                value={contactFormData.phone}
+                onChange={handleContactFormChange}
+                placeholder="9XX XXX XXX"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="contact-notes">Informações Adicionais (Opcional)</Label>
+              <Textarea
+                id="contact-notes"
+                name="notes"
+                value={contactFormData.notes}
+                onChange={handleContactFormChange}
+                placeholder="Qualquer informação adicional que gostaria de partilhar..."
+                rows={3}
+              />
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setShowContactForm(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={isSubmittingContact}>
+                {isSubmittingContact ? "A guardar..." : "Guardar Contactos"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
       <style jsx global>{`
         @keyframes chatbot-pulse {
           0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 #11182744; }
