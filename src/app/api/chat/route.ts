@@ -565,12 +565,32 @@ ${contextText}
           const leadId = lead.id;
           const userMessage = messages[messages.length - 1];
 
+          // Extract property_id from NLU entities or flatId parameter
+          let propertyId = null;
+          
+          // First, try to get apartment ID from NLU entities
+          const apartmentEntity = nluResult.entities.find(e => e.type === 'apartment_id');
+          if (apartmentEntity) {
+            propertyId = apartmentEntity.value.toUpperCase();
+          }
+          
+          // If no entity found but flatId is provided, use that
+          if (!propertyId && flatId) {
+            propertyId = flatId.toUpperCase();
+          }
+          
+          // Transform property ID to match database format if needed
+          if (propertyId) {
+            propertyId = transformFlatIdForDatabase(propertyId);
+          }
+
           const { error: interactionError } = await supabase_admin
             .from("visitor_interactions")
             .insert({
               lead_id: leadId,
               visitor_id: visitorId,
               interaction_type: "chat_message",
+              property_id: propertyId,
               points_awarded: 5,
               details: { message: userMessage.text, leadScore: leadScore },
             });

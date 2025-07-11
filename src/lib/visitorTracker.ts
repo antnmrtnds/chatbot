@@ -61,12 +61,14 @@ class VisitorTracker {
       return;
     }
     try {
-      // Generate device fingerprint
+      // Generate device fingerprint first
       const fingerprint = await this.generateDeviceFingerprint();
       this.fingerprintHash = await this.hashFingerprint(fingerprint);
       this.fingerprintId = this.fingerprintHash;
       
-      // Get or create visitor ID using multiple methods
+      console.log('[VisitorTracker] Generated fingerprint hash:', this.fingerprintHash.substring(0, 16) + '...');
+      
+      // Get or create visitor ID using multiple methods (now fingerprint is available)
       const newVisitorId = await this.getOrCreateVisitorId();
       if (!this.isValidUUID(newVisitorId)) {
         throw new Error('Generated visitor ID is not a valid UUID.');
@@ -84,7 +86,7 @@ class VisitorTracker {
       this.isInitialized = true;
       console.log('[VisitorTracker] Initialized:', {
         visitorId: this.visitorId,
-        fingerprintId: this.fingerprintId,
+        fingerprintId: this.fingerprintId.substring(0, 16) + '...',
         sessionId: this.sessionData.sessionId
       });
     } catch (error) {
@@ -92,6 +94,7 @@ class VisitorTracker {
       // Fallback to a newly generated UUID if initialization fails
       this.visitorId = crypto.randomUUID();
       this.fingerprintId = 'fallback-fingerprint';
+      this.fingerprintHash = 'fallback-fingerprint-hash';
       this.sessionData.sessionId = 'fallback-session';
       this.isInitialized = true; // Ensure it's initialized even on error
     }
@@ -290,18 +293,32 @@ class VisitorTracker {
 
   private async getVisitorIdByFingerprint(): Promise<string | null> {
     try {
+      // Only query if we have a valid fingerprint hash
+      if (!this.fingerprintHash || this.fingerprintHash.length === 0) {
+        console.log('[VisitorTracker] No fingerprint hash available for database lookup');
+        return null;
+      }
+
       const { data, error } = await supabase
         .from('leads_tracking')
         .select('visitor_id')
         .eq('fingerprint_id', this.fingerprintHash)
         .single();
       
-      if (error || !data) return null;
+      if (error) {
+        console.log('[VisitorTracker] No existing visitor found by fingerprint:', error.message);
+        return null;
+      }
       
-      console.log('Found existing visitor by fingerprint:', data.visitor_id);
+      if (!data) {
+        console.log('[VisitorTracker] No data returned for fingerprint lookup');
+        return null;
+      }
+      
+      console.log('[VisitorTracker] Found existing visitor by fingerprint:', data.visitor_id);
       return data.visitor_id;
     } catch (error) {
-      console.warn('Error checking fingerprint in database:', error);
+      console.warn('[VisitorTracker] Error checking fingerprint in database:', error);
       return null;
     }
   }

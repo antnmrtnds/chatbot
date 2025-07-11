@@ -48,6 +48,7 @@ export async function POST(request: NextRequest) {
             lead_id: leadId,
             visitor_id: visitorId,
             interaction_type: "lead_submission",
+            property_id: flatId ? flatId.toUpperCase() : null,
             points_awarded: 50,
             details: { name, email, flatId, purchaseTimeframe },
           });
@@ -144,6 +145,7 @@ export async function PATCH(request: NextRequest) {
           lead_id: updatedLead.id,
           visitor_id: visitorId,
           interaction_type: "lead_qualification",
+          property_id: flatId ? flatId.toUpperCase() : null,
           points_awarded: 10,
           details: { leadData, leadScore, flatId },
         });
