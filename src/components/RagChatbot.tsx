@@ -439,30 +439,17 @@ export function RagChatbot({
 
       // Check for navigation commands
       if (features.navigationCommands && data.navigationCommand) {
-        // If it's a listing request, show a brief message and then navigate
+        // If it's a listing request, collect preferences first
         if (data.navigationCommand.command === 'navigate_to_evergreen_listings') {
-          const navigationMessage: Message = {
+          const preferencesMessage: Message = {
             id: (Date.now() + 2).toString(),
-            content: data.navigationCommand.context?.message || 'Redirecionando para as unidades disponíveis...',
+            content: 'Claro, diga-me rapidamente as suas preferências de tipologia e orçamento:',
             role: 'assistant',
             timestamp: new Date(),
           };
           
-          setMessages(prev => [...prev, navigationMessage]);
-          
-          // Navigate after a short delay to show the message
-          setTimeout(() => {
-            if (typeof window !== 'undefined') {
-              window.location.href = data.navigationCommand.url;
-            } else {
-              onNavigate?.(data.navigationCommand.url, {
-                command: data.navigationCommand.command,
-                targetPage: data.navigationCommand.url,
-                reason: 'user_request',
-                context: data.navigationCommand.context,
-              });
-            }
-          }, 1500);
+          setMessages(prev => [...prev, preferencesMessage]);
+          setIsCollectingPreferences(true);
         } else {
           // Handle other navigation commands normally
           onNavigate?.(data.navigationCommand.url, {
