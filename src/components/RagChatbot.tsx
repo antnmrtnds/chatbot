@@ -71,7 +71,7 @@ export interface ChatbotConfig {
 
 export interface PageContext {
   url: string;
-  pageType: 'home' | 'property' | 'listing' | 'about' | 'contact' | 'blog';
+  pageType: 'home' | 'property' | 'listing' | 'about' | 'contact' | 'blog' | 'general';
   semanticId: string;
   title?: string;
   description?: string;
