@@ -5,7 +5,6 @@ import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import AppTracker from "@/components/AppTracker";
-import RagChatbot from "@/components/RagChatbot";
 import { Suspense } from "react";
 
 export const metadata: Metadata = {
@@ -31,24 +30,6 @@ export default function RootLayout({
         <Suspense fallback={null}>
           <AppTracker />
         </Suspense>
-        <RagChatbot
-          pageContext={{
-            url: typeof window !== 'undefined' ? window.location.pathname : '/',
-            pageType: 'general',
-            semanticId: 'global_chatbot',
-            title: 'Viriato - Assistente Virtual',
-          }}
-          visitorId={`visitor-${Date.now()}`}
-          sessionId={`session-${Date.now()}`}
-          features={{
-            ragEnabled: true,
-            contextAwareness: true,
-            progressiveLeadCapture: true,
-            voiceInput: true,
-            navigationCommands: true,
-          }}
-          position="bottom-right"
-        />
       </body>
     </html>
   );

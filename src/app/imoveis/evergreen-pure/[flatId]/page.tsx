@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Bath, Bed, Car, MapPin, Building2, Heart, Share2, Calendar, Info } from "lucide-react";
 import Link from "next/link";
-import RagChatbot from '@/components/RagChatbot';
+import SimpleApartmentChatbot from '@/components/SimpleApartmentChatbot';
 import { Suspense } from 'react';
 
 interface PageProps {
@@ -248,41 +248,7 @@ function FlatPageContent({ flatId }: { flatId: string }) {
         </div>
       </div>
       
-      <RagChatbot
-        pageContext={{
-          url: `/imoveis/evergreen-pure/${flatId}`,
-          pageType: 'property',
-          semanticId: `property_${flatId}`,
-          title: `Evergreen Pure - Apartamento ${flatId}`,
-          propertyId: flatId,
-          propertyType: flatDetails.typology,
-          priceRange: flatDetails.priceValue > 0 ?
-            (flatDetails.priceValue < 300000 ? '200k-300k' : '300k-400k') : undefined,
-          features: ['garagem', 'elevador', 'em_construcao'],
-        }}
-        visitorId={`visitor-${Date.now()}`}
-        sessionId={`session-${Date.now()}`}
-        features={{
-          ragEnabled: true,
-          contextAwareness: true,
-          progressiveLeadCapture: true,
-          voiceInput: true,
-          navigationCommands: true,
-        }}
-        onLeadCapture={(leadData) => {
-          console.log(`Lead captured for apartment ${flatId}:`, leadData);
-          // Send to your CRM or analytics
-        }}
-        onAnalyticsEvent={(event) => {
-          console.log(`Analytics event for apartment ${flatId}:`, event);
-          // Send to your analytics platform
-        }}
-        onNavigate={(url, navContext) => {
-          console.log('Navigation requested:', url, navContext);
-          window.location.href = url;
-        }}
-        position="bottom-right"
-      />
+      <SimpleApartmentChatbot position="bottom-right" />
     </div>
   );
 }

@@ -170,12 +170,14 @@ export class RagService {
   private async analyzeIntent(message: string, context?: PageContext) {
     const prompt = `
 Analyze the following user message and extract:
-1. Intent (property_search, property_info, pricing, scheduling, general_info, navigation, listing_request)
+1. Intent (property_search, property_info, pricing, scheduling, general_info, navigation, listing_request, apartment_specific_info)
 2. Entities (property types, locations, price ranges, features, etc.)
 
-Special attention to listing requests:
+Special attention to different types of queries:
 - "unidades disponíveis", "apartamentos disponíveis", "ver apartamentos" = listing_request intent
+- Questions about specific apartment details (dimensions, features, price of specific unit) = apartment_specific_info intent
 - Extract property preferences like T2, T3, budget ranges (200k-300k, etc.)
+- Extract specific apartment IDs like A01, B02, etc.
 
 Context: ${context ? JSON.stringify(context) : 'None'}
 User Message: "${message}"
@@ -190,7 +192,9 @@ Respond in JSON format:
     "features": [...],
     "timeline": "...",
     "budget_min": "...",
-    "budget_max": "..."
+    "budget_max": "...",
+    "apartment_id": "...",
+    "query_type": "dimensions|features|price|general_info"
   },
   "confidence": 0.0-1.0
 }
@@ -245,27 +249,20 @@ Respond in JSON format:
     intent?: string
   ): Promise<DocumentChunk[]> {
     try {
-      // Build the query with filters
-      let query = supabase
-        .from('rag_document_chunks')
-        .select('*')
-        .order('similarity', { ascending: false })
-        .limit(5);
-
-      // Add context-based filters
-      if (context?.propertyId) {
-        query = query.or(`metadata->propertyId.eq.${context.propertyId},metadata->propertyId.is.null`);
-      }
-
-      if (context?.pageType === 'property') {
-        query = query.or(`metadata->documentType.eq.property_info,metadata->documentType.eq.general`);
+      // For apartment-specific queries, prioritize apartment-specific documents
+      let matchCount = 5;
+      let matchThreshold = 0.7;
+      
+      if (context?.propertyId && intent === 'apartment_specific_info') {
+        matchCount = 8; // Get more documents for apartment-specific queries
+        matchThreshold = 0.6; // Lower threshold to get more relevant docs
       }
 
       // Execute similarity search using Supabase's vector similarity
       const { data: documents, error } = await supabase.rpc('match_documents', {
         query_embedding: queryEmbedding,
-        match_threshold: 0.7,
-        match_count: 5,
+        match_threshold: matchThreshold,
+        match_count: matchCount,
       });
 
       if (error) {
@@ -273,7 +270,21 @@ Respond in JSON format:
         return [];
       }
 
-      return documents || [];
+      let results = documents || [];
+
+      // If we have apartment context, prioritize apartment-specific documents
+      if (context?.propertyId) {
+        results = results.sort((a: DocumentChunk, b: DocumentChunk) => {
+          const aIsApartmentSpecific = a.metadata?.propertyId === context.propertyId;
+          const bIsApartmentSpecific = b.metadata?.propertyId === context.propertyId;
+          
+          if (aIsApartmentSpecific && !bIsApartmentSpecific) return -1;
+          if (!aIsApartmentSpecific && bIsApartmentSpecific) return 1;
+          return 0;
+        });
+      }
+
+      return results.slice(0, 5); // Return top 5 results
     } catch (error) {
       console.error('Document retrieval error:', error);
       return [];
@@ -429,14 +440,33 @@ Extracted Entities: ${JSON.stringify(intentAnalysis?.entities || {})}
       'ver unidades', 'mostrar unidades', 'disponibilidade'
     ];
 
-    const listingIntents = ['property_search', 'property_info', 'listing_request'];
+    const listingIntents = ['listing_request'];
+
+    // Check if this is a specific apartment query (contains apartment ID like A01, B02, etc.)
+    const specificApartmentPattern = /apartamento\s+[A-Z]\d+/i;
+    const hasSpecificApartment = specificApartmentPattern.test(userMessage);
+    
+    // Check if asking about specific details (dimensions, features, etc.) rather than listing
+    const specificDetailsKeywords = [
+      'dimensões', 'dimensoes', 'tamanho', 'área', 'area', 'metros', 'quartos', 'casas de banho',
+      'características', 'caracteristicas', 'detalhes', 'informações sobre', 'informacoes sobre',
+      'preço do apartamento', 'preco do apartamento', 'quanto custa', 'valor do apartamento'
+    ];
+    
+    const isSpecificDetailQuery = specificDetailsKeywords.some(keyword =>
+      userMessage.toLowerCase().includes(keyword.toLowerCase())
+    );
+
+    // If it's a specific apartment query or asking for specific details, it's NOT a listing request
+    if (hasSpecificApartment || isSpecificDetailQuery) {
+      return false;
+    }
 
     return (
       listingIntents.includes(intentAnalysis.intent) ||
       listingKeywords.some(keyword =>
         userMessage.toLowerCase().includes(keyword.toLowerCase())
-      ) ||
-      (intentAnalysis.entities?.property_type && intentAnalysis.intent === 'property_search')
+      )
     );
   }
 

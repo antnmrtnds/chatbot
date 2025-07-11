@@ -1,7 +1,6 @@
 'use client';
 
 import React, { Suspense } from 'react';
-import RagChatbot from '@/components/RagChatbot';
 import { usePageContext } from '@/lib/pageContextManager';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -183,37 +182,19 @@ function RagDemoContent() {
           </CardContent>
         </Card>
 
-        {/* RAG Chatbot Component */}
-        <RagChatbot
-          pageContext={context || undefined}
-          visitorId="demo-visitor-123"
-          sessionId="demo-session-456"
-          onNavigate={(url, navContext) => {
-            console.log('Navigation requested:', url, navContext);
-            // In a real app, you would handle navigation here
-            alert(`Navigation requested to: ${url}`);
-          }}
-          onLeadCapture={(leadData) => {
-            console.log('Lead captured:', leadData);
-            alert('Lead captured! Check console for details.');
-          }}
-          onContextUpdate={(newContext) => {
-            console.log('Context updated:', newContext);
-          }}
-          onAnalyticsEvent={(event) => {
-            console.log('Analytics event:', event);
-          }}
-          features={{
-            voiceInput: true,
-            voiceOutput: false,
-            mediaRendering: true,
-            navigationCommands: true,
-            progressiveLeadCapture: true,
-            contextAwareness: true,
-            ragEnabled: true,
-          }}
-          position="bottom-right"
-        />
+        {/* Note: RAG Chatbot now only appears on apartment pages */}
+        <Card className="bg-yellow-50 border-yellow-200">
+          <CardHeader>
+            <CardTitle className="text-yellow-800">📢 Note about Chatbot</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-yellow-700 text-sm">
+              The chatbot has been simplified and now only appears on specific apartment pages
+              (e.g., /imoveis/evergreen-pure/A01). It focuses exclusively on apartment-specific queries
+              with three main suggestions: "Area das divisoes", "estado da obra", and "acabamentos".
+            </p>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
