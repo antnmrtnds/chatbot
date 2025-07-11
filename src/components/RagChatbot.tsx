@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useCallback, useEffect, useRef } from 'react';
+import ragVisitorTracker from '@/lib/ragVisitorTracker';
 
 // Web Speech API types
 declare global {
@@ -297,6 +298,13 @@ export function RagChatbot({
     setIsLoading(true);
     setMessageCount(prev => prev + 1);
 
+    // Track message sent with new RAG visitor tracker
+    ragVisitorTracker.trackMessageSent(
+      content.trim(),
+      typeof window !== 'undefined' ? window.location.href : '/',
+      currentContext
+    );
+
     // Track analytics
     onAnalyticsEvent?.({
       category: 'chatbot',
@@ -319,8 +327,8 @@ export function RagChatbot({
         body: JSON.stringify({
           message: content,
           context: currentContext,
-          visitorId,
-          sessionId,
+          visitorId: ragVisitorTracker.getVisitorId() || visitorId,
+          sessionId: ragVisitorTracker.getSessionId() || sessionId,
           conversationHistory: messages.slice(-5), // Last 5 messages for context
           ragEnabled: features.ragEnabled,
         }),
@@ -412,6 +420,13 @@ export function RagChatbot({
       consentTimestamp: new Date().toISOString(),
     };
 
+    // Track lead captured with new RAG visitor tracker
+    ragVisitorTracker.trackLeadCaptured(
+      fullLeadData,
+      typeof window !== 'undefined' ? window.location.href : '/',
+      currentContext
+    );
+
     onLeadCapture?.(fullLeadData);
     setLeadCaptured(true);
     setShowLeadCapture(false);
@@ -456,13 +471,19 @@ export function RagChatbot({
     setShowWelcome(false);
     setShowNameInput(true);
     
+    // Track with new RAG visitor tracker
+    ragVisitorTracker.trackConversationStarted(
+      typeof window !== 'undefined' ? window.location.href : '/',
+      currentContext
+    );
+    
     // Track analytics
     onAnalyticsEvent?.({
       category: 'chatbot',
       action: 'start_conversation',
       label: 'welcome_flow',
     });
-  }, [onAnalyticsEvent]);
+  }, [onAnalyticsEvent, currentContext]);
 
   const handleNameSubmit = useCallback(() => {
     if (!nameInputValue.trim()) return;
@@ -470,6 +491,13 @@ export function RagChatbot({
     setVisitorName(nameInputValue.trim());
     setShowNameInput(false);
     setNameInputValue('');
+    
+    // Track name provided with new RAG visitor tracker
+    ragVisitorTracker.trackNameProvided(
+      nameInputValue.trim(),
+      typeof window !== 'undefined' ? window.location.href : '/',
+      currentContext
+    );
     
     // Add welcome message with name
     const welcomeMessage: Message = {
@@ -490,7 +518,7 @@ export function RagChatbot({
         hasName: true,
       },
     });
-  }, [nameInputValue, onAnalyticsEvent]);
+  }, [nameInputValue, onAnalyticsEvent, currentContext]);
 
   const handleSuggestionClick = useCallback((suggestion: string) => {
     handleSendMessage(suggestion);
@@ -508,7 +536,14 @@ export function RagChatbot({
       {/* Floating Widget Button */}
       {!isOpen && (
         <Button
-          onClick={() => setIsOpen(true)}
+          onClick={() => {
+            setIsOpen(true);
+            // Track chat opened
+            ragVisitorTracker.trackChatOpened(
+              typeof window !== 'undefined' ? window.location.href : '/',
+              currentContext
+            );
+          }}
           className={`fixed ${positionClasses[position]} z-50 h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-all duration-200`}
           style={{
             backgroundColor: theme.primaryColor,
