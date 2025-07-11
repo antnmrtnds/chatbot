@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import ragVisitorTracker from '@/lib/ragVisitorTracker';
+import visitorTracker from '@/lib/visitorTracker';
 
 // Web Speech API types
 declare global {
@@ -431,7 +431,7 @@ export function RagChatbot({
         setHasAutoOpened(true);
         
         // Track auto-open event
-        ragVisitorTracker.trackChatOpened(
+        visitorTracker.trackChatOpened(
           window.location.href,
           currentContext
         );
@@ -520,7 +520,7 @@ export function RagChatbot({
     setMessageCount(prev => prev + 1);
 
     // Track message sent with new RAG visitor tracker
-    ragVisitorTracker.trackMessageSent(
+    visitorTracker.trackMessageSent(
       content.trim(),
       typeof window !== 'undefined' ? window.location.href : '/',
       currentContext
@@ -548,8 +548,8 @@ export function RagChatbot({
         body: JSON.stringify({
           message: content,
           context: currentContext,
-          visitorId: ragVisitorTracker.getVisitorId() || visitorId,
-          sessionId: ragVisitorTracker.getSessionId() || sessionId,
+          visitorId: visitorTracker.getVisitorId() || visitorId,
+          sessionId: visitorTracker.getSessionId() || sessionId,
           conversationHistory: messages.slice(-5), // Last 5 messages for context
           ragEnabled: features.ragEnabled,
         }),
@@ -649,7 +649,7 @@ export function RagChatbot({
     };
 
     // Track lead captured with new RAG visitor tracker
-    ragVisitorTracker.trackLeadCaptured(
+    visitorTracker.trackLeadCaptured(
       fullLeadData,
       typeof window !== 'undefined' ? window.location.href : '/',
       currentContext
@@ -700,7 +700,7 @@ export function RagChatbot({
     setShowNameInput(true);
     
     // Track with new RAG visitor tracker
-    ragVisitorTracker.trackConversationStarted(
+    visitorTracker.trackConversationStarted(
       typeof window !== 'undefined' ? window.location.href : '/',
       currentContext
     );
@@ -721,7 +721,7 @@ export function RagChatbot({
     setNameInputValue('');
     
     // Track name provided with new RAG visitor tracker
-    ragVisitorTracker.trackNameProvided(
+    visitorTracker.trackNameProvided(
       nameInputValue.trim(),
       typeof window !== 'undefined' ? window.location.href : '/',
       currentContext
@@ -776,7 +776,7 @@ export function RagChatbot({
     }
     
     // Track new chat started
-    ragVisitorTracker.trackConversationStarted(
+    visitorTracker.trackConversationStarted(
       typeof window !== 'undefined' ? window.location.href : '/',
       currentContext
     );
@@ -798,7 +798,7 @@ export function RagChatbot({
     setHasAutoOpened(true); // Prevent auto-open after manual open
     
     // Track manual chat opened
-    ragVisitorTracker.trackChatOpened(
+    visitorTracker.trackChatOpened(
       typeof window !== 'undefined' ? window.location.href : '/',
       currentContext
     );
@@ -881,7 +881,7 @@ export function RagChatbot({
     setMessages(prev => [...prev, confirmationMessage]);
 
     // Track preferences collected as a message sent event
-    ragVisitorTracker.trackMessageSent(
+    visitorTracker.trackMessageSent(
       `Preferences collected: ${bedrooms} apartment with budget ${budgetText}`,
       typeof window !== 'undefined' ? window.location.href : '/',
       currentContext

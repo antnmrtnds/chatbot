@@ -608,6 +608,58 @@ class VisitorTracker {
     return contactInfo;
   }
 
+  // RAG Chatbot specific methods
+  getVisitorId(): string {
+    return this.visitorId;
+  }
+
+  getSessionId(): string {
+    return this.sessionData.sessionId;
+  }
+
+  async trackChatOpened(url: string, context?: any) {
+    await this.trackInteraction('chat_opened', {
+      url,
+      context,
+      timestamp: Date.now()
+    });
+  }
+
+  async trackMessageSent(message: string, url: string, context?: any) {
+    await this.trackInteraction('message_sent', {
+      message,
+      url,
+      context,
+      timestamp: Date.now()
+    });
+  }
+
+  async trackLeadCaptured(leadData: any, url: string, context?: any) {
+    await this.trackInteraction('lead_captured', {
+      leadData,
+      url,
+      context,
+      timestamp: Date.now()
+    });
+  }
+
+  async trackConversationStarted(url: string, context?: any) {
+    await this.trackInteraction('conversation_started', {
+      url,
+      context,
+      timestamp: Date.now()
+    });
+  }
+
+  async trackNameProvided(name: string, url: string, context?: any) {
+    await this.trackInteraction('name_provided', {
+      name,
+      url,
+      context,
+      timestamp: Date.now()
+    });
+  }
+
   // Get visitor data for analytics
   getVisitorData() {
     return {
