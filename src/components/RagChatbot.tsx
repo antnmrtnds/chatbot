@@ -221,6 +221,12 @@ export function RagChatbot({
   const [messageCount, setMessageCount] = useState(0);
   const [leadCaptured, setLeadCaptured] = useState(false);
   const [currentContext, setCurrentContext] = useState<PageContext | null>(pageContext || null);
+  
+  // New visitor onboarding states
+  const [showWelcome, setShowWelcome] = useState(true);
+  const [showNameInput, setShowNameInput] = useState(false);
+  const [visitorName, setVisitorName] = useState('');
+  const [nameInputValue, setNameInputValue] = useState('');
 
   // Refs
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -414,6 +420,51 @@ export function RagChatbot({
     });
   }, [messages, currentContext, messageCount, onLeadCapture, onAnalyticsEvent]);
 
+  // New visitor onboarding handlers
+  const handleStartConversation = useCallback(() => {
+    setShowWelcome(false);
+    setShowNameInput(true);
+    
+    // Track analytics
+    onAnalyticsEvent?.({
+      category: 'chatbot',
+      action: 'start_conversation',
+      label: 'welcome_flow',
+    });
+  }, [onAnalyticsEvent]);
+
+  const handleNameSubmit = useCallback(() => {
+    if (!nameInputValue.trim()) return;
+    
+    setVisitorName(nameInputValue.trim());
+    setShowNameInput(false);
+    setNameInputValue('');
+    
+    // Add welcome message with name
+    const welcomeMessage: Message = {
+      id: Date.now().toString(),
+      content: `Olá ${nameInputValue.trim()}! 👋 Bem-vindo à Viriato. Como posso ajudá-lo hoje?`,
+      role: 'assistant',
+      timestamp: new Date(),
+    };
+    
+    setMessages([welcomeMessage]);
+    
+    // Track analytics
+    onAnalyticsEvent?.({
+      category: 'chatbot',
+      action: 'name_provided',
+      label: 'onboarding_complete',
+      properties: {
+        hasName: true,
+      },
+    });
+  }, [nameInputValue, onAnalyticsEvent]);
+
+  const handleSuggestionClick = useCallback((suggestion: string) => {
+    handleSendMessage(suggestion);
+  }, [handleSendMessage]);
+
   const positionClasses = {
     'bottom-right': 'bottom-4 right-4',
     'bottom-left': 'bottom-4 left-4',
@@ -470,19 +521,84 @@ export function RagChatbot({
 
           {/* Messages */}
           <CardContent className="flex-1 overflow-y-auto p-4 space-y-4">
-            {messages.length === 0 && (
-              <div className="text-center text-gray-500 mt-8">
-                <Bot className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>Olá! Como posso ajudá-lo hoje?</p>
-                {currentContext?.pageType === 'property' && (
-                  <p className="text-sm mt-2">
-                    Vejo que está a ver uma propriedade. Posso ajudar com informações específicas!
-                  </p>
-                )}
+            {/* Welcome Screen */}
+            {showWelcome && (
+              <div className="text-center mt-8">
+                <Bot className="h-12 w-12 mx-auto mb-4" style={{ color: theme.primaryColor }} />
+                <h3 className="text-lg font-semibold mb-2">Assistente Viriato</h3>
+                <p className="text-gray-600 mb-6">We typically reply in a few minutes</p>
+                <Button
+                  onClick={handleStartConversation}
+                  className="w-full flex items-center justify-center gap-2"
+                  style={{ backgroundColor: theme.primaryColor }}
+                >
+                  Iniciar Conversa
+                  <Send className="h-4 w-4" />
+                </Button>
               </div>
             )}
 
-            {messages.map((message) => (
+            {/* Name Input Screen */}
+            {showNameInput && (
+              <div className="mt-8">
+                <Bot className="h-8 w-8 mx-auto mb-4" style={{ color: theme.primaryColor }} />
+                <h3 className="text-lg font-semibold mb-4 text-center">Como posso chamá-lo?</h3>
+                <div className="space-y-4">
+                  <Input
+                    value={nameInputValue}
+                    onChange={(e) => setNameInputValue(e.target.value)}
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleNameSubmit();
+                      }
+                    }}
+                    placeholder="* Nome"
+                    className="w-full"
+                  />
+                  <Button
+                    onClick={handleNameSubmit}
+                    disabled={!nameInputValue.trim()}
+                    className="w-full flex items-center justify-center gap-2"
+                    style={{ backgroundColor: theme.primaryColor }}
+                  >
+                    <Send className="h-4 w-4" />
+                    Iniciar Conversa
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Chat Messages */}
+            {!showWelcome && !showNameInput && (
+              <>
+                {/* Show suggestions after welcome message */}
+                {messages.length === 1 && (
+                  <div className="space-y-3 mt-4">
+                    <div className="grid grid-cols-1 gap-2">
+                      {[
+                        "Mais sobre Evergreen Pure",
+                        "Visita Virtual",
+                        "Falar com agente humano",
+                        "Unidades disponíveis"
+                      ].map((suggestion, index) => (
+                        <Button
+                          key={index}
+                          variant="outline"
+                          onClick={() => handleSuggestionClick(suggestion)}
+                          className="text-left justify-start h-auto p-3 text-sm"
+                          disabled={isLoading}
+                        >
+                          {suggestion}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+
+            {!showWelcome && !showNameInput && messages.map((message) => (
               <div
                 key={message.id}
                 className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
@@ -537,46 +653,48 @@ export function RagChatbot({
             <div ref={messagesEndRef} />
           </CardContent>
 
-          {/* Input */}
-          <div className="p-4 border-t">
-            <div className="flex space-x-2">
-              <Input
-                ref={inputRef}
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                onKeyPress={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSendMessage(inputValue);
-                  }
-                }}
-                placeholder="Digite sua mensagem..."
-                disabled={isLoading}
-                className="flex-1"
-              />
-              
-              {features.voiceInput && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleVoiceInput}
+          {/* Input - Only show after onboarding */}
+          {!showWelcome && !showNameInput && (
+            <div className="p-4 border-t">
+              <div className="flex space-x-2">
+                <Input
+                  ref={inputRef}
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSendMessage(inputValue);
+                    }
+                  }}
+                  placeholder="Digite sua mensagem..."
                   disabled={isLoading}
-                  className={isListening ? 'bg-red-100' : ''}
+                  className="flex-1"
+                />
+                
+                {features.voiceInput && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleVoiceInput}
+                    disabled={isLoading}
+                    className={isListening ? 'bg-red-100' : ''}
+                  >
+                    {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                  </Button>
+                )}
+                
+                <Button
+                  onClick={() => handleSendMessage(inputValue)}
+                  disabled={isLoading || !inputValue.trim()}
+                  size="sm"
+                  style={{ backgroundColor: theme.primaryColor }}
                 >
-                  {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                  <Send className="h-4 w-4" />
                 </Button>
-              )}
-              
-              <Button
-                onClick={() => handleSendMessage(inputValue)}
-                disabled={isLoading || !inputValue.trim()}
-                size="sm"
-                style={{ backgroundColor: theme.primaryColor }}
-              >
-                <Send className="h-4 w-4" />
-              </Button>
+              </div>
             </div>
-          </div>
+          )}
         </Card>
       )}
 
