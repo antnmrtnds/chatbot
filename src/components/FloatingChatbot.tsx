@@ -8,7 +8,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { ChatSession, ChatMessage, Property } from '@/lib/rag/types';
 import { createChatSession, processUserMessage, getRelevantProperties } from '@/lib/rag/chatSessionManager';
-import { Building2, Send, User, Bot, Home, MapPin, DollarSign, Bed, Bath, Square, X, MessageCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import { Building2, Send, User, Bot, Home, MapPin, DollarSign, Bed, Bath, Square, X, MessageCircle, ChevronDown, ChevronUp, Car, Wind, Sun } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 export default function FloatingChatbot() {
@@ -57,10 +57,10 @@ export default function FloatingChatbot() {
   
   // Example questions
   const exampleQuestions = [
-    "What properties do you have in Aveiro?",
-    "Show me T2 apartments under 300,000€",
-    "Which properties have a balcony or terrace?",
-    "Tell me about the Evergreen Pure project"
+    "Que apartamentos T2 existem?",
+    "Mostra-me apartamentos com terraço",
+    "Quais os apartamentos abaixo de 200.000€?",
+    "Fala-me sobre o projeto Evergreen Pure"
   ];
   
   return (
@@ -81,7 +81,7 @@ export default function FloatingChatbot() {
           <CardHeader className="border-b py-3 px-4 flex flex-row items-center justify-between space-y-0">
             <CardTitle className="text-sm font-medium flex items-center">
               <Building2 className="h-4 w-4 text-teal-600 mr-2" />
-              Property Assistant
+              Assistente Imobiliário
             </CardTitle>
             <div className="flex gap-1">
               <Button
@@ -102,9 +102,9 @@ export default function FloatingChatbot() {
                   <Avatar className="h-12 w-12 mx-auto mb-2 bg-teal-100">
                     <Bot className="h-6 w-6 text-teal-600" />
                   </Avatar>
-                  <p className="text-sm font-medium mb-1">Property Assistant</p>
+                  <p className="text-sm font-medium mb-1">Assistente Imobiliário</p>
                   <p className="text-xs text-gray-500 mb-4">
-                    Ask me about our properties, pricing, or availability
+                    Pergunte-me sobre os nossos imóveis, preços ou disponibilidade
                   </p>
                 </div>
               )}
@@ -145,7 +145,7 @@ export default function FloatingChatbot() {
               {/* Example questions */}
               {chatSession.messages.length <= 1 && showSuggestions && (
                 <div className="space-y-2 mt-4">
-                  <p className="text-xs text-gray-500 text-center">Try asking:</p>
+                  <p className="text-xs text-gray-500 text-center">Experimente perguntar:</p>
                   {exampleQuestions.map((question, index) => (
                     <Button
                       key={index}
@@ -167,7 +167,7 @@ export default function FloatingChatbot() {
           <CardFooter className="border-t p-3">
             <div className="flex w-full gap-2">
               <Input
-                placeholder="Type your message..."
+                placeholder="Escreva a sua mensagem..."
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyDown={handleKeyDown}
@@ -195,15 +195,15 @@ export default function FloatingChatbot() {
                   className="mx-3 mb-3 text-xs flex items-center justify-center gap-1 border-teal-200 text-teal-700 bg-teal-50"
                 >
                   <Home className="h-3 w-3" />
-                  <span>{relevantProperties.length} Relevant Properties</span>
+                  <span>{relevantProperties.length} Imóveis Relevantes</span>
                   <ChevronUp className="h-3 w-3" />
                 </Button>
               </SheetTrigger>
               <SheetContent side="bottom" className="h-[400px] px-4 py-6">
                 <div className="space-y-1 mb-4">
-                  <h3 className="text-lg font-medium">Relevant Properties</h3>
+                  <h3 className="text-lg font-medium">Imóveis Relevantes</h3>
                   <p className="text-sm text-gray-500">
-                    Properties that match your criteria
+                    Propriedades que correspondem aos seus critérios
                   </p>
                 </div>
                 
@@ -223,6 +223,15 @@ export default function FloatingChatbot() {
 
 // Property card component
 function PropertyCard({ property }: { property: Property }) {
+  const formatPrice = (price?: number) => {
+    if (!price) return 'Preço sob consulta';
+    return new Intl.NumberFormat('pt-PT', {
+      style: 'currency',
+      currency: 'EUR',
+      minimumFractionDigits: 0,
+    }).format(price);
+  };
+
   return (
     <Card className="overflow-hidden">
       <div className="relative h-32 bg-gray-100">
@@ -232,7 +241,7 @@ function PropertyCard({ property }: { property: Property }) {
         
         {property.flat_id && (
           <Badge className="absolute top-2 left-2 bg-teal-600">
-            {property.flat_id}
+             {property.flat_id.replace(/_/g, ' ').replace('flat ', 'Flat ')}
           </Badge>
         )}
       </div>
@@ -246,51 +255,42 @@ function PropertyCard({ property }: { property: Property }) {
             </div>
           )}
           
-          {property.price && (
-            <div className="flex items-center font-medium">
-              <DollarSign className="h-4 w-4 mr-1 text-teal-600" />
-              <span>{property.price}</span>
-            </div>
-          )}
-          
-          <div className="flex gap-2 text-xs text-gray-500">
-            {property.bedrooms !== undefined && (
+          <div className="flex items-center font-bold text-lg">
+            <span>{formatPrice(property.price)}</span>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 text-xs text-gray-600 pt-1">
+            {property.typology && (
               <div className="flex items-center">
-                <Bed className="h-3 w-3 mr-1" />
-                <span>{property.bedrooms}</span>
+                <Bed className="h-3.5 w-3.5 mr-1.5 text-teal-600" />
+                <span>{property.typology}</span>
               </div>
             )}
-            
-            {property.bathrooms !== undefined && (
+            {property.floor_level && (
               <div className="flex items-center">
-                <Bath className="h-3 w-3 mr-1" />
-                <span>{property.bathrooms}</span>
+                <Building2 className="h-3.5 w-3.5 mr-1.5 text-teal-600" />
+                <span className="capitalize">{property.floor_level}</span>
               </div>
             )}
-            
-            {property.squareFootage !== undefined && (
+            {property.outdoor_space && (
               <div className="flex items-center">
-                <Square className="h-3 w-3 mr-1" />
-                <span>{property.squareFootage} m²</span>
+                <Sun className="h-3.5 w-3.5 mr-1.5 text-teal-600" />
+                <span className="capitalize">{property.outdoor_space} ({property.outdoor_area_sqm}m²)</span>
+              </div>
+            )}
+            {property.position && (
+              <div className="flex items-center">
+                <Wind className="h-3.5 w-3.5 mr-1.5 text-teal-600" />
+                <span className="capitalize">{property.position}</span>
+              </div>
+            )}
+             {property.parking && (
+              <div className="flex items-center">
+                <Car className="h-3.5 w-3.5 mr-1.5 text-teal-600" />
+                <span>Garagem</span>
               </div>
             )}
           </div>
-          
-          {property.amenities && property.amenities.length > 0 && (
-            <div className="flex flex-wrap gap-1 mt-2">
-              {property.amenities.slice(0, 3).map((amenity, index) => (
-                <Badge key={index} variant="outline" className="text-xs py-0">
-                  {amenity}
-                </Badge>
-              ))}
-              
-              {property.amenities.length > 3 && (
-                <Badge variant="outline" className="text-xs py-0">
-                  +{property.amenities.length - 3}
-                </Badge>
-              )}
-            </div>
-          )}
         </div>
       </CardContent>
     </Card>
