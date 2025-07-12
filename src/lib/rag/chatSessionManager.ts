@@ -1,6 +1,4 @@
-import { ChatMessage, ChatSession, Property, SearchFilters } from './types';
-import { processQuery, extractFiltersFromQuery } from './ragChain';
-import { similaritySearch } from './vectorStore';
+import { ChatMessage, ChatSession, Property } from './types';
 
 /**
  * Create a new chat session
@@ -9,10 +7,14 @@ import { similaritySearch } from './vectorStore';
 export function createChatSession(): ChatSession {
   return {
     messages: [
-      {
-        role: 'system',
-        content: 'I am a real estate assistant that can help you find properties and answer questions about listings.'
-      }
+     {
+       role: 'system',
+       content: 'És um assistente imobiliário que pode ajudar-te a encontrar propriedades e a responder a perguntas sobre os imóveis.'
+     },
+     {
+       role: 'assistant',
+       content: 'Olá! Como posso ajudar a encontrar o seu próximo imóvel?'
+     }
     ],
     context: {
       relevantProperties: []
@@ -70,48 +72,48 @@ export async function processUserMessage(
 ): Promise<ChatSession> {
   // Add user message to session
   let updatedSession = addUserMessage(session, message);
-  
+
   try {
-    // Extract filters from the query
-    const filters = extractFiltersFromQuery(message);
-    
-    // Get relevant properties for context
-    const searchResults = await similaritySearch(message, filters, 5);
-    const relevantProperties = searchResults.map(result => ({
-      id: result.id,
-      content: result.content,
-      flat_id: result.metadata.flat_id || '',
-      price: result.metadata.price || '',
-      location: result.metadata.location,
-      bedrooms: result.metadata.bedrooms,
-      bathrooms: result.metadata.bathrooms,
-      squareFootage: result.metadata.squareFootage,
-      amenities: result.metadata.amenities
-    }));
-    
-    // Update context
-    if (updatedSession.context) {
-      updatedSession.context.relevantProperties = relevantProperties;
+    // Send message to the backend API
+    const response = await fetch('/api/chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        message: message,
+        chatHistory: updatedSession.messages.filter(msg => msg.role !== 'system'),
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`API request failed with status ${response.status}`);
     }
-    
-    // Process the query
-    const response = await processQuery(
-      message,
-      updatedSession.messages.filter(msg => msg.role !== 'system'),
-      filters
-    );
+
+    const { response: assistantResponse, relevantProperties } = await response.json();
     
     // Add assistant response
-    updatedSession = addAssistantMessage(updatedSession, response);
+    updatedSession = addAssistantMessage(updatedSession, assistantResponse);
+
+    // Update context with relevant properties
+    if (updatedSession.context) {
+      updatedSession.context.relevantProperties = relevantProperties || [];
+    }
     
     return updatedSession;
+
   } catch (error) {
     console.error('Error processing user message:', error);
     
-    // Add error response
-    const errorMessage = 'I apologize, but I encountered an error while processing your request. Please try again.';
+    // Add error response to the chat
+    const errorMessage = 'Peço desculpa, mas encontrei um erro ao processar o seu pedido. Por favor, tente novamente.';
     updatedSession = addAssistantMessage(updatedSession, errorMessage);
     
+    // Clear context on error
+    if (updatedSession.context) {
+      updatedSession.context.relevantProperties = [];
+    }
+
     return updatedSession;
   }
 }
