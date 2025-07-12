@@ -1,6 +1,6 @@
 import { Property } from './types';
 import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
-import { Document } from 'langchain/document';
+import { Document } from '@langchain/core/documents';
 
 /**
  * Extracts structured metadata from property content
@@ -9,33 +9,54 @@ import { Document } from 'langchain/document';
  */
 export function extractPropertyMetadata(content: string): Partial<Property> {
   const metadata: Partial<Property> = {};
-  
-  // Extract location
-  const locationMatch = content.match(/location[:\s]+([^,\n]+)/i);
-  if (locationMatch) metadata.location = locationMatch[1].trim();
-  
-  // Extract bedrooms
-  const bedroomsMatch = content.match(/(\d+)\s*bedroom/i) || content.match(/T(\d+)/i);
-  if (bedroomsMatch) metadata.bedrooms = parseInt(bedroomsMatch[1], 10);
-  
-  // Extract bathrooms
-  const bathroomsMatch = content.match(/(\d+)\s*bathroom/i);
-  if (bathroomsMatch) metadata.bathrooms = parseInt(bathroomsMatch[1], 10);
-  
-  // Extract square footage
-  const squareFootageMatch = content.match(/(\d+)\s*m²/i) || content.match(/(\d+)\s*square\s*meters/i);
-  if (squareFootageMatch) metadata.squareFootage = parseInt(squareFootageMatch[1], 10);
-  
-  // Extract amenities
-  const amenitiesRegex = /amenities[:\s]+(.*?)(?:\.|$)/i;
-  const amenitiesMatch = content.match(amenitiesRegex);
-  if (amenitiesMatch) {
-    metadata.amenities = amenitiesMatch[1]
-      .split(/,|;/)
-      .map(item => item.trim())
-      .filter(item => item.length > 0);
+
+  // Extract price (e.g., "Preço: €195.000" or "preço deste apartamento é €195.000")
+  const priceMatch = content.match(/preço.*€\s*([\d\.,]+)/i);
+  if (priceMatch) {
+    metadata.price = parseInt(priceMatch[1].replace(/\./g, ''), 10);
+  }
+
+  // Extract typology (e.g., "apartamento T1")
+  const typologyMatch = content.match(/apartamento\s+(T\d+)/i);
+  if (typologyMatch) {
+    metadata.typology = typologyMatch[1];
+    metadata.bedrooms = parseInt(typologyMatch[1].substring(1), 10);
+  }
+
+  // Extract floor level (e.g., "rés-do-chão", "primeiro andar")
+  const floorMatch = content.match(/(rés-do-chão|primeiro andar|segundo andar|terceiro andar)/i);
+  if (floorMatch) {
+    metadata.floor_level = floorMatch[1];
+  }
+
+  // Extract outdoor space and area (e.g., "terraço ... 100 m²", "varanda ... 12 m²")
+  const outdoorSpaceMatch = content.match(/(terraço|varanda)/i);
+  if (outdoorSpaceMatch) {
+    metadata.outdoor_space = outdoorSpaceMatch[1];
+    const outdoorAreaRegex = new RegExp(`(?:${outdoorSpaceMatch[1]}|espaço exterior).*?(\\d+)\\s*m²`, 'i');
+    const outdoorAreaMatch = content.match(outdoorAreaRegex);
+    if (outdoorAreaMatch) {
+      metadata.outdoor_area_sqm = parseInt(outdoorAreaMatch[1], 10);
+    }
+  }
+
+  // Extract position (e.g., "frontal", "traseiro")
+  const positionMatch = content.match(/(frontal|traseiro)/i);
+  if (positionMatch) {
+    metadata.position = positionMatch[1];
+  }
+
+  // Extract parking (e.g., "lugar de garagem")
+  if (/lugar de garagem/i.test(content)) {
+    metadata.parking = true;
   }
   
+  // Extract location (e.g., "Localizado em Santa Joana, Aveiro")
+  const locationMatch = content.match(/Localizado em ([^,]+),/i);
+  if (locationMatch) {
+    metadata.location = locationMatch[1].trim();
+  }
+
   return metadata;
 }
 
