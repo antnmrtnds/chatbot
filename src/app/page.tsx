@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { MapPin, Building2, Home, Bed, Search, Mail, User, Menu, Phone } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import FloatingChatbot from "@/components/FloatingChatbot";
 
 export default function EvergreenPureLanding() {
   return (
@@ -92,7 +93,7 @@ export default function EvergreenPureLanding() {
             className="bg-white text-gray-900 hover:bg-gray-100 px-8 py-4"
             asChild
           >
-            <Link href="/imoveis/evergreen-pure">
+            <Link href="#disponibilidades">
               VER APARTAMENTOS
             </Link>
           </Button>
@@ -229,7 +230,7 @@ export default function EvergreenPureLanding() {
       </section>
 
       {/* Disponibilidades */}
-      <section className="py-16 bg-gray-50">
+      <section id="disponibilidades" className="py-16 bg-gray-50">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between mb-8">
             <h2 className="text-4xl font-light text-teal-600">
@@ -424,7 +425,7 @@ export default function EvergreenPureLanding() {
               className="bg-white text-teal-900 hover:bg-gray-100 px-8 py-4"
               asChild
             >
-              <Link href="/imoveis/evergreen-pure">
+              <Link href="#disponibilidades">
                 VER APARTAMENTOS
               </Link>
             </Button>
@@ -437,13 +438,8 @@ export default function EvergreenPureLanding() {
           </div>
         </div>
       </section>
-
-      {/* Status Badge */}
-      <div className="fixed top-4 right-4 z-50">
-        <Badge className="bg-orange-500 text-white px-4 py-2">
-          EM CONSTRUÇÃO
-        </Badge>
-      </div>
+      {/* Floating Chatbot */}
+      <FloatingChatbot />
     </div>
   );
 }
