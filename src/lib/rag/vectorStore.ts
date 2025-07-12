@@ -1,7 +1,7 @@
 import { Pinecone } from '@pinecone-database/pinecone';
-import { OpenAIEmbeddings } from 'langchain/embeddings/openai';
-import { PineconeStore } from 'langchain/vectorstores/pinecone';
-import { Document } from 'langchain/document';
+import { OpenAIEmbeddings } from '@langchain/openai';
+import { PineconeStore } from '@langchain/pinecone';
+import { Document } from '@langchain/core/documents';
 import { VectorSearchResult, SearchFilters, Property } from './types';
 
 // Initialize Pinecone client
@@ -89,20 +89,20 @@ export async function similaritySearch(
       pineconeFilters.location = filters.location;
     }
     
+    if (filters.typology) {
+      pineconeFilters.typology = filters.typology;
+    }
+
     if (filters.bedrooms) {
       pineconeFilters.bedrooms = filters.bedrooms;
     }
     
-    if (filters.bathrooms) {
-      pineconeFilters.bathrooms = filters.bathrooms;
+    if (filters.outdoor_space && filters.outdoor_space.length > 0) {
+      pineconeFilters.outdoor_space = { $in: filters.outdoor_space };
     }
-    
-    if (filters.minSquareFootage) {
-      pineconeFilters.squareFootage = { $gte: filters.minSquareFootage };
-    }
-    
-    if (filters.amenities && filters.amenities.length > 0) {
-      pineconeFilters.amenities = { $in: filters.amenities };
+
+    if (filters.parking !== undefined) {
+      pineconeFilters.parking = filters.parking;
     }
   }
   
