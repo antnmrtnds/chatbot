@@ -9,7 +9,8 @@ import { sendGAEvent } from '@/lib/ga-server';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    let { message, chatHistory = [], visitorId, sessionId } = body;
+    let { message, visitorId, sessionId } = body;
+    let chatHistory: ChatMessage[] = [];
 
     if (!message || typeof message !== 'string') {
       return NextResponse.json({ error: 'Message is required' }, { status: 400 });
@@ -20,18 +21,18 @@ export async function POST(request: NextRequest) {
 
     const currentSessionId = sessionId || uuidv4();
 
-    // If there is a sessionId, fetch the chat history from the database
-    if (sessionId) {
+    // Always fetch the latest chat history for the session from the database
+    if (currentSessionId) {
       const { data, error } = await supabaseAdmin
         .from('chat_messages')
         .select('role, content')
-        .eq('session_id', sessionId)
+        .eq('session_id', currentSessionId)
         .order('created_at', { ascending: true });
 
       if (error) {
         console.error('Error fetching chat history:', error);
-        // Continue with history from request body or empty on error
-      } else {
+        // On error, proceed with an empty history
+      } else if (data) {
         chatHistory = data.map((msg: any) => ({
           role: msg.role,
           content: msg.content,
