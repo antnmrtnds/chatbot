@@ -74,9 +74,10 @@ export default function FloatingChatbot() {
       setVisitorId(id);
 
       try {
-        const response = await fetch(`/api/chat/history?visitorId=${id}`);
+        const response = await fetch(`/api/chat?visitorId=${id}`);
         if (response.ok) {
           const data = await response.json();
+          console.log('Chat history received from API:', data);
           if (data.messages && data.messages.length > 0) {
             // History found, load it
             setChatSession({

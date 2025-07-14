@@ -108,9 +108,49 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function GET() {
-  return NextResponse.json(
-    { message: 'Use POST to send chat messages' },
-    { status: 200 }
-  );
+export async function GET(request: NextRequest) {
+  const visitorId = request.nextUrl.searchParams.get('visitorId');
+
+  if (!visitorId) {
+    return NextResponse.json({ error: 'visitorId is required' }, { status: 400 });
+  }
+
+  try {
+    // Find the most recent session for the visitor
+    const { data: sessionData, error: sessionError } = await supabase
+      .from('chat_messages')
+      .select('session_id')
+      .eq('visitor_id', visitorId)
+      .order('created_at', { ascending: false })
+      .limit(1);
+
+    if (sessionError || !sessionData || sessionData.length === 0) {
+      console.log(`No chat history found for visitor: ${visitorId}`);
+      return NextResponse.json({ messages: [] }, { status: 200 });
+    }
+
+    const sessionId = sessionData[0].session_id;
+
+    // Fetch all messages for that session
+    const { data: messagesData, error: messagesError } = await supabase
+      .from('chat_messages')
+      .select('role, content')
+      .eq('session_id', sessionId)
+      .order('created_at', { ascending: true });
+
+    if (messagesError) {
+      console.error('Error fetching chat history:', messagesError);
+      return NextResponse.json({ error: 'Failed to fetch chat history' }, { status: 500 });
+    }
+
+    console.log(`Fetched ${messagesData.length} messages for visitor ${visitorId} in session ${sessionId}`);
+
+    return NextResponse.json(
+      { messages: messagesData, sessionId },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error('Error fetching chat history:', error);
+    return NextResponse.json({ error: 'An error occurred' }, { status: 500 });
+  }
 }
