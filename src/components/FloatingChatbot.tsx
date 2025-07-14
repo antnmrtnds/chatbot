@@ -65,6 +65,10 @@ export default function FloatingChatbot() {
   // Get visitor ID and fetch chat history on component mount
   useEffect(() => {
     const initializeChat = async () => {
+      // Only initialize if there is no active session
+      if (chatSession) {
+        return;
+      }
       setIsLoading(true);
       const id = getVisitorId();
       setVisitorId(id);
@@ -98,7 +102,7 @@ export default function FloatingChatbot() {
     };
 
     initializeChat();
-  }, []);
+  }, [chatSession]); // Add chatSession to dependency array
 
   // Scroll to bottom of messages
   useEffect(() => {
