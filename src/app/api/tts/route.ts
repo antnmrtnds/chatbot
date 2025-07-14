@@ -1,48 +1,36 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { ElevenLabsClient } from 'elevenlabs-node';
+const ElevenLabs = require("elevenlabs-node");
+import { NextRequest, NextResponse } from "next/server";
 
-const elevenlabs = new ElevenLabsClient({
-  apiKey: process.env.ELEVENLABS_API_KEY,
-});
+export async function POST(req: NextRequest) {
+  const { text } = await req.json();
 
-export async function POST(request: NextRequest) {
+  if (!text) {
+    return new NextResponse("Missing text", { status: 400 });
+  }
+
+  const elevenLabsApiKey = process.env.ELEVENLABS_API_KEY;
+  if (!elevenLabsApiKey) {
+    return new NextResponse("Missing ElevenLabs API key", { status: 500 });
+  }
+
+  const elevenlabs = new ElevenLabs({
+    apiKey: elevenLabsApiKey,
+  });
+
   try {
-    const { text } = await request.json();
-
-    if (!text) {
-      return NextResponse.json({ error: 'Text is required' }, { status: 400 });
-    }
-
-    const audioStream = await elevenlabs.generate({
-      voice: 'Rachel',
-      text,
-      model_id: 'eleven_multilingual_v2',
-      output_format: 'mp3_44100_128',
-    });
-    
-    // The stream is a Node.js Readable stream. We need to convert it to a Web Stream.
-    const webStream = new ReadableStream({
-      start(controller) {
-        audioStream.on('data', (chunk: Buffer) => {
-          controller.enqueue(chunk);
-        });
-        audioStream.on('end', () => {
-          controller.close();
-        });
-        audioStream.on('error', (error: Error) => {
-          controller.error(error);
-        });
-      },
+    const response = await elevenlabs.textToSpeechStream({
+      textInput: text,
+      voiceId: "21m00Tcm4TlvDq8ikWAM",
+      modelId: "eleven_multilingual_v2",
     });
 
-    return new NextResponse(webStream, {
+    return new NextResponse(response, {
       headers: {
-        'Content-Type': 'audio/mpeg',
+        "Content-Type": "audio/mpeg",
       },
     });
-
   } catch (error) {
-    console.error('Error generating TTS audio:', error);
-    return NextResponse.json({ error: 'Failed to generate audio' }, { status: 500 });
+    console.error("ElevenLabs API error:", error);
+    return new NextResponse("Error from ElevenLabs API", { status: 500 });
   }
 } 
