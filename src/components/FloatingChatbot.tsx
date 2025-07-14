@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { ChatSession, ChatMessage, Property } from '@/lib/rag/types';
 import { createChatSession, processUserMessage, getRelevantProperties } from '@/lib/rag/chatSessionManager';
 import { 
-  Building2, Send, User, Bot, Home, MapPin, DollarSign, Bed, Bath, Square, X, MessageCircle, ChevronDown, ChevronUp, Car, Wind, Sun, Mic, Volume2, VolumeX 
+  Building2, Send, User, Bot, Home, MapPin, DollarSign, Bed, Bath, Square, X, MessageCircle, ChevronDown, ChevronUp, Car, Wind, Sun, Mic, Volume2, VolumeX, Phone 
 } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import * as gtag from '@/lib/gtag';
@@ -171,24 +171,36 @@ export default function FloatingChatbot() {
   ];
   
   return (
-    <div className="fixed bottom-4 right-4 z-50">
+    <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end space-y-2">
       {/* Floating button */}
       {!isOpen && (
-        <Button
-          onClick={() => {
-            setIsOpen(true);
-            trackEvent({ eventName: 'chatbot_opened' });
-            gtag.event({
-              action: 'open_chatbot',
-              category: 'chatbot',
-              label: 'Floating Chatbot Opened',
-              value: 1,
-            });
-          }}
-          className="h-14 w-14 rounded-full bg-teal-600 hover:bg-teal-700 shadow-lg"
-        >
-          <MessageCircle className="h-6 w-6 text-white" />
-        </Button>
+        <div className="flex flex-col items-end space-y-2">
+            <Button
+              onClick={() => {
+                setIsOpen(true);
+                trackEvent({ eventName: 'chatbot_opened' });
+                gtag.event({
+                  action: 'open_chatbot',
+                  category: 'chatbot',
+                  label: 'Floating Chatbot Opened',
+                  value: 1,
+                });
+              }}
+              className="h-14 w-14 rounded-full bg-teal-600 hover:bg-teal-700 shadow-lg"
+            >
+              <MessageCircle className="h-6 w-6 text-white" />
+            </Button>
+            <a 
+              href="https://wa.me/14155238886"
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => trackEvent({ eventName: 'whatsapp_icon_clicked' })}
+            >
+              <div className="h-14 w-14 rounded-full bg-green-500 hover:bg-green-600 shadow-lg flex items-center justify-center">
+                <Phone className="h-6 w-6 text-white" />
+              </div>
+            </a>
+        </div>
       )}
       
       {/* Chat window */}
