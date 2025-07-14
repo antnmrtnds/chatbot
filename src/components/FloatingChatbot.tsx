@@ -8,10 +8,13 @@ import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { ChatSession, ChatMessage, Property } from '@/lib/rag/types';
 import { createChatSession, processUserMessage, getRelevantProperties } from '@/lib/rag/chatSessionManager';
-import { Building2, Send, User, Bot, Home, MapPin, DollarSign, Bed, Bath, Square, X, MessageCircle, ChevronDown, ChevronUp, Car, Wind, Sun } from 'lucide-react';
+import { 
+  Building2, Send, User, Bot, Home, MapPin, DollarSign, Bed, Bath, Square, X, MessageCircle, ChevronDown, ChevronUp, Car, Wind, Sun, Mic, Volume2, VolumeX 
+} from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import * as gtag from '@/lib/gtag';
 import { getVisitorId, trackEvent } from '@/lib/tracking'; // Import trackEvent
+import { useSpeechRecognition } from '@/lib/hooks/useSpeechRecognition';
 
 export default function FloatingChatbot() {
   const [chatSession, setChatSession] = useState<ChatSession | null>(null); // Start with null
@@ -20,8 +23,45 @@ export default function FloatingChatbot() {
   const [isOpen, setIsOpen] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(true);
   const [visitorId, setVisitorId] = useState<string>('');
+  const [isTtsEnabled, setIsTtsEnabled] = useState(true);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
+  const handleTranscript = (transcript: string) => {
+    if (transcript) {
+      handleSendMessage(transcript);
+    }
+  };
+
+  const { isListening, isAvailable, toggleListening } = useSpeechRecognition({
+    onTranscript: handleTranscript,
+  });
+
+  const playAudio = async (text: string) => {
+    if (!isTtsEnabled || !text) return;
+
+    try {
+      const response = await fetch('/api/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text }),
+      });
+
+      if (response.ok) {
+        const audioBlob = await response.blob();
+        const audioUrl = URL.createObjectURL(audioBlob);
+        if (audioRef.current) {
+          audioRef.current.src = audioUrl;
+          audioRef.current.play();
+        }
+      } else {
+        console.error('TTS API request failed');
+      }
+    } catch (error) {
+      console.error('Error playing TTS audio:', error);
+    }
+  };
+
   // Get visitor ID and fetch chat history on component mount
   useEffect(() => {
     const initializeChat = async () => {
@@ -90,6 +130,13 @@ export default function FloatingChatbot() {
       
       // Update chat session
       setChatSession(updatedSession);
+      
+      // Play TTS for the latest assistant message
+      const lastMessage = updatedSession.messages[updatedSession.messages.length - 1];
+      if (lastMessage.role === 'assistant') {
+        playAudio(lastMessage.content);
+      }
+
       setInputValue('');
       setShowSuggestions(false);
       console.log('FloatingChatbot: Message sent and session updated.');
@@ -149,6 +196,14 @@ export default function FloatingChatbot() {
               Assistente Imobiliário
             </CardTitle>
             <div className="flex gap-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-gray-500 hover:text-gray-700"
+                onClick={() => setIsTtsEnabled(!isTtsEnabled)}
+              >
+                {isTtsEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
+              </Button>
               <Button
                 variant="ghost"
                 size="icon"
@@ -251,6 +306,16 @@ export default function FloatingChatbot() {
                 disabled={isLoading}
                 className="flex-1 text-sm h-9"
               />
+              {isAvailable && (
+                <Button
+                  onClick={toggleListening}
+                  size="icon"
+                  variant={isListening ? 'destructive' : 'outline'}
+                  className="h-9 w-9 p-0"
+                >
+                  <Mic className="h-4 w-4" />
+                </Button>
+              )}
               <Button
                 onClick={() => handleSendMessage()}
                 disabled={isLoading || !inputValue.trim()}
@@ -261,6 +326,7 @@ export default function FloatingChatbot() {
               </Button>
             </div>
           </CardFooter>
+          <audio ref={audioRef} className="hidden" />
           
           {/* Property suggestions */}
           {relevantProperties.length > 0 && (
