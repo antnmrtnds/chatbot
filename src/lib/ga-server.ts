@@ -1,5 +1,5 @@
-const GA_MEASUREMENT_ID = 'G-XXXXXXXXXX'; // Replace with your Measurement ID
-const GA_API_SECRET = 'YOUR_API_SECRET'; // Replace with your API Secret
+const GA_MEASUREMENT_ID = 'GTM-N78NLD6X'; // Replace with your Measurement ID
+const GA_API_SECRET = 'ed76a918dc186c51e2192515e574d4c43700db34'; // Replace with your API Secret
 
 type GAEvent = {
   name: string;
