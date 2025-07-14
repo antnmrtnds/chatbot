@@ -10,6 +10,7 @@ import { ChatSession, ChatMessage, Property } from '@/lib/rag/types';
 import { createChatSession, processUserMessage, getRelevantProperties } from '@/lib/rag/chatSessionManager';
 import { Building2, Send, User, Bot, Home, MapPin, DollarSign, Bed, Bath, Square, X, MessageCircle, ChevronDown, ChevronUp, Car, Wind, Sun } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import * as gtag from '@/lib/gtag';
 
 export default function FloatingChatbot() {
   const [chatSession, setChatSession] = useState<ChatSession>(createChatSession());
@@ -27,6 +28,13 @@ export default function FloatingChatbot() {
   // Handle sending a message
   const handleSendMessage = async (message: string = inputValue) => {
     if (!message.trim() || isLoading) return;
+    
+    gtag.event({
+      action: 'send_message',
+      category: 'chatbot',
+      label: message,
+      value: 1,
+    });
     
     setIsLoading(true);
     
@@ -71,7 +79,15 @@ export default function FloatingChatbot() {
       {/* Floating button */}
       {!isOpen && (
         <Button
-          onClick={() => setIsOpen(true)}
+          onClick={() => {
+            setIsOpen(true);
+            gtag.event({
+              action: 'open_chatbot',
+              category: 'chatbot',
+              label: 'Floating Chatbot Opened',
+              value: 1,
+            });
+          }}
           className="h-14 w-14 rounded-full bg-teal-600 hover:bg-teal-700 shadow-lg"
         >
           <MessageCircle className="h-6 w-6 text-white" />

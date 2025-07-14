@@ -2,11 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ChatMessage, ChatSession, SearchFilters } from '@/lib/rag/types';
 import { processQuery, extractFiltersFromQuery } from '@/lib/rag/ragChain';
 import { similaritySearch } from '@/lib/rag/vectorStore';
+import { sendGAEvent } from '@/lib/ga-server';
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { message, chatHistory = [] } = body;
+    const { message, chatHistory = [], userId = 'anonymous' } = body;
     
     if (!message || typeof message !== 'string') {
       return NextResponse.json(
@@ -41,6 +42,18 @@ export async function POST(request: NextRequest) {
       position: result.metadata.position,
       parking: result.metadata.parking,
     }));
+    
+    // Send GA event
+    sendGAEvent(
+      {
+        name: 'property_inquiry',
+        params: {
+          user_message: message,
+          property_ids: relevantProperties.map(p => p.flat_id).join(','),
+        },
+      },
+      userId
+    );
     
     return NextResponse.json({
       response,
