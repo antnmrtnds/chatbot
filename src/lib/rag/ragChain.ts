@@ -99,7 +99,7 @@ export async function processQuery(
   try {
     const response = await chain.invoke({
       question: query,
-      chatHistory,
+      chatHistory: chatHistory, // Ensure history is passed here
       filters,
     });
     

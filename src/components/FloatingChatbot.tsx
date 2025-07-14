@@ -292,7 +292,7 @@ export default function FloatingChatbot() {
               
               {isLoading && (
                 <div className="flex justify-center items-center h-full">
-                  <p className="text-gray-500">A carregar histórico...</p>
+                  <p className="text-gray-500">O assistente está a escrever...</p>
                 </div>
               )}
 
