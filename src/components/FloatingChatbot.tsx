@@ -14,27 +14,60 @@ import * as gtag from '@/lib/gtag';
 import { getVisitorId, trackEvent } from '@/lib/tracking'; // Import trackEvent
 
 export default function FloatingChatbot() {
-  const [chatSession, setChatSession] = useState<ChatSession>(createChatSession());
+  const [chatSession, setChatSession] = useState<ChatSession | null>(null); // Start with null
   const [inputValue, setInputValue] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true); // Start in loading state
   const [isOpen, setIsOpen] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(true);
   const [visitorId, setVisitorId] = useState<string>('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
-  // Get visitor ID on component mount
+  // Get visitor ID and fetch chat history on component mount
   useEffect(() => {
-    setVisitorId(getVisitorId());
+    const initializeChat = async () => {
+      setIsLoading(true);
+      const id = getVisitorId();
+      setVisitorId(id);
+
+      try {
+        const response = await fetch(`/api/chat/history?visitorId=${id}`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.messages && data.messages.length > 0) {
+            // History found, load it
+            setChatSession({
+              messages: data.messages,
+              sessionId: data.sessionId,
+              context: { relevantProperties: [] },
+            });
+          } else {
+            // No history, create a new session
+            setChatSession(createChatSession());
+          }
+        } else {
+          // API error, create a new session as a fallback
+          console.error('Failed to fetch chat history');
+          setChatSession(createChatSession());
+        }
+      } catch (error) {
+        console.error('Error initializing chat:', error);
+        setChatSession(createChatSession());
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initializeChat();
   }, []);
 
   // Scroll to bottom of messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [chatSession.messages]);
+  }, [chatSession?.messages]);
   
   // Handle sending a message
   const handleSendMessage = async (message: string = inputValue) => {
-    if (!message.trim() || isLoading || !visitorId) return;
+    if (!message.trim() || isLoading || !visitorId || !chatSession) return;
     
     trackEvent({
       eventName: 'chatbot_message_sent',
@@ -76,7 +109,7 @@ export default function FloatingChatbot() {
   };
   
   // Get relevant properties from context
-  const relevantProperties = getRelevantProperties(chatSession);
+  const relevantProperties = chatSession ? getRelevantProperties(chatSession) : [];
   
   // Example questions
   const exampleQuestions = [
@@ -124,7 +157,7 @@ export default function FloatingChatbot() {
                   setIsOpen(false);
                   trackEvent({ 
                     eventName: 'chatbot_closed',
-                    details: { messages_exchanged: chatSession.messages.length }
+                    details: { messages_exchanged: chatSession?.messages.length ?? 0 }
                   });
                 }}
               >
@@ -135,7 +168,7 @@ export default function FloatingChatbot() {
           
           <CardContent className="flex-1 overflow-y-auto p-4">
             <div className="space-y-4">
-              {chatSession.messages.length <= 1 && (
+              {!isLoading && chatSession && chatSession.messages.length <= 1 && (
                 <div className="text-center py-4">
                   <Avatar className="h-12 w-12 mx-auto mb-2 bg-teal-100">
                     <Bot className="h-6 w-6 text-teal-600" />
@@ -147,7 +180,7 @@ export default function FloatingChatbot() {
                 </div>
               )}
               
-              {chatSession.messages
+              {!isLoading && chatSession?.messages
                 .filter(msg => msg.role !== 'system')
                 .map((message, index) => (
                   <div
@@ -181,7 +214,7 @@ export default function FloatingChatbot() {
                 ))}
               
               {/* Example questions */}
-              {chatSession.messages.length <= 1 && showSuggestions && (
+              {!isLoading && chatSession && chatSession.messages.length <= 1 && showSuggestions && (
                 <div className="space-y-2 mt-4">
                   <p className="text-xs text-gray-500 text-center">Experimente perguntar:</p>
                   {exampleQuestions.map((question, index) => (
@@ -198,6 +231,12 @@ export default function FloatingChatbot() {
                 </div>
               )}
               
+              {isLoading && (
+                <div className="flex justify-center items-center h-full">
+                  <p className="text-gray-500">A carregar histórico...</p>
+                </div>
+              )}
+
               <div ref={messagesEndRef} />
             </div>
           </CardContent>
