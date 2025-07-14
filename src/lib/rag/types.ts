@@ -22,6 +22,7 @@ export interface ChatMessage {
 
 export interface ChatSession {
   messages: ChatMessage[];
+  sessionId: string | null; // Add sessionId
   context?: {
     relevantProperties: Property[];
     currentQuery?: string;

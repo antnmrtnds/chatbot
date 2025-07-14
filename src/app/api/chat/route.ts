@@ -1,30 +1,53 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { ChatMessage, ChatSession, SearchFilters } from '@/lib/rag/types';
+import { createClient } from '@supabase/supabase-js';
+import { v4 as uuidv4 } from 'uuid';
+import { ChatMessage } from '@/lib/rag/types';
 import { processQuery, extractFiltersFromQuery } from '@/lib/rag/ragChain';
 import { similaritySearch } from '@/lib/rag/vectorStore';
 import { sendGAEvent } from '@/lib/ga-server';
 
+// Initialize Supabase client
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { message, chatHistory = [], userId = 'anonymous' } = body;
-    
+    const { message, chatHistory = [], visitorId, sessionId } = body;
+
     if (!message || typeof message !== 'string') {
-      return NextResponse.json(
-        { error: 'Message is required and must be a string' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Message is required' }, { status: 400 });
     }
-    
-    // Extract filters from the query
+    if (!visitorId) {
+      return NextResponse.json({ error: 'visitorId is required' }, { status: 400 });
+    }
+
+    const currentSessionId = sessionId || uuidv4();
+
+    // 1. Save user's message
+    await supabase.from('chat_messages').insert({
+      visitor_id: visitorId,
+      session_id: currentSessionId,
+      role: 'user',
+      content: message,
+    });
+
+    // Process the query to get the chatbot's response
     const filters = extractFiltersFromQuery(message);
-    
-    // Process the query
     const response = await processQuery(
       message,
       chatHistory as ChatMessage[],
       filters
     );
+
+    // 2. Save assistant's response
+    await supabase.from('chat_messages').insert({
+      visitor_id: visitorId,
+      session_id: currentSessionId,
+      role: 'assistant',
+      content: response,
+    });
     
     // Get relevant properties for context
     const searchResults = await similaritySearch(message, filters, 5);
@@ -43,7 +66,7 @@ export async function POST(request: NextRequest) {
       parking: result.metadata.parking,
     }));
     
-    // Send GA event
+    // Legacy GA event (can be removed if you prefer the new system)
     sendGAEvent(
       {
         name: 'property_inquiry',
@@ -52,20 +75,17 @@ export async function POST(request: NextRequest) {
           property_ids: relevantProperties.map(p => p.flat_id).join(','),
         },
       },
-      userId
+      visitorId
     );
     
     return NextResponse.json({
       response,
       relevantProperties,
+      sessionId: currentSessionId, // Send back the session ID
     });
   } catch (error) {
     console.error('Error processing chat request:', error);
-    
-    return NextResponse.json(
-      { error: 'An error occurred while processing your request' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'An error occurred' }, { status: 500 });
   }
 }
 

@@ -11,6 +11,7 @@ import { createChatSession, processUserMessage, getRelevantProperties } from '@/
 import { Building2, Send, User, Bot, Home, MapPin, DollarSign, Bed, Bath, Square, X, MessageCircle, ChevronDown, ChevronUp, Car, Wind, Sun } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import * as gtag from '@/lib/gtag';
+import { getVisitorId } from '@/lib/tracking'; // Import the tracking function
 
 export default function FloatingChatbot() {
   const [chatSession, setChatSession] = useState<ChatSession>(createChatSession());
@@ -18,8 +19,14 @@ export default function FloatingChatbot() {
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(true);
+  const [visitorId, setVisitorId] = useState<string>('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
+  // Get visitor ID on component mount
+  useEffect(() => {
+    setVisitorId(getVisitorId());
+  }, []);
+
   // Scroll to bottom of messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -27,7 +34,7 @@ export default function FloatingChatbot() {
   
   // Handle sending a message
   const handleSendMessage = async (message: string = inputValue) => {
-    if (!message.trim() || isLoading) return;
+    if (!message.trim() || isLoading || !visitorId) return;
     
     gtag.event({
       action: 'send_message',
@@ -40,8 +47,8 @@ export default function FloatingChatbot() {
     
     console.log('FloatingChatbot: Sending message:', message);
     try {
-      // Process the user message
-      const updatedSession = await processUserMessage(chatSession, message);
+      // Process the user message, now passing the visitorId
+      const updatedSession = await processUserMessage(chatSession, message, visitorId);
       
       // Update chat session
       setChatSession(updatedSession);

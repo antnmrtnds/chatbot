@@ -18,7 +18,8 @@ export function createChatSession(): ChatSession {
     ],
     context: {
       relevantProperties: []
-    }
+    },
+    sessionId: null, // Add sessionId to the session
   };
 }
 
@@ -64,11 +65,13 @@ export function addAssistantMessage(session: ChatSession, message: string): Chat
  * Process a user message and generate a response
  * @param session The chat session
  * @param message The user message
+ * @param visitorId The unique ID of the visitor
  * @returns Updated chat session with assistant response
  */
 export async function processUserMessage(
   session: ChatSession,
-  message: string
+  message: string,
+  visitorId: string
 ): Promise<ChatSession> {
   // Add user message to session
   let updatedSession = addUserMessage(session, message);
@@ -83,6 +86,8 @@ export async function processUserMessage(
       body: JSON.stringify({
         message: message,
         chatHistory: updatedSession.messages.filter(msg => msg.role !== 'system'),
+        visitorId: visitorId, // Pass the visitorId
+        sessionId: session.sessionId, // Pass the current sessionId (can be null)
       }),
     });
 
@@ -90,10 +95,13 @@ export async function processUserMessage(
       throw new Error(`API request failed with status ${response.status}`);
     }
 
-    const { response: assistantResponse, relevantProperties } = await response.json();
+    const { response: assistantResponse, relevantProperties, sessionId } = await response.json();
     
     // Add assistant response
     updatedSession = addAssistantMessage(updatedSession, assistantResponse);
+    
+    // Update the session with the ID from the backend
+    updatedSession.sessionId = sessionId;
 
     // Update context with relevant properties
     if (updatedSession.context) {
