@@ -14,7 +14,7 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey);
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { message, chatHistory = [], visitorId, sessionId } = body;
+    let { message, chatHistory = [], visitorId, sessionId } = body;
 
     if (!message || typeof message !== 'string') {
       return NextResponse.json({ error: 'Message is required' }, { status: 400 });
@@ -24,6 +24,25 @@ export async function POST(request: NextRequest) {
     }
 
     const currentSessionId = sessionId || uuidv4();
+
+    // If there is a sessionId, fetch the chat history from the database
+    if (sessionId) {
+      const { data, error } = await supabase
+        .from('chat_messages')
+        .select('role, content')
+        .eq('session_id', sessionId)
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        console.error('Error fetching chat history:', error);
+        // Continue with history from request body or empty on error
+      } else {
+        chatHistory = data.map((msg: any) => ({
+          role: msg.role,
+          content: msg.content,
+        }));
+      }
+    }
 
     // 1. Save user's message
     await supabase.from('chat_messages').insert({

@@ -62,47 +62,24 @@ export default function FloatingChatbot() {
     }
   };
 
-  // Get visitor ID and fetch chat history on component mount
+  // Initialize the chat session
   useEffect(() => {
-    const initializeChat = async () => {
-      // Only initialize if there is no active session
-      if (chatSession) {
-        return;
-      }
-      setIsLoading(true);
-      const id = getVisitorId();
-      setVisitorId(id);
-
-      try {
-        const response = await fetch(`/api/chat/history?visitorId=${id}`);
-        if (response.ok) {
-          const data = await response.json();
-          if (data.messages && data.messages.length > 0) {
-            // History found, load it
-            setChatSession({
-              messages: data.messages,
-              sessionId: data.sessionId,
-              context: { relevantProperties: [] },
-            });
-          } else {
-            // No history, create a new session
-            setChatSession(createChatSession());
-          }
-        } else {
-          // API error, create a new session as a fallback
-          console.error('Failed to fetch chat history');
-          setChatSession(createChatSession());
-        }
-      } catch (error) {
-        console.error('Error initializing chat:', error);
+    const initialize = async () => {
+      // Create a new session on component mount
+      if (!chatSession) {
+        setIsLoading(true);
+        const id = getVisitorId();
+        setVisitorId(id);
+        
+        // Start with a clean session; the backend will manage history
         setChatSession(createChatSession());
-      } finally {
+        
         setIsLoading(false);
       }
     };
-
-    initializeChat();
-  }, [chatSession]); // Add chatSession to dependency array
+    
+    initialize();
+  }, [chatSession]); // Re-run if chatSession becomes null
 
   // Scroll to bottom of messages
   useEffect(() => {

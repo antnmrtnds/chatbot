@@ -77,7 +77,7 @@ export async function processUserMessage(
   let updatedSession = addUserMessage(session, message);
 
   try {
-    // Send message to the backend API
+    // Send the user's message to the backend
     const response = await fetch('/api/chat', {
       method: 'POST',
       headers: {
@@ -85,9 +85,8 @@ export async function processUserMessage(
       },
       body: JSON.stringify({
         message: message,
-        chatHistory: updatedSession.messages.filter(msg => msg.role !== 'system'),
-        visitorId: visitorId, // Pass the visitorId
-        sessionId: session.sessionId, // Pass the current sessionId (can be null)
+        visitorId,
+        sessionId: session.sessionId, // Pass the current session ID
       }),
     });
 
