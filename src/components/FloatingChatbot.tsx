@@ -11,7 +11,7 @@ import { createChatSession, processUserMessage, getRelevantProperties } from '@/
 import { Building2, Send, User, Bot, Home, MapPin, DollarSign, Bed, Bath, Square, X, MessageCircle, ChevronDown, ChevronUp, Car, Wind, Sun } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import * as gtag from '@/lib/gtag';
-import { getVisitorId } from '@/lib/tracking'; // Import the tracking function
+import { getVisitorId, trackEvent } from '@/lib/tracking'; // Import trackEvent
 
 export default function FloatingChatbot() {
   const [chatSession, setChatSession] = useState<ChatSession>(createChatSession());
@@ -36,6 +36,11 @@ export default function FloatingChatbot() {
   const handleSendMessage = async (message: string = inputValue) => {
     if (!message.trim() || isLoading || !visitorId) return;
     
+    trackEvent({
+      eventName: 'chatbot_message_sent',
+      details: { message_content: message }
+    });
+
     gtag.event({
       action: 'send_message',
       category: 'chatbot',
@@ -88,6 +93,7 @@ export default function FloatingChatbot() {
         <Button
           onClick={() => {
             setIsOpen(true);
+            trackEvent({ eventName: 'chatbot_opened' });
             gtag.event({
               action: 'open_chatbot',
               category: 'chatbot',
@@ -114,7 +120,13 @@ export default function FloatingChatbot() {
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8 text-gray-500 hover:text-gray-700"
-                onClick={() => setIsOpen(false)}
+                onClick={() => {
+                  setIsOpen(false);
+                  trackEvent({ 
+                    eventName: 'chatbot_closed',
+                    details: { messages_exchanged: chatSession.messages.length }
+                  });
+                }}
               >
                 <X className="h-4 w-4" />
               </Button>

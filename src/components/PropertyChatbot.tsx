@@ -10,6 +10,7 @@ import { ChatSession, ChatMessage, Property } from '@/lib/rag/types';
 import { createChatSession, processUserMessage, getRelevantProperties } from '@/lib/rag/chatSessionManager';
 import { Building2, Send, User, Bot, Home, MapPin, DollarSign, Bed, Bath, Square, Car, Trees, Wind, Sun } from 'lucide-react';
 import { getVisitorId } from '@/lib/tracking';
+import { trackEvent } from '@/lib/tracking';
 
 export default function PropertyChatbot() {
   const [chatSession, setChatSession] = useState<ChatSession>(createChatSession());
@@ -32,6 +33,11 @@ export default function PropertyChatbot() {
   const handleSendMessage = async () => {
     if (!inputValue.trim() || isLoading || !visitorId) return;
     
+    trackEvent({
+      eventName: 'property_chatbot_message_sent',
+      details: { message_content: inputValue }
+    });
+
     setIsLoading(true);
     
     try {
