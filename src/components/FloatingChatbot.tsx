@@ -168,7 +168,7 @@ export default function FloatingChatbot() {
               <MessageCircle className="h-6 w-6 text-white" />
             </Button>
             <a 
-              href="https://wa.me/14155238886"
+              href="https://wa.me/14155238886?text=Ol%C3%A1%2C%20gostaria%20de%20saber%20mais%20sobre%20os%20im%C3%B3veis."
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => trackEvent({ eventName: 'whatsapp_icon_clicked' })}
