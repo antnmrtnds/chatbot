@@ -235,7 +235,7 @@ export default function EvergreenPureLanding() {
           <h2 className="text-3xl font-light text-center text-gray-900 mb-8">
             Visita Virtual
           </h2>
-          <div className="aspect-w-16 aspect-h-9 rounded-lg overflow-hidden shadow-xl">
+          <div className="h-[80vh] w-full rounded-lg overflow-hidden shadow-xl">
             <iframe
               src="https://upinvestments.vshow.pt/evergreen/village/"
               allowFullScreen
