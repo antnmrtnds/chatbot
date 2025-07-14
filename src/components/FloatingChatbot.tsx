@@ -30,6 +30,7 @@ export default function FloatingChatbot() {
     
     setIsLoading(true);
     
+    console.log('FloatingChatbot: Sending message:', message);
     try {
       // Process the user message
       const updatedSession = await processUserMessage(chatSession, message);
@@ -38,10 +39,12 @@ export default function FloatingChatbot() {
       setChatSession(updatedSession);
       setInputValue('');
       setShowSuggestions(false);
+      console.log('FloatingChatbot: Message sent and session updated.');
     } catch (error) {
-      console.error('Error processing message:', error);
+      console.error('FloatingChatbot: Error processing message:', error);
     } finally {
       setIsLoading(false);
+      console.log('FloatingChatbot: Loading state reset.');
     }
   };
   

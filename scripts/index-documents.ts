@@ -308,6 +308,9 @@ async function indexDocuments(documents: Document[]): Promise<void> {
         // that LangChain adds. We also don't need the original `id` or `chunk` fields in the metadata.
         const { loc, id, chunk, ...metadata } = doc.metadata;
 
+        // Store the original pageContent in metadata to retrieve it later during similarity search
+        metadata.pageContent = doc.pageContent;
+
         // Create a deterministic ID for each chunk to prevent duplicates on re-runs.
         const vectorId = `${doc.metadata.flat_id}-chunk-${doc.metadata.chunk}`;
         

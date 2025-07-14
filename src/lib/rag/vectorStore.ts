@@ -112,7 +112,7 @@ export async function similaritySearch(
   // Convert to our result format
   return results.map((doc: any) => ({
     id: doc.metadata.id || '',
-    content: doc.pageContent,
+    content: doc.metadata.pageContent,
     metadata: doc.metadata,
     score: 0, // Score not directly available from LangChain's similaritySearch
   }));

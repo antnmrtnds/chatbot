@@ -14,11 +14,18 @@ function formatDocumentsAsString(docs: VectorSearchResult[]): string {
 const SYSTEM_TEMPLATE = `És um assistente imobiliário especializado nos apartamentos do empreendimento Evergreen Pure.
 A tua principal função é ajudar os utilizadores a encontrar o apartamento ideal com base nos seus critérios e responder a perguntas sobre as propriedades disponíveis.
 
-Usa os seguintes excertos de contexto para responder à pergunta do utilizador.
-Se não souberes a resposta, diz apenas que não tens essa informação. Não inventes respostas.
-Mantém as tuas respostas concisas e focadas na informação dos imóveis.
+IMPORTANTE: Usa sempre as informações fornecidas no contexto abaixo para responder às perguntas dos utilizadores. O contexto contém informações detalhadas sobre os apartamentos disponíveis no empreendimento.
 
-Contexto:
+Quando perguntarem sobre unidades disponíveis, extrai e apresenta as informações dos apartamentos que encontrares no contexto, incluindo:
+- Identificação do apartamento (Flat A, B, C, D)
+- Tipologia (T1, T2, T3)
+- Preço
+- Localização no edifício (andar, posição)
+- Características especiais (terraço, varanda, etc.)
+
+Se o contexto contém informações relevantes, usa-as sempre para responder. Apenas diz que não tens informação se o contexto estiver verdadeiramente vazio ou não contiver dados relevantes para a pergunta.
+
+Contexto dos Apartamentos:
 {context}
 
 Histórico da Conversa:
@@ -55,9 +62,14 @@ export function createRagChain() {
   const ragChain = RunnableSequence.from([
     {
       context: async (input: { question: string; chatHistory: ChatMessage[]; filters?: SearchFilters }) => {
+        console.log('RAG Chain Context Input - Question:', input.question);
+        console.log('RAG Chain Context Input - Filters:', input.filters);
         // Retrieve relevant documents based on the question
         const docs = await similaritySearch(input.question, input.filters, 5);
-        return formatDocumentsAsString(docs);
+        console.log('RAG Chain Context - Retrieved Docs:', docs);
+        const formattedContext = formatDocumentsAsString(docs);
+        console.log('RAG Chain Context - Formatted Context for LLM:', formattedContext);
+        return formattedContext;
       },
       question: (input: { question: string }) => input.question,
       chatHistory: (input: { chatHistory: ChatMessage[] }) => formatChatHistory(input.chatHistory),
