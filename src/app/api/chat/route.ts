@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
     const filters = extractFiltersFromQuery(message);
     const response = await processQuery(
       message,
-      chatHistory as ChatMessage[],
+      chatHistory, // Pass the chat history here
       filters
     );
 
