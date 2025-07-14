@@ -1,15 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { v4 as uuidv4 } from 'uuid';
 import { ChatMessage } from '@/lib/rag/types';
 import { processQuery, extractFiltersFromQuery } from '@/lib/rag/ragChain';
 import { similaritySearch } from '@/lib/rag/vectorStore';
 import { sendGAEvent } from '@/lib/ga-server';
-
-// Initialize Supabase client
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export async function POST(request: NextRequest) {
   try {
@@ -27,7 +22,7 @@ export async function POST(request: NextRequest) {
 
     // If there is a sessionId, fetch the chat history from the database
     if (sessionId) {
-      const { data, error } = await supabase
+      const { data, error } = await supabaseAdmin
         .from('chat_messages')
         .select('role, content')
         .eq('session_id', sessionId)
@@ -45,7 +40,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 1. Save user's message
-    await supabase.from('chat_messages').insert({
+    await supabaseAdmin.from('chat_messages').insert({
       visitor_id: visitorId,
       session_id: currentSessionId,
       role: 'user',
@@ -53,15 +48,13 @@ export async function POST(request: NextRequest) {
     });
 
     // Process the query to get the chatbot's response
-    const filters = extractFiltersFromQuery(message);
     const response = await processQuery(
       message,
-      chatHistory, // Pass the chat history here
-      filters
+      chatHistory // Pass the chat history here
     );
 
     // 2. Save assistant's response
-    await supabase.from('chat_messages').insert({
+    await supabaseAdmin.from('chat_messages').insert({
       visitor_id: visitorId,
       session_id: currentSessionId,
       role: 'assistant',
@@ -69,6 +62,7 @@ export async function POST(request: NextRequest) {
     });
     
     // Get relevant properties for context
+    const filters = extractFiltersFromQuery(message);
     const searchResults = await similaritySearch(message, filters, 5);
     const relevantProperties = searchResults.map(result => ({
       id: result.id,
@@ -117,7 +111,7 @@ export async function GET(request: NextRequest) {
 
   try {
     // Find the most recent session for the visitor
-    const { data: sessionData, error: sessionError } = await supabase
+    const { data: sessionData, error: sessionError } = await supabaseAdmin
       .from('chat_messages')
       .select('session_id')
       .eq('visitor_id', visitorId)
@@ -132,7 +126,7 @@ export async function GET(request: NextRequest) {
     const sessionId = sessionData[0].session_id;
 
     // Fetch all messages for that session
-    const { data: messagesData, error: messagesError } = await supabase
+    const { data: messagesData, error: messagesError } = await supabaseAdmin
       .from('chat_messages')
       .select('role, content')
       .eq('session_id', sessionId)
