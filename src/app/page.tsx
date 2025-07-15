@@ -35,13 +35,6 @@ export default function EvergreenPureLanding() {
             {/* Right side icons */}
             <div className="flex items-center space-x-4">
               <Button
-                variant="outline"
-                className="hidden md:flex border-white text-white hover:bg-white/10 px-4 py-2"
-              >
-                <Search size={16} className="mr-2" />
-                DISPONIBILIDADES
-              </Button>
-              <Button
                 variant="ghost"
                 size="icon"
                 className="text-white hover:bg-white/10"

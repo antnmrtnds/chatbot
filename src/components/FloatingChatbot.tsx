@@ -26,6 +26,8 @@ export default function FloatingChatbot() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [onboardingInProgress, setOnboardingInProgress] = useState(false);
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
 
   const onboardingQuestions = [
     {
@@ -58,8 +60,8 @@ export default function FloatingChatbot() {
       options: ["Sim", "Não"]
     },
     {
-      question: "Como podemos contactá-lo para apresentar propostas adequadas? (email/telefone)",
-      type: "text_input",
+      question: "Para podermos apresentar propostas adequadas, por favor, deixe o seu email e/ou telefone.",
+      type: "contact_input",
       optional: true
     }
   ];
@@ -111,6 +113,28 @@ export default function FloatingChatbot() {
       setVisitorId(id);
 
       try {
+        // Check if the visitor has completed onboarding before
+        const visitorResponse = await fetch(`/api/visitors/${id}`);
+        if (visitorResponse.ok) {
+          const visitorData = await visitorResponse.json();
+          if (visitorData.onboarding_answers) {
+            // Onboarding already complete, load answers and skip to chat
+            const historyResponse = await fetch(`/api/chat?visitorId=${id}`);
+            const historyData = await historyResponse.json();
+            setChatSession({
+              ...createChatSession(),
+              messages: historyData.messages || [],
+              sessionId: historyData.sessionId,
+              onboardingState: 'completed',
+              onboardingAnswers: visitorData.onboarding_answers,
+            });
+            setOnboardingInProgress(false);
+            setIsLoading(false);
+            return;
+          }
+        }
+
+        // Standard chat history initialization
         const response = await fetch(`/api/chat?visitorId=${id}`);
         if (response.ok) {
           const data = await response.json();
@@ -159,22 +183,35 @@ export default function FloatingChatbot() {
         {
           role: 'assistant',
           content: "Bem-vindo! Somos especialistas em apartamentos novos e em construção nos arredores de Aveiro. Para o ajudar a encontrar a melhor opção disponível dentro dos nossos empreendimentos, por favor, responda a estas perguntas rápidas."
+        },
+        {
+          role: 'assistant',
+          content: onboardingQuestions[0].question,
         }
       ]
     });
     setOnboardingInProgress(true);
   };
 
-  const handleOnboardingResponse = (answer: string) => {
+  const handleOnboardingResponse = async (answer: string) => {
     if (!chatSession) return;
     
     const currentQuestionIndex = chatSession.currentQuestionIndex;
     const currentQuestion = onboardingQuestions[currentQuestionIndex];
+
+    let answerToSave = answer;
+
+    if (currentQuestion.type === 'contact_input') {
+      answerToSave = `Email: ${email}, Telefone: ${phone}`;
+      if (!email && !phone && answer === 'skip') {
+        answerToSave = 'Pular';
+      }
+    }
     
     // Store the answer
     const updatedAnswers = {
       ...chatSession.onboardingAnswers,
-      [currentQuestion.question]: answer
+      [currentQuestion.question]: answerToSave,
     };
 
     // Create user message for the answer
@@ -187,7 +224,10 @@ export default function FloatingChatbot() {
         ...chatSession,
         currentQuestionIndex: nextQuestionIndex,
         onboardingAnswers: updatedAnswers,
-        messages: [...chatSession.messages, userMessage],
+        messages: [...chatSession.messages, userMessage, {
+          role: 'assistant',
+          content: onboardingQuestions[nextQuestionIndex].question
+        }],
       });
     } else {
       // Onboarding complete
@@ -201,8 +241,22 @@ export default function FloatingChatbot() {
         }],
       });
       setOnboardingInProgress(false);
-      // Optional: send summary to backend/CRM
-      console.log("Onboarding Complete:", updatedAnswers);
+      
+      // Save answers to the backend
+      try {
+        await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            visitorId: visitorId,
+            onboardingComplete: true,
+            onboardingAnswers: updatedAnswers
+          })
+        });
+        console.log("Onboarding answers saved successfully.");
+      } catch (error) {
+        console.error("Failed to save onboarding answers:", error);
+      }
     }
   };
 
@@ -261,7 +315,7 @@ export default function FloatingChatbot() {
       if(chatSession && onboardingInProgress && onboardingQuestions[chatSession.currentQuestionIndex].type === 'text_input') {
         handleOnboardingResponse(inputValue);
         setInputValue('');
-      } else {
+      } else if (!onboardingInProgress) {
         handleSendMessage();
       }
     }
@@ -410,7 +464,7 @@ export default function FloatingChatbot() {
                   {onboardingQuestions[chatSession.currentQuestionIndex].type === 'multiple_choice' && (
                     <div className="flex flex-wrap gap-2">
                       {onboardingQuestions[chatSession.currentQuestionIndex].options?.map(option => (
-                        <Button key={option} variant="outline" className="bg-white/10 text-white hover:bg-white/20" onClick={() => handleOnboardingResponse(option)}>
+                        <Button key={option} className="border border-white/20 bg-black/20 text-white hover:bg-black/40" onClick={() => handleOnboardingResponse(option)}>
                           {option}
                         </Button>
                       ))}
@@ -423,12 +477,38 @@ export default function FloatingChatbot() {
                          onChange={(e) => setInputValue(e.target.value)}
                          onKeyDown={handleKeyDown}
                          placeholder="Escreva a sua resposta..."
-                         className="flex-1 bg-black/20 border-white/20 placeholder:text-gray-300 text-white rounded-lg"
+                         className="flex-1 rounded-lg"
                        />
-                       <Button onClick={() => { handleOnboardingResponse(inputValue); setInputValue(''); }} size="icon" className="h-9 w-9 bg-black/20 border-white/20 text-white hover:bg-black/40">
+                       <Button onClick={() => { handleOnboardingResponse(inputValue); setInputValue(''); }} size="icon" className="h-9 w-9 bg-teal-600 text-white hover:bg-teal-700">
                          <Send className="h-4 w-4" />
                        </Button>
                      </div>
+                  )}
+                   {onboardingQuestions[chatSession.currentQuestionIndex].type === 'contact_input' && (
+                    <div className="space-y-3">
+                      <Input
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="O seu email..."
+                        className="flex-1 rounded-lg"
+                      />
+                      <Input
+                        type="tel"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        placeholder="O seu telefone..."
+                        className="flex-1 rounded-lg"
+                      />
+                      <div className="flex justify-end gap-2">
+                         <Button className="border border-gray-300 bg-gray-100 text-gray-700 hover:bg-gray-200" onClick={() => handleOnboardingResponse('skip')}>
+                          Pular
+                        </Button>
+                        <Button className="bg-teal-600 text-white hover:bg-teal-700" onClick={() => handleOnboardingResponse(`Email: ${email}, Telefone: ${phone}`)}>
+                          Enviar
+                        </Button>
+                      </div>
+                    </div>
                   )}
                 </div>
               ) : (
@@ -438,7 +518,7 @@ export default function FloatingChatbot() {
                     onChange={(e) => setInputValue(e.target.value)}
                     onKeyDown={handleKeyDown}
                     placeholder="Escreva a sua mensagem..."
-                    className="flex-1 bg-black/20 border-white/20 placeholder:text-gray-300 text-white rounded-lg"
+                    className="flex-1 rounded-lg"
                     disabled={isLoading}
                   />
                   {isAvailable && (
@@ -447,12 +527,12 @@ export default function FloatingChatbot() {
                       size="icon"
                       onClick={toggleListening}
                       disabled={isLoading}
-                      className={`h-9 w-9 bg-black/20 border-white/20 text-white hover:bg-black/40 hover:text-white ${isListening ? 'bg-red-500/50' : ''}`}
+                      className={`h-9 w-9 text-gray-500 hover:text-gray-700 ${isListening ? 'bg-red-100' : ''}`}
                     >
                       <Mic className="h-4 w-4" />
                     </Button>
                   )}
-                  <Button onClick={() => handleSendMessage()} disabled={isLoading} size="icon" className="h-9 w-9 bg-black/20 border-white/20 text-white hover:bg-black/40">
+                  <Button onClick={() => handleSendMessage()} disabled={isLoading} size="icon" className="h-9 w-9 bg-teal-600 text-white hover:bg-teal-700">
                     <Send className="h-4 w-4" />
                   </Button>
                 </div>

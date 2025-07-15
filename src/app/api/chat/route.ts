@@ -11,9 +11,31 @@ import {
 import { sendGAEvent } from '@/lib/ga-server';
 
 export async function POST(request: NextRequest) {
+  const body = await request.json();
+  const { message, visitorId, sessionId, onboardingAnswers, onboardingComplete } = body;
+
+  if (onboardingComplete) {
+    // Save onboarding answers to the visitors table
+    try {
+      const { error } = await supabaseAdmin
+        .from('visitors')
+        .upsert({
+          visitor_id: visitorId,
+          onboarding_answers: onboardingAnswers,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'visitor_id' });
+      
+      if (error) throw error;
+      
+      return NextResponse.json({ success: true, message: "Onboarding answers saved." });
+
+    } catch (error) {
+      console.error('Error saving onboarding answers:', error);
+      return NextResponse.json({ error: 'Failed to save onboarding answers.' }, { status: 500 });
+    }
+  }
+
   try {
-    const body = await request.json();
-    let { message, visitorId, sessionId } = body;
     let chatHistory: ChatMessage[] = [];
 
     if (!message || typeof message !== 'string') {
