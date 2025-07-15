@@ -7,6 +7,10 @@ import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
 import csvParser from 'csv-parser';
+import {
+  batchProcessProperties,
+  processGenericDocument,
+} from '../src/lib/rag/documentProcessor';
 
 // Load environment variables
 dotenv.config();
@@ -337,64 +341,42 @@ async function indexDocuments(documents: Document[]): Promise<void> {
 }
 
 async function main() {
-  console.log('🚀 Starting document indexing process for local property files...\n');
-
   try {
-    // Step 1: Read properties from .txt files
-    const propertyDir = path.join(process.cwd(), 'property');
-    console.log(`🔍 Reading property files from ${propertyDir}...`);
-    
-    const files = fs.readdirSync(propertyDir).filter(file => file.endsWith('.txt'));
-    if (files.length === 0) {
-        console.error('❌ No .txt files found in property/ directory. Please add your files and try again.');
-        process.exit(1);
+    console.log('🚀 Starting document indexing process...');
+    let propertyDocs: Document[] = [];
+
+    // 1. Get all properties from Supabase
+    const properties = await getAllProperties();
+
+    if (properties.length > 0) {
+      // 2. Process property documents
+      propertyDocs = await batchProcessProperties(properties);
+      console.log(`✅ Processed ${propertyDocs.length} property documents.`);
+    } else {
+      console.log('No properties found in Supabase. Continuing without property documents.');
     }
-    console.log(`✅ Found ${files.length} property files.`);
 
-    const properties: Property[] = files.map(file => {
-        const filePath = path.join(propertyDir, file);
-        const content = fs.readFileSync(filePath, 'utf-8');
-        const flatId = path.basename(file, '.txt');
-        return {
-            id: flatId,
-            flat_id: flatId,
-            content: content,
-        };
-    });
+    // 3. Process the financing information document
+    const financingDocPath = path.join(process.cwd(), 'property', 'financing.txt');
+    const financingContent = fs.readFileSync(financingDocPath, 'utf-8');
+    const financingDocs = await processGenericDocument(financingContent, 'financing.txt');
+    console.log(`✅ Processed ${financingDocs.length} financing documents.`);
 
-    // Step 2: Process all properties into document chunks
-    console.log('\n🔍 Processing properties into document chunks...');
-    let processedCount = 0;
-    const allDocs: Document[] = [];
-    
-    for (const property of properties) {
-      try {
-        const docs = await processPropertyDocument(property);
-        allDocs.push(...docs);
-        processedCount++;
-        console.log(`(✓) Processed property ${property.id}`);
-      } catch (error) {
-        console.error(`❌ Error processing property ${property.id}:`, error);
-      }
-    }
-    console.log(`✅ Finished processing ${processedCount}/${properties.length} properties.`);
+    // 4. Combine all documents
+    const allDocs = [...propertyDocs, ...financingDocs];
 
-    // Step 3: Index all document chunks in Pinecone
     if (allDocs.length > 0) {
-        console.log(`\n🌲 Indexing ${allDocs.length} document chunks in Pinecone...`);
-        await indexDocuments(allDocs);
+      console.log(`Total documents to be indexed: ${allDocs.length}`);
+      // 5. Index all documents in Pinecone
+      await indexDocuments(allDocs);
+      console.log('🎉 Document indexing completed successfully!');
+    } else {
+      console.log('No documents to index. Exiting.');
     }
-    
-    console.log('\n🎉 Document indexing complete!');
-    
   } catch (error) {
-    console.error('❌ Error during document indexing:', error);
+    console.error('An error occurred during the indexing process:', error);
     process.exit(1);
   }
 }
 
-// Run the main function
-main().catch(error => {
-  console.error('Error in main function:', error);
-  process.exit(1);
-});
+main();

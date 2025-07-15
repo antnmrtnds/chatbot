@@ -89,6 +89,42 @@ export async function processPropertyDocument(property: Property): Promise<Docum
     [metadata]
   );
   
+  // Add chunk number to each document for deterministic IDs
+  docs.forEach((doc, index) => {
+    doc.metadata.chunk = index;
+  });
+
+  return docs;
+}
+
+/**
+ * Processes a generic text document, splits it into chunks, and adds metadata.
+ * @param content The text content of the document.
+ * @param source The name of the source file (e.g., 'financing.txt').
+ * @returns An array of LangChain documents.
+ */
+export async function processGenericDocument(content: string, source: string): Promise<Document[]> {
+  const textSplitter = new RecursiveCharacterTextSplitter({
+    chunkSize: 1000,
+    chunkOverlap: 200,
+  });
+
+  // Clean the content to handle markdown tables better by removing pipes.
+  const cleanedContent = content.replace(/\|/g, ' ');
+
+  // Create the documents from the cleaned content.
+  const docs = await textSplitter.createDocuments([cleanedContent]);
+
+  // Add the necessary metadata to each chunk.
+  docs.forEach((doc, index) => {
+    doc.metadata = {
+      ...doc.metadata,
+      source: source,
+      id: source,
+      chunk: index,
+    };
+  });
+
   return docs;
 }
 
