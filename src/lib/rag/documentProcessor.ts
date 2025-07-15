@@ -118,16 +118,18 @@ export async function processGenericDocument(content: string, source: string): P
     .replace(/\s\s+/g, ' ') // Replace multiple spaces with a single space
     .trim();
 
-  // Create the documents from the cleaned content.
-  const docs = await textSplitter.createDocuments([cleanedContent]);
-
-  // Add the necessary metadata to each chunk.
-  docs.forEach((doc, index) => {
-    doc.metadata = {
-      ...doc.metadata,
+  // Define the base metadata that will be copied to each chunk.
+  const metadata = {
       source: source,
       id: source, // Base ID for the document
-    };
+  };
+
+  // Create the documents, passing the metadata to be applied to all chunks.
+  const docs = await textSplitter.createDocuments([cleanedContent], [metadata]);
+
+  // Now, add the unique chunk number to each document.
+  docs.forEach((doc, index) => {
+    doc.metadata.chunk = index;
   });
 
   return docs;

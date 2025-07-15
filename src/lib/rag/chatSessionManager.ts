@@ -20,6 +20,9 @@ export function createChatSession(): ChatSession {
       relevantProperties: []
     },
     sessionId: null, // Add sessionId to the session
+    onboardingState: 'not_started',
+    currentQuestionIndex: 0,
+    onboardingAnswers: {},
   };
 }
 
@@ -87,6 +90,7 @@ export async function processUserMessage(
         message: message,
         visitorId,
         sessionId: session.sessionId, // Pass the current session ID
+        onboardingAnswers: session.onboardingAnswers,
       }),
     });
 

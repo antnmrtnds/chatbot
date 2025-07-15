@@ -67,7 +67,8 @@ export async function POST(request: NextRequest) {
     // Process the query to get the chatbot's response
     const response = await processQuery(
       message,
-      combinedHistory // Pass the combined history here
+      combinedHistory, // Pass the combined history here
+      body.onboardingAnswers || {}
     );
 
     // 2. Save assistant's response to Supabase

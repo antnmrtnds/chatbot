@@ -10,35 +10,37 @@ function formatDocumentsAsString(docs: VectorSearchResult[]): string {
   return docs.map(doc => doc.content).join('\n\n');
 }
 
+function formatOnboardingAnswers(answers: Record<string, any>): string {
+  if (Object.keys(answers).length === 0) return "Nenhuma preferência foi recolhida ainda.";
+  return Object.entries(answers)
+    .map(([question, answer]) => `- ${question}: ${answer}`)
+    .join('\n');
+}
+
 // System prompt template
 const SYSTEM_TEMPLATE = `És um assistente imobiliário especializado para o empreendimento Evergreen Pure.
 A tua função principal é ajudar os utilizadores a encontrar o apartamento ideal com base nos seus critérios e responder a perguntas sobre as propriedades disponíveis, bem como sobre opções de pagamento e financiamento.
 
-**Instruções Principais:**
-1.  **Usa o Contexto Fornecido**: Utiliza SEMPRE a informação da secção "Contexto" abaixo para responder às perguntas. Este contexto contém informações detalhadas e atualizadas sobre os apartamentos e as opções de financiamento.
-2.  **Analisa o Histórico da Conversa**: Presta muita atenção ao "Histórico da Conversa" para compreenderes as necessidades do utilizador e manteres o contexto.
-    - Se o utilizador partilhar o seu nome, usa-o para personalizar a conversa.
-    - Identifica e recorda as preferências do utilizador (ex: orçamento, tamanho desejado, características específicas como terraço, andar preferido, etc.). Usa estas preferências para refinar as tuas sugestões.
-3.  **Responde a Perguntas de Financiamento**: Quando te perguntarem sobre pagamentos, financiamento, impostos ou prazos, usa a informação de contexto para dar respostas claras e detalhadas sobre:
-    - Pagamento de sinal e contrato promessa.
-    - Planos de pagamento faseados.
-    - Opções de financiamento bancário.
-    - Impostos aplicáveis (IMT, IMI, Selo).
-    - Garantias e seguros.
-4.  **Apresenta a Informação de Forma Clara**: Quando te perguntarem sobre unidades disponíveis, extrai e apresenta todos os detalhes relevantes que encontrares no contexto para cada apartamento. Isto inclui, mas não se limita a:
-    - Identificação/Nome do Apartamento
-    - Tipologia (ex: T1, T2)
-    - Preço
-    - Localização no edifício (andar, posição)
-    - Características especiais (terraço, varanda, etc.)
-    - Quaisquer outros detalhes relevantes fornecidos.
-5.  **Sê Honesto Sobre Limitações**: Se o contexto não contiver a informação necessária para responder a uma pergunta, informa claramente que não tens essa informação. Não inventes detalhes.
-
-Contexto:
-{context}
+**Contexto da Conversa:**
+Preferências do Utilizador (recolhidas durante o onboarding):
+{onboardingAnswers}
 
 Histórico da Conversa:
 {chatHistory}
+
+**Instruções Principais:**
+1.  **Usa as Preferências do Utilizador**: Analisa as preferências do utilizador acima. Usa o seu orçamento, tipologia desejada e outras características para personalizar as tuas sugestões e argumentos.
+2.  **Usa o Contexto Fornecido**: Utiliza SEMPRE a informação da secção "Contexto dos Documentos" abaixo para responder às perguntas. Este contexto contém informações detalhadas e atualizadas sobre os apartamentos e as opções de financiamento.
+3.  **Destaca Benefícios**: Ao interagir, realça proativamente os benefícios de comprar um imóvel em planta ou em construção, como potencial de valorização, opções de personalização e facilidades de pagamento.
+4.  **Responde a Perguntas de Financiamento**: Quando te perguntarem sobre pagamentos, financiamento, impostos ou prazos, usa a informação de contexto para dar respostas claras e detalhadas.
+5.  **Oferece o Próximo Passo**: No final das interações ou quando apropriado, oferece sempre a possibilidade de agendar uma visita ao stand de vendas ou uma reunião com um consultor para dar seguimento ao interesse.
+6.  **Apresenta a Informação de Forma Clara**: Ao descrever unidades, extrai e apresenta todos os detalhes relevantes do contexto.
+7.  **Sê Honesto Sobre Limitações**: Se o contexto não contiver a informação necessária, informa claramente que não tens essa informação. Não inventes detalhes.
+8.  **Garante Transparência**: Assegura ao utilizador que os seus dados de contacto serão usados exclusivamente para apresentar propostas adequadas para os empreendimentos da nossa promotora.
+
+
+**Contexto dos Documentos:**
+{context}
 
 Pergunta do Utilizador: {question}`;
 
@@ -70,7 +72,7 @@ export function createRagChain() {
   // Create the RAG chain
   const ragChain = RunnableSequence.from([
     {
-      context: async (input: { question: string; chatHistory: ChatMessage[]; filters?: SearchFilters }) => {
+      context: async (input: { question: string; chatHistory: ChatMessage[]; onboardingAnswers: Record<string, any>; filters?: SearchFilters }) => {
         console.log('RAG Chain Context Input - Question:', input.question);
         console.log('RAG Chain Context Input - Filters:', input.filters);
         // Retrieve relevant documents based on the question
@@ -82,6 +84,7 @@ export function createRagChain() {
       },
       question: (input: { question: string }) => input.question,
       chatHistory: (input: { chatHistory: ChatMessage[] }) => formatChatHistory(input.chatHistory),
+      onboardingAnswers: (input: { onboardingAnswers: Record<string, any> }) => formatOnboardingAnswers(input.onboardingAnswers),
     },
     prompt,
     model,
@@ -95,12 +98,14 @@ export function createRagChain() {
  * Process a user query using the RAG chain
  * @param query The user's query
  * @param chatHistory Previous chat messages
+ * @param onboardingAnswers User's onboarding answers
  * @param filters Optional search filters
  * @returns The assistant's response
  */
 export async function processQuery(
   query: string,
   chatHistory: ChatMessage[],
+  onboardingAnswers: Record<string, any>,
   filters?: SearchFilters
 ): Promise<string> {
   const chain = createRagChain();
@@ -108,7 +113,8 @@ export async function processQuery(
   try {
     const response = await chain.invoke({
       question: query,
-      chatHistory: chatHistory, // Ensure history is passed here
+      chatHistory: chatHistory,
+      onboardingAnswers: onboardingAnswers,
       filters,
     });
     

@@ -27,6 +27,9 @@ export interface ChatSession {
     relevantProperties: Property[];
     currentQuery?: string;
   };
+  onboardingState: 'not_started' | 'in_progress' | 'completed';
+  currentQuestionIndex: number;
+  onboardingAnswers: Record<string, any>;
 }
 
 export interface SearchFilters {
