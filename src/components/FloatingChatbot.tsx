@@ -240,143 +240,117 @@ export default function FloatingChatbot() {
           
           <CardContent className="flex-1 overflow-y-auto p-4">
             <div className="space-y-4">
-              {!isLoading && chatSession && chatSession.messages.length <= 1 && (
-                <div className="text-center py-4">
-                  <Avatar className="h-12 w-12 mx-auto mb-2 bg-teal-100">
-                    <Bot className="h-6 w-6 text-teal-600" />
-                  </Avatar>
-                  <p className="text-sm font-medium mb-1">Assistente Imobiliário</p>
-                  <p className="text-xs text-gray-500 mb-4">
-                    Pergunte-me sobre os nossos imóveis, preços ou disponibilidade
-                  </p>
-                </div>
-              )}
-              
-              {!isLoading && chatSession?.messages
-                .filter(msg => msg.role !== 'system')
-                .map((message, index) => (
-                  <div
-                    key={index}
-                    className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                  >
-                    <div
-                      className={`flex gap-3 max-w-[85%] ${
-                        message.role === 'user'
-                          ? 'bg-teal-600 text-white rounded-tl-lg rounded-tr-lg rounded-bl-lg'
-                          : 'bg-gray-100 text-gray-800 rounded-tl-lg rounded-tr-lg rounded-br-lg'
-                      } p-3`}
-                    >
-                      {message.role === 'assistant' && (
-                        <Avatar className="h-6 w-6 bg-teal-100">
-                          <Bot className="h-3 w-3 text-teal-600" />
-                        </Avatar>
-                      )}
-                      
-                      <div className="space-y-1">
-                        <p className="text-xs">{message.content}</p>
-                      </div>
-                      
-                      {message.role === 'user' && (
-                        <Avatar className="h-6 w-6 bg-teal-800">
-                          <User className="h-3 w-3 text-white" />
-                        </Avatar>
-                      )}
+              {chatSession ? (
+                chatSession.messages.map((message, index) => (
+                  <div key={index} className={`flex items-start gap-3 ${message.role === 'user' ? 'justify-end' : ''}`}>
+                    {message.role === 'assistant' && (
+                      <Avatar className="h-8 w-8 bg-teal-100">
+                        <Bot className="h-5 w-5 text-teal-600" />
+                      </Avatar>
+                    )}
+                    <div className={`rounded-lg px-3 py-2 max-w-[80%] ${
+                      message.role === 'user'
+                        ? 'bg-teal-600 text-white'
+                        : 'bg-gray-100 text-gray-800'
+                    }`}>
+                      <p className="text-sm">{message.content}</p>
+                    </div>
+                    {message.role === 'user' && (
+                      <Avatar className="h-8 w-8 bg-gray-200">
+                        <User className="h-5 w-5 text-gray-600" />
+                      </Avatar>
+                    )}
+                  </div>
+                ))
+              ) : (
+                // Show loading skeleton while session initializes
+                <div className="space-y-4">
+                  <div className="flex items-start gap-3">
+                    <div className="h-8 w-8 rounded-full bg-gray-200 animate-pulse"></div>
+                    <div className="flex-1 space-y-2">
+                      <div className="h-4 w-3/4 rounded bg-gray-200 animate-pulse"></div>
+                      <div className="h-4 w-1/2 rounded bg-gray-200 animate-pulse"></div>
                     </div>
                   </div>
-                ))}
-              
-              {/* Example questions */}
-              {!isLoading && chatSession && chatSession.messages.length <= 1 && showSuggestions && (
-                <div className="space-y-2 mt-4">
-                  <p className="text-xs text-gray-500 text-center">Experimente perguntar:</p>
-                  {exampleQuestions.map((question, index) => (
-                    <Button
-                      key={index}
-                      variant="outline"
-                      size="sm"
-                      className="w-full justify-start text-left text-xs h-auto py-2 px-3"
-                      onClick={() => handleSendMessage(question)}
-                    >
-                      {question}
-                    </Button>
-                  ))}
-                </div>
-              )}
-              
-              {isLoading && (
-                <div className="flex justify-center items-center h-full">
-                  <p className="text-gray-500">O assistente está a escrever...</p>
+                  <div className="flex items-start gap-3 justify-end">
+                    <div className="flex-1 space-y-2 items-end">
+                      <div className="h-4 w-3/4 rounded bg-gray-200 animate-pulse ml-auto"></div>
+                    </div>
+                    <div className="h-8 w-8 rounded-full bg-gray-200 animate-pulse"></div>
+                  </div>
                 </div>
               )}
 
+              {isLoading && chatSession && (
+                <div className="flex items-start gap-3">
+                  <Avatar className="h-8 w-8 bg-teal-100">
+                    <Bot className="h-5 w-5 text-teal-600" />
+                  </Avatar>
+                  <div className="rounded-lg px-3 py-2 bg-gray-100 text-gray-800">
+                    <div className="flex items-center space-x-1">
+                      <span className="h-2 w-2 bg-teal-600 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+                      <span className="h-2 w-2 bg-teal-600 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+                      <span className="h-2 w-2 bg-teal-600 rounded-full animate-bounce"></span>
+                    </div>
+                  </div>
+                </div>
+              )}
               <div ref={messagesEndRef} />
             </div>
           </CardContent>
           
-          <CardFooter className="border-t p-3">
-            <div className="flex w-full gap-2">
-              <Input
-                placeholder="Escreva a sua mensagem..."
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                onKeyDown={handleKeyDown}
-                disabled={isLoading}
-                className="flex-1 text-sm h-9"
-              />
-              {isAvailable && (
-                <Button
-                  onClick={toggleListening}
-                  size="icon"
-                  variant={isListening ? 'destructive' : 'outline'}
-                  className="h-9 w-9 p-0"
-                >
-                  <Mic className="h-4 w-4" />
-                </Button>
+          {chatSession && (
+            <CardFooter className="border-t p-4 flex flex-col items-start gap-4">
+              {showSuggestions && (
+                <div className="w-full">
+                  <p className="text-xs text-gray-500 mb-2">Ou experimente uma destas sugestões:</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {exampleQuestions.map((q, i) => (
+                      <Button
+                        key={i}
+                        variant="outline"
+                        size="sm"
+                        className="text-xs h-auto py-1.5 text-left"
+                        onClick={() => {
+                          handleSendMessage(q);
+                          setShowSuggestions(false);
+                        }}
+                      >
+                        {q}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
               )}
-              <Button
-                onClick={() => handleSendMessage()}
-                disabled={isLoading || !inputValue.trim()}
-                size="sm"
-                className="bg-teal-600 hover:bg-teal-700 h-9 w-9 p-0"
-              >
-                <Send className="h-4 w-4" />
-              </Button>
-            </div>
-          </CardFooter>
-          <audio ref={audioRef} className="hidden" />
-          
-          {/* Property suggestions */}
-          {relevantProperties.length > 0 && (
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="mx-3 mb-3 text-xs flex items-center justify-center gap-1 border-teal-200 text-teal-700 bg-teal-50"
-                >
-                  <Home className="h-3 w-3" />
-                  <span>{relevantProperties.length} Imóveis Relevantes</span>
-                  <ChevronUp className="h-3 w-3" />
+              <div className="w-full flex items-center space-x-2">
+                <Input
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Escreva a sua mensagem..."
+                  className="flex-1"
+                  disabled={isLoading}
+                />
+                {isAvailable && (
+                  <Button
+                    variant={isListening ? "destructive" : "outline"}
+                    size="icon"
+                    onClick={toggleListening}
+                    disabled={isLoading}
+                    className="h-9 w-9"
+                  >
+                    <Mic className="h-4 w-4" />
+                  </Button>
+                )}
+                <Button onClick={() => handleSendMessage()} disabled={isLoading} size="icon" className="h-9 w-9">
+                  <Send className="h-4 w-4" />
                 </Button>
-              </SheetTrigger>
-              <SheetContent side="bottom" className="h-[400px] px-4 py-6">
-                <div className="space-y-1 mb-4">
-                  <h3 className="text-lg font-medium">Imóveis Relevantes</h3>
-                  <p className="text-sm text-gray-500">
-                    Propriedades que correspondem aos seus critérios
-                  </p>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 overflow-y-auto max-h-[300px] pr-2">
-                  {relevantProperties.map((property, index) => (
-                    <PropertyCard key={index} property={property} />
-                  ))}
-                </div>
-              </SheetContent>
-            </Sheet>
+              </div>
+            </CardFooter>
           )}
         </Card>
       )}
+      <audio ref={audioRef} />
     </div>
   );
 }
