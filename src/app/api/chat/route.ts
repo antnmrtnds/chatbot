@@ -4,6 +4,10 @@ import { v4 as uuidv4 } from 'uuid';
 import { ChatMessage } from '@/lib/rag/types';
 import { processQuery, extractFiltersFromQuery } from '@/lib/rag/ragChain';
 import { similaritySearch } from '@/lib/rag/vectorStore';
+import {
+  addMessageToHistory,
+  getRelevantChatHistory,
+} from '@/lib/rag/chatHistoryStore';
 import { sendGAEvent } from '@/lib/ga-server';
 
 export async function POST(request: NextRequest) {
@@ -21,46 +25,62 @@ export async function POST(request: NextRequest) {
 
     const currentSessionId = sessionId || uuidv4();
 
-    // Always fetch the latest chat history for the session from the database
-    if (currentSessionId) {
-      const { data, error } = await supabaseAdmin
-        .from('chat_messages')
-        .select('role, content')
-        .eq('session_id', currentSessionId)
-        .order('created_at', { ascending: true });
+    // Fetch recent chat history from Supabase (short-term memory)
+    const { data, error } = await supabaseAdmin
+      .from('chat_messages')
+      .select('role, content')
+      .eq('session_id', currentSessionId)
+      .order('created_at', { ascending: true })
+      .limit(10); // Get last 10 messages
 
-      if (error) {
-        console.error('Error fetching chat history:', error);
-        // On error, proceed with an empty history
-      } else if (data) {
-        chatHistory = data.map((msg: any) => ({
-          role: msg.role,
-          content: msg.content,
-        }));
-      }
+    if (error) {
+      console.error('Error fetching chat history:', error);
+    } else if (data) {
+      chatHistory = data.map((msg: any) => ({
+        role: msg.role,
+        content: msg.content,
+      }));
     }
 
-    // 1. Save user's message
+    // Fetch relevant long-term history from Pinecone
+    const relevantHistory = await getRelevantChatHistory(message, visitorId, 5);
+
+    // Combine recent and relevant history
+    const combinedHistory = [
+      ...new Map(
+        [...relevantHistory, ...chatHistory].map(item => [item.content, item])
+      ).values(),
+    ];
+
+    // 1. Save user's message to Supabase
+    const userMessage: ChatMessage = { role: 'user', content: message };
     await supabaseAdmin.from('chat_messages').insert({
       visitor_id: visitorId,
       session_id: currentSessionId,
-      role: 'user',
-      content: message,
+      role: userMessage.role,
+      content: userMessage.content,
     });
+
+    // Add user message to Pinecone history
+    await addMessageToHistory(userMessage, visitorId, currentSessionId);
 
     // Process the query to get the chatbot's response
     const response = await processQuery(
       message,
-      chatHistory // Pass the chat history here
+      combinedHistory // Pass the combined history here
     );
 
-    // 2. Save assistant's response
+    // 2. Save assistant's response to Supabase
+    const assistantMessage: ChatMessage = { role: 'assistant', content: response };
     await supabaseAdmin.from('chat_messages').insert({
       visitor_id: visitorId,
       session_id: currentSessionId,
-      role: 'assistant',
-      content: response,
+      role: assistantMessage.role,
+      content: assistantMessage.content,
     });
+
+    // Add assistant's message to Pinecone history
+    await addMessageToHistory(assistantMessage, visitorId, currentSessionId);
     
     // Get relevant properties for context
     const filters = extractFiltersFromQuery(message);
