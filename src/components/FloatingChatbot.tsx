@@ -225,21 +225,22 @@ export default function FloatingChatbot() {
         currentQuestionIndex: nextQuestionIndex,
         onboardingAnswers: updatedAnswers,
         messages: [...chatSession.messages, userMessage, {
-          role: 'assistant',
+          role: 'assistant' as const,
           content: onboardingQuestions[nextQuestionIndex].question
         }],
       });
     } else {
       // Onboarding complete
-      setChatSession({
+      const finalSessionState = {
         ...chatSession,
-        onboardingState: 'completed',
+        onboardingState: 'completed' as const,
         onboardingAnswers: updatedAnswers,
         messages: [...chatSession.messages, userMessage, {
-          role: 'assistant',
+          role: 'assistant' as const,
           content: 'Obrigado pelas suas respostas! Com base nas suas preferências, vou procurar as melhores opções para si.'
         }],
-      });
+      };
+      setChatSession(finalSessionState);
       setOnboardingInProgress(false);
       
       // Save answers to the backend
@@ -254,6 +255,10 @@ export default function FloatingChatbot() {
           })
         });
         console.log("Onboarding answers saved successfully.");
+        
+        // After saving, trigger the search
+        handleSendMessage("Encontre imóveis com base nas minhas respostas.");
+
       } catch (error) {
         console.error("Failed to save onboarding answers:", error);
       }

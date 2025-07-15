@@ -17,6 +17,27 @@ function formatOnboardingAnswers(answers: Record<string, any>): string {
     .join('\n');
 }
 
+function generateSearchQueryFromAnswers(answers: Record<string, any>): string {
+  let queryParts = ["Encontrar um apartamento com as seguintes características:"];
+  
+  const questionToField: Record<string, string> = {
+    "Que tipo de apartamento procura?": "Tipologia",
+    "Qual é o orçamento disponível para o investimento?": "Orçamento",
+    "O apartamento é para habitação própria, investimento ou outra finalidade?": "Finalidade",
+    "Em que fase da construção prefere adquirir?": "Fase de construção",
+    "Há características/sugestões essenciais? (ex: varanda, garagem, vista, etc.)": "Características essenciais",
+    "Pretende saber mais sobre condições de financiamento ou campanhas em vigor?": "Interesse em financiamento"
+  };
+
+  for (const [question, answer] of Object.entries(answers)) {
+    if (questionToField[question] && answer && answer.toLowerCase() !== 'pular' && answer.toLowerCase() !== 'não') {
+      queryParts.push(`${questionToField[question]}: ${answer}`);
+    }
+  }
+  
+  return queryParts.join(', ');
+}
+
 // System prompt template
 const SYSTEM_TEMPLATE = `És um assistente imobiliário especializado para o empreendimento Evergreen Pure.
 A tua função principal é ajudar os utilizadores a encontrar o apartamento ideal com base nos seus critérios e responder a perguntas sobre as propriedades disponíveis, bem como sobre opções de pagamento e financiamento.
@@ -111,8 +132,15 @@ export async function processQuery(
   const chain = createRagChain();
   
   try {
+    let finalQuery = query;
+    // If the user has just completed onboarding, generate a query from their answers
+    if (query === "Encontre imóveis com base nas minhas respostas." && Object.keys(onboardingAnswers).length > 0) {
+      finalQuery = generateSearchQueryFromAnswers(onboardingAnswers);
+      console.log("Generated search query from onboarding answers:", finalQuery);
+    }
+
     const response = await chain.invoke({
-      question: query,
+      question: finalQuery,
       chatHistory: chatHistory,
       onboardingAnswers: onboardingAnswers,
       filters,
