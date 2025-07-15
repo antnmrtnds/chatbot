@@ -109,8 +109,14 @@ export async function processGenericDocument(content: string, source: string): P
     chunkOverlap: 200,
   });
 
-  // Clean the content to handle markdown tables better by removing pipes.
-  const cleanedContent = content.replace(/\|/g, ' ');
+  // Clean the content to remove markdown and excess whitespace
+  const cleanedContent = content
+    .replace(/#+\s/g, '') // Remove markdown headers (e.g., "### ")
+    .replace(/[\*\_]/g, '') // Remove bold/italic markers
+    .replace(/\|/g, ' ')   // Replace pipes with spaces
+    .replace(/-\s/g, '')   // Remove list item markers
+    .replace(/\s\s+/g, ' ') // Replace multiple spaces with a single space
+    .trim();
 
   // Create the documents from the cleaned content.
   const docs = await textSplitter.createDocuments([cleanedContent]);
@@ -120,8 +126,7 @@ export async function processGenericDocument(content: string, source: string): P
     doc.metadata = {
       ...doc.metadata,
       source: source,
-      id: source,
-      chunk: index,
+      id: source, // Base ID for the document
     };
   });
 

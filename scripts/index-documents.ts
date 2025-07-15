@@ -275,17 +275,22 @@ async function getAllProperties(): Promise<Property[]> {
 
 /**
  * Index documents in Pinecone
- * @param documents Array of documents to index
+ * @param documents Array of LangChain documents to index
  */
 async function indexDocuments(documents: Document[]): Promise<void> {
-  const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
+  const pineconeIndex = pinecone.index(process.env.PINECONE_INDEX_NAME!);
+  const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+  // Add a deterministic ID to each document chunk before indexing
+  documents.forEach((doc, index) => {
+    // Use the base ID from metadata if it exists, otherwise create a fallback.
+    const baseId = doc.metadata.id || `doc-${index}`;
+    // Create a final, unique ID for the chunk.
+    doc.metadata.id = `${baseId}-chunk-${doc.metadata.chunk || index}`;
   });
-  
-  const pineconeIndex = pinecone.Index(process.env.PINECONE_INDEX_NAME!);
-  
-  // Process documents in batches to avoid rate limits
-  const batchSize = 10;
+
+  // Batch size for Pinecone upsert
+  const batchSize = 100;
   const batches = [];
   
   for (let i = 0; i < documents.length; i += batchSize) {
