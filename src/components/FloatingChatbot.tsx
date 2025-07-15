@@ -21,7 +21,6 @@ export default function FloatingChatbot() {
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(true); // Start in loading state
   const [isOpen, setIsOpen] = useState(false);
-  const [showSuggestions, setShowSuggestions] = useState(true);
   const [visitorId, setVisitorId] = useState<string>('');
   const [isTtsEnabled, setIsTtsEnabled] = useState(true);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -143,7 +142,6 @@ export default function FloatingChatbot() {
       }
 
       setInputValue('');
-      setShowSuggestions(false);
       console.log('FloatingChatbot: Message sent and session updated.');
     } catch (error) {
       console.error('FloatingChatbot: Error processing message:', error);
@@ -159,17 +157,6 @@ export default function FloatingChatbot() {
       handleSendMessage();
     }
   };
-  
-  // Get relevant properties from context
-  const relevantProperties = chatSession ? getRelevantProperties(chatSession) : [];
-  
-  // Example questions
-  const exampleQuestions = [
-    "Que apartamentos T2 existem?",
-    "Mostra-me apartamentos com terraço",
-    "Quais os apartamentos abaixo de 200.000€?",
-    "Fala-me sobre o projeto Evergreen Pure"
-  ];
   
   return (
     <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end space-y-2">
@@ -300,28 +287,7 @@ export default function FloatingChatbot() {
           </CardContent>
           
           {chatSession && (
-            <CardFooter className="border-t p-4 flex flex-col items-start gap-4">
-              {showSuggestions && (
-                <div className="w-full">
-                  <p className="text-xs text-gray-500 mb-2">Ou experimente uma destas sugestões:</p>
-                  <div className="grid grid-cols-2 gap-2">
-                    {exampleQuestions.map((q, i) => (
-                      <Button
-                        key={i}
-                        variant="outline"
-                        size="sm"
-                        className="text-xs h-auto py-1.5 text-left whitespace-normal"
-                        onClick={() => {
-                          handleSendMessage(q);
-                          setShowSuggestions(false);
-                        }}
-                      >
-                        {q}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-              )}
+            <CardFooter className="border-t p-4">
               <div className="w-full flex items-center space-x-2">
                 <Input
                   value={inputValue}
