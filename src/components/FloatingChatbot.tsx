@@ -310,7 +310,7 @@ export default function FloatingChatbot() {
                         key={i}
                         variant="outline"
                         size="sm"
-                        className="text-xs h-auto py-1.5 text-left"
+                        className="text-xs h-auto py-1.5 text-left whitespace-normal"
                         onClick={() => {
                           handleSendMessage(q);
                           setShowSuggestions(false);
