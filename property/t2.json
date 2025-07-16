@@ -1,0 +1,34 @@
+{
+  "Descrição geral": "Apartamento T2 - 94 m²",
+  "Especificações gerais": {
+    "Área bruta privativa": "94 m²",
+    "Quartos": 2,
+    "Casas de banho": 2,
+    "Varanda": "Sim",
+    "Lugar de garagem": "Incluído",
+    "Preço": "960,000 €"
+  },
+  "Comodidades": {
+    "Acabamentos e Materiais": {
+      "Quartos": "Dois quartos com roupeiros embutidos e acabamentos diferenciados",
+      "Cozinha": "Totalmente equipada com eletrodomésticos de gama superior",
+      "Casas de banho": "Com revestimentos em cerâmica de qualidade premium",
+      "Pavimentos": "Em materiais nobres com excelente desempenho térmico e acústico",
+      "Varanda": "Com pavimento antiderrapante e sistema de drenagem eficiente",
+      "Sistemas de domótica": "Integrados para controlo inteligente do apartamento"
+    },
+    "Especificações Técnicas e Acabamentos": {
+      "Cozinhas": "Equipadas com eletrodomésticos de alta eficiência energética e bancadas em materiais duráveis",
+      "Casas de Banho": "Revestimentos de qualidade premium e equipamentos sanitários de eficiência hídrica",
+      "Sistemas de Climatização": "Com sistemas de ar condicionado por condutas e ventilação mecânica controlada"
+    },
+    "Certificação e Sustentabilidade": "Processo de certificação LEED com classificação GOLD, inclui sistemas eco-friendly e promoção de mobilidade sustentável"
+  },
+  "Regras especificas": "Projeto com conclusão prevista para o primeiro trimestre de 2027",
+  "Descrição por divisão": {
+    "Sala de estar": "Dimensões generosas, conecta com a cozinha e oferece acesso direto à varanda",
+    "Cozinhas": "Design contemporâneo que integra funcionalidade e estética",
+    "Casas de Banho": "Apresentam uma sensação de continuidade e elegância",
+    "Quartos": "Dimensões confortáveis, cada um com acesso a casas de banho"
+  }
+}

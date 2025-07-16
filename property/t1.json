@@ -1,0 +1,26 @@
+{
+  "Descrição geral": "Apartamento T1 - 59 m²",
+  "Especificações gerais": {
+    "Área bruta privativa": "59 m²",
+    "Nº de quartos": "1",
+    "Nº de casas de banho": "1",
+    "Varanda": true,
+    "Lugar de garagem": "incluído"
+  },
+  "Comodidades": {
+    "Quarto": "Roupeiros embutidos, acabamentos em madeiras nobres",
+    "Cozinha": "Equipada com eletrodomésticos de alta eficiência energética, integrada com a sala",
+    "Casa de banho": "Materiais de qualidade premium",
+    "Pavimentos": "Materiais sustentáveis com excelente durabilidade",
+    "Sistemas de climatização": "Eficientes, ar condicionado por condutas, ventilação mecânica controlada",
+    "Certificação": "Processo de certificação LEED, classificação GOLD",
+    "Sustentabilidade": "Soluções sustentáveis, materiais eco-friendly, sistemas de eficiência energética e hídrica, mobilidade sustentável"
+  },
+  "Regras especificas": "",
+  "Descrição por divisão": {
+    "Sala de estar": "Amplas janelas que se abrem para varandas, criando uma extensão natural do espaço interior, funcionalidade integrada com a cozinha",
+    "Quarto": "Dimensões generosas que garante repouso e tranquilidade",
+    "Cozinha": "Design contemporâneo, funcionalidade e estética com bancadas em materiais duráveis, equipada com eletrodomésticos de alta eficiência energética",
+    "Casa de banho": "Revestimentos de qualidade premium, cerâmicas de grandes dimensões, equipamentos sanitários de eficiência hídrica e design contemporâneo"
+  }
+}

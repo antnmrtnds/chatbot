@@ -1,0 +1,80 @@
+# Opções de Pagamento – Promotor e Empreendedor Imobiliário (Portugal, atualização 2025)
+
+## 1. Pagamentos do Cliente à Promotora
+
+### a) Sinal e Contrato Promessa
+- Normalmente, o cliente entrega um sinal (10 %–20 %) aquando da assinatura do Contrato Promessa de Compra e Venda.
+- Tal valor integra o preço final, sobre o qual incidem os impostos aplicáveis (IMT, IVA, selo).
+
+### b) Pagamentos faseados (Contrato de Empreitada)
+- Conforme acordo contratual, o pagamento pode ser fracionado por etapas: licenciamento, marco estrutural, conclusão, escritura.
+- O Código Civil e práticas de mercado permitem escalonar, desde que expresso por escrito com prazos e montantes.
+
+### c) Escritura Pública
+- O montante restante é pago na assinatura da escritura na Conservatória, normalmente por transferência bancária ou cheques bancários visados.
+
+## 2. Financiamento Bancário (Crédito à Habitação)
+
+### a) Crédito Habitação
+- O cliente recorre a instituição bancária; subscreve-se contrato de crédito (pode incluir taxa variável ou indexada).
+- Com base na Lei n.º 1/2025 (6 de janeiro), que repele os efeitos da subida de indexantes, pode haver impacto em contratos existentes e novos.
+
+### b) Pagamentos à Promotora Via Banco
+- O banco liberta fundos à promotora conforme o estado da obra (drawdowns), seguros e vistoria verificada.
+
+## 3. Garantias e Seguros
+
+- Promotor deve dispor de seguro “Contractors All Risks (CAR)” para assegurar danos na construção.
+- Obrigações civis: garantia de 5 anos pós-entrega, denúncia de defeitos em 1 ano.
+
+## 4. Impostos e Taxas Associadas
+
+### a) IMT + Imposto de Selo
+- IMT aplicado sobre o maior entre o valor de compra e o VPT.
+- IRS/IRC de Selo: 0,8 % sobre o valor mais alto.
+
+### b) IMI
+- Em 2025, prazo alargado: 
+  - Montantes ≤ 100 € → 30 de junho
+  - Entre 100 – 500 € → 30 de junho + 30 nov.
+  - > 500 € → 30 jun., 31 ago., 30 nov..
+
+### c) IRC – Pagamentos por Conta
+- Promotora (entidade jurídica) paga três PPC anuais em 2025:
+  - 80 % (turnover ≤ 500k €) ou 95 % (> 500k €) sobre coleta de 2024, dividido por três.
+
+## 5. Comissões de Mediação
+
+- Caso exista contrato com agência, pagamento é devido na escritura (vendedor) ou assinatura (arrendamento).
+- Pode ser acordado pagamento faseado, desde que formalmente previsto no contrato.
+
+## 6. Penalizações por Atrasos
+
+- Atrasos nos pagamentos ao Estado, banco ou promotor podem implicar juros e penalizações.
+- A Lei n.º 1/2025 reforça medidas de proteção dos mutuários contra subidas abruptas de taxas de referência.
+- Promotor sofre penalizações se descumprir prazos do contrato promessa.
+
+## 7. Recomendações Práticas
+
+1. Definir em contrato: montantes, condições, prazos e método de pagamento.
+2. Estabelecer seguro CAR e cumprir responsabilidade pós-entrega (5 anos).
+3. Acompanhar datas fiscais e descontos para evitar juros.
+4. Discutir com entidade bancária plano de desembolso ajustado ao progresso da obra.
+5. Declarar e pagar IMT, Selo e IMI dentro dos prazos legais.
+
+---
+
+### 📌 Resumo dos Principais Prazos em 2025
+
+| Ente / Objeto                         | Prazo/Fase                          |
+|--------------------------------------|-------------------------------------|
+| IMI ≤ 100 €                          | 30 junho                            |
+| IMI 100 – 500 €                      | 30 junho + 30 novembro              |
+| IMI > 500 €                          | 30 junho, 31 agosto, 30 novembro    |
+| Contrato promessa (sinal)           | Conforme estipulado contratualmente  |
+| Escritura – pagamento final         | No ato – transferência ou cheque    |
+| IRC – Pagamentos por conta          | PPC1: abril, PPC2: julho, PPC3: novembro (valor dividido por 3) |
+
+---
+
+_Data da atualização: julho de 2025. Esta síntese reflete a legislação e práticas vigentes em Portugal para promotores imobiliários e clientes._ 

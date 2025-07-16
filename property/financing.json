@@ -1,0 +1,26 @@
+{
+  "Descrição geral": "Este documento fornece uma visão detalhada das opções de pagamento, financiamento, garantias, seguros, impostos e taxas, comissões e penalizações associados a transações imobiliárias em Portugal para promotores imobiliários e clientes, com informações atualizadas até julho de 2025.",
+  "Especificações gerais": {
+    "Pagamentos do Cliente à Promotora": "Incluem sinal e contrato promessa, pagamentos faseados e escritura pública.",
+    "Financiamento Bancário": "Detalhes sobre Crédito à Habitação e como os pagamentos são realizados à promotora via banco.",
+    "Garantias e Seguros": "Promotor deve ter seguro 'Contractors All Risks (CAR)' e cumprir obrigações civis com garantia de 5 anos pós-entrega.",
+    "Impostos e Taxas": "Incluem IMT, Imposto de Selo, IMI e IRC, com detalhes dos montantes e prazos para cada um.",
+    "Comissões de Mediação": "Descreve as condições e prazos para o pagamento de comissões em casos de vendas ou arrendamentos.",
+    "Penalizações por Atrasos": "Explica as multas e juros aplicáveis em caso de atrasos nos pagamentos ao Estado, bancos ou promotores, e as proteções adicionais introduzidas pela Lei n.º 1/2025."
+  },
+  "Comodidades": {
+    "Seguros": ["Contractors All Risks (CAR)"],
+    "Garantias": ["Garantia de 5 anos pós-entrega", "Denúncia de defeitos em 1 ano"]
+  },
+  "Regras especificas": {
+    "Pagamentos": ["Sinal de 10%-20% em contrato promessa", "Escalonamento de pagamentos conforme progresso de obra", "Uso de créditos e condições bancárias especiais para financiamento"],
+    "Impostos": ["Pagamento de IMT, Selo e IMI dentro dos prazos legais"],
+    "Comissões": ["Pagamentos de comissões formalmente previstos em contrato"],
+    "Penalizações": ["Juros e penalizações por atrasos nos pagamentos", "Proteção contra subidas abruptas de taxas de referência"]
+  },
+  "Descrição por divisão": {
+    "Cronograma de Pagamentos": "Detalhado com base nas etapas da transação imobiliária incluindo momentos de pagamento do sinal, pagamentos faseados durante a construção e o pagamento final na escritura.",
+    "Responsabilidades Financeiras": "Inclui detalhes sobre o cumprimento financeiro como IMT, Imposto de Selo, IMI e IRC, assim como prazos e condições.",
+    "Procedimentos Bancários": "Examina como os bancos interagem com clientes e promotores para liberação de fundos de acordo com o progresso da obra."
+  }
+}
