@@ -182,7 +182,7 @@ export default function FloatingChatbot() {
         ...chatSession.messages,
         {
           role: 'assistant',
-          content: "Bem-vindo! Somos especialistas em apartamentos novos e em construção nos arredores de Aveiro. Para o ajudar a encontrar a melhor opção disponível dentro dos nossos empreendimentos, por favor, responda a estas perguntas rápidas."
+          content: "Bem-vindo! Para o ajudar a encontrar a melhor opção disponível dentro dos nossos empreendimentos, por favor, responda a estas perguntas rápidas."
         },
         {
           role: 'assistant',

@@ -39,7 +39,7 @@ function generateSearchQueryFromAnswers(answers: Record<string, any>): string {
 }
 
 // System prompt template
-const SYSTEM_TEMPLATE = `És um assistente imobiliário especializado para o empreendimento Evergreen Pure.
+const SYSTEM_TEMPLATE = `És um assistente imobiliário especializado para o empreendimentos da Civilria.
 A tua função principal é ajudar os utilizadores a encontrar o apartamento ideal com base nos seus critérios e responder a perguntas sobre as propriedades disponíveis, bem como sobre opções de pagamento e financiamento.
 
 **Contexto da Conversa:**
