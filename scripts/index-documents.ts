@@ -321,7 +321,7 @@ async function indexDocuments(documents: Document[]): Promise<void> {
         metadata.pageContent = doc.pageContent;
 
         // Create a deterministic ID for each chunk to prevent duplicates on re-runs.
-        const vectorId = `${doc.metadata.flat_id}-chunk-${doc.metadata.chunk}`;
+        const vectorId = doc.metadata.id;
         
         // Insert into Pinecone
         await pineconeIndex.upsert([{
@@ -331,7 +331,7 @@ async function indexDocuments(documents: Document[]): Promise<void> {
         }]);
         
       } catch (error: any) {
-        console.error(`❌ Error indexing chunk for ${doc.metadata.flat_id} (chunk ${doc.metadata.chunk}):`, error.message);
+        console.error(`❌ Error indexing chunk for ${doc.metadata.id}:`, error.message);
       }
     }
     
@@ -348,38 +348,51 @@ async function indexDocuments(documents: Document[]): Promise<void> {
 async function main() {
   try {
     console.log('🚀 Starting document indexing process...');
-    let propertyDocs: Document[] = [];
 
-    // 1. Get all properties from Supabase
-    const properties = await getAllProperties();
+    // Define paths for property and generic documents
+    const propertyJsonDir = path.join(process.cwd(), 'public', 'civilria');
+    const genericDocsDir = path.join(process.cwd(), 'property'); // For non-property files
 
-    if (properties.length > 0) {
-      // 2. Process property documents
-      propertyDocs = await batchProcessProperties(properties);
-      console.log(`✅ Processed ${propertyDocs.length} property documents.`);
-    } else {
-      console.log('No properties found in Supabase. Continuing without property documents.');
+    let allDocs: Document[] = [];
+
+    // Process JSON property files
+    const jsonFiles = fs.readdirSync(propertyJsonDir).filter(file => file.endsWith('.json'));
+    console.log(`🔍 Found ${jsonFiles.length} JSON property files to process.`);
+
+    for (const file of jsonFiles) {
+      const filePath = path.join(propertyJsonDir, file);
+      const fileContent = fs.readFileSync(filePath, 'utf-8');
+      const propertyData = JSON.parse(fileContent);
+      
+      const { content, ...metadata } = propertyData;
+      
+      const docs = await processGenericDocument(content, file, metadata);
+      allDocs.push(...docs);
+      console.log(`📄 Processed and chunked ${file}`);
     }
 
-    // 3. Process the financing information document
-    const financingDocPath = path.join(process.cwd(), 'property', 'financing.txt');
-    const financingContent = fs.readFileSync(financingDocPath, 'utf-8');
-    const financingDocs = await processGenericDocument(financingContent, 'financing.txt');
-    console.log(`✅ Processed ${financingDocs.length} financing documents.`);
+    // Process generic text files from the 'property' directory
+    const genericFiles = fs.readdirSync(genericDocsDir).filter(file => file.endsWith('.txt'));
+    console.log(`🔍 Found ${genericFiles.length} generic text files to process.`);
 
-    // 4. Combine all documents
-    const allDocs = [...propertyDocs, ...financingDocs];
+    for (const file of genericFiles) {
+        const filePath = path.join(genericDocsDir, file);
+        const content = fs.readFileSync(filePath, 'utf-8');
+        const docs = await processGenericDocument(content, file);
+        allDocs.push(...docs);
+        console.log(`📄 Processed and chunked ${file}`);
+    }
 
     if (allDocs.length > 0) {
-      console.log(`Total documents to be indexed: ${allDocs.length}`);
-      // 5. Index all documents in Pinecone
+      console.log(`Total documents to index: ${allDocs.length}`);
       await indexDocuments(allDocs);
-      console.log('🎉 Document indexing completed successfully!');
+      console.log('✅ All documents indexed successfully.');
     } else {
-      console.log('No documents to index. Exiting.');
+      console.log('No new documents to index.');
     }
+
   } catch (error) {
-    console.error('An error occurred during the indexing process:', error);
+    console.error('❌ An error occurred during the indexing process:', error);
     process.exit(1);
   }
 }

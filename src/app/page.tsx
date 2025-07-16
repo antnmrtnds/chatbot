@@ -16,7 +16,7 @@ export default function EvergreenPureLanding() {
           <div className="flex items-center justify-between">
             {/* Logo */}
             <div className="text-white text-2xl font-bold">
-              UPINVESTMENTS
+              CIVILRIA
             </div>
             
             {/* Navigation */}
@@ -64,8 +64,8 @@ export default function EvergreenPureLanding() {
       <section className="relative h-screen flex items-center justify-center">
         <div className="absolute inset-0">
           <Image
-            src="https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=1200&h=800&fit=crop"
-            alt="Modern Apartments"
+            src="/civilria/ID4cf09501-0000-0500-0000-000015afc88a.jpg.webp"
+            alt="Building image"
             fill
             className="object-cover"
           />
@@ -74,11 +74,11 @@ export default function EvergreenPureLanding() {
         
         <div className="relative z-10 text-center text-white px-4">
           <h1 className="text-5xl md:text-6xl font-light mb-4">
-            EVERGREEN PURE
+            VIEIRA DA SILVA
           </h1>
           <div className="flex items-center justify-center gap-2 text-lg mb-8">
             <MapPin size={20} />
-            <span>Santa Joana | Aveiro</span>
+            <span>Saldanha, Lisboa</span>
           </div>
           
           <Button
@@ -189,16 +189,16 @@ export default function EvergreenPureLanding() {
               <div className="grid grid-cols-1 gap-4">
                 <div className="relative h-80 rounded-lg overflow-hidden">
                   <Image
-                    src="https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=800&h=600&fit=crop"
-                    alt="Modern Living Room"
+                    src="/civilria/ID4cf09501-0000-0500-0000-000015afc89d.jpg.webp"
+                    alt="Apartment Interior"
                     fill
                     className="object-cover"
                   />
                 </div>
                 <div className="relative h-80 rounded-lg overflow-hidden">
                   <Image
-                    src="https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop"
-                    alt="Modern Kitchen"
+                    src="/civilria/ID4cf09501-0000-0500-0000-000015afc88b.jpg.webp"
+                    alt="Apartment Kitchen"
                     fill
                     className="object-cover"
                   />

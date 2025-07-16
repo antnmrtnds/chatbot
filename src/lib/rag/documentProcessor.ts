@@ -79,6 +79,7 @@ export async function processPropertyDocument(property: Property): Promise<Docum
   const metadata = {
     id: property.id,
     flat_id: property.flat_id,
+    source: `${property.flat_id}.txt`, // Add source based on flat_id for consistency
     price: property.price,
     ...extractedMetadata,
   };
@@ -103,7 +104,7 @@ export async function processPropertyDocument(property: Property): Promise<Docum
  * @param source The name of the source file (e.g., 'financing.txt').
  * @returns An array of LangChain documents.
  */
-export async function processGenericDocument(content: string, source: string): Promise<Document[]> {
+export async function processGenericDocument(content: string, source: string, metadata: { [key: string]: any } = {}): Promise<Document[]> {
   const textSplitter = new RecursiveCharacterTextSplitter({
     chunkSize: 1000,
     chunkOverlap: 200,
@@ -119,13 +120,14 @@ export async function processGenericDocument(content: string, source: string): P
     .trim();
 
   // Define the base metadata that will be copied to each chunk.
-  const metadata = {
+  const baseMetadata: { [key: string]: any } = {
+      ...metadata,
       source: source,
       id: source, // Base ID for the document
   };
 
   // Create the documents, passing the metadata to be applied to all chunks.
-  const docs = await textSplitter.createDocuments([cleanedContent], [metadata]);
+  const docs = await textSplitter.createDocuments([cleanedContent], [baseMetadata]);
 
   // Now, add the unique chunk number to each document.
   docs.forEach((doc, index) => {
