@@ -7,7 +7,21 @@ import { similaritySearch } from './vectorStore';
 
 // Helper function to format documents as string
 function formatDocumentsAsString(docs: VectorSearchResult[]): string {
-  return docs.map(doc => doc.content).join('\n\n');
+  return docs.map(doc => {
+    // If content is available, use it. Otherwise, format metadata.
+    if (doc.content) {
+      return doc.content;
+    }
+    
+    // Format metadata into a readable string if it exists
+    if (doc.metadata) {
+      return Object.entries(doc.metadata)
+        .map(([key, value]) => `${key}: ${JSON.stringify(value)}`)
+        .join('\n');
+    }
+    
+    return ''; // Return empty string if no content or metadata
+  }).join('\n\n');
 }
 
 function formatOnboardingAnswers(answers: Record<string, any>): string {

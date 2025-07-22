@@ -179,7 +179,6 @@ export default function FloatingChatbot() {
       ...chatSession,
       onboardingState: 'in_progress',
       messages: [
-        ...chatSession.messages,
         {
           role: 'assistant',
           content: "Bem-vindo! Para o ajudar a encontrar a melhor opção disponível dentro dos nossos empreendimentos, por favor, responda a estas perguntas rápidas."
@@ -333,6 +332,52 @@ export default function FloatingChatbot() {
     }
   }, [chatSession, isOpen]);
 
+  // Handle starting a new conversation
+  const handleNewConversation = () => {
+    if (!chatSession) return;
+
+    // Track the new conversation event
+    trackEvent({
+      eventName: 'chatbot_new_conversation_started',
+      details: { previous_messages_count: chatSession.messages.length }
+    });
+
+    // Preserve onboarding state if it was completed
+    const wasOnboardingCompleted = chatSession.onboardingState === 'completed';
+    const previousAnswers = chatSession.onboardingAnswers;
+
+    // Create a fresh chat session
+    let newSession = createChatSession();
+
+    if (wasOnboardingCompleted) {
+      newSession = {
+        ...newSession,
+        onboardingState: 'completed',
+        onboardingAnswers: previousAnswers,
+        messages: [
+          {
+            role: 'assistant',
+            content: 'Olá! Como posso ajudar a encontrar o seu próximo imóvel?'
+          }
+        ]
+      };
+    }
+
+    setChatSession(newSession);
+    setOnboardingInProgress(!wasOnboardingCompleted);
+    setInputValue('');
+    setEmail('');
+    setPhone('');
+    
+    // Reset any audio
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
+
+    console.log('New conversation started. Onboarding completed status:', wasOnboardingCompleted);
+  };
+
   return (
     <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end space-y-2">
       {/* Floating button */}
@@ -403,7 +448,9 @@ export default function FloatingChatbot() {
           <CardContent className="flex-1 overflow-y-auto p-4">
             <div className="space-y-4">
               {chatSession ? (
-                chatSession.messages.map((message, index) => (
+                chatSession.messages
+                  .filter(msg => msg.role !== 'system') // Filter out system messages
+                  .map((message, index) => (
                   <div key={index} className={`flex items-start gap-3 ${message.role === 'user' ? 'justify-end' : ''}`}>
                     {message.role === 'assistant' && (
                       <Avatar className="h-8 w-8 bg-teal-100">
@@ -462,14 +509,17 @@ export default function FloatingChatbot() {
           </CardContent>
           
           {chatSession && (
-            <CardFooter className="border-t border-white/20 p-4">
+            <CardFooter className="border-t border-white/20 p-4 pb-2 flex flex-col space-y-2">
               {onboardingInProgress && chatSession.onboardingState === 'in_progress' ? (
                 <div className="w-full">
-                  <p className="text-white text-sm mb-2">{onboardingQuestions[chatSession.currentQuestionIndex].question}</p>
                   {onboardingQuestions[chatSession.currentQuestionIndex].type === 'multiple_choice' && (
                     <div className="flex flex-wrap gap-2">
                       {onboardingQuestions[chatSession.currentQuestionIndex].options?.map(option => (
-                        <Button key={option} className="border border-white/20 bg-black/20 text-white hover:bg-black/40" onClick={() => handleOnboardingResponse(option)}>
+                        <Button 
+                          key={option} 
+                          className="border-2 border-teal-200 bg-teal-50 text-teal-800 hover:bg-teal-100 hover:border-teal-300 font-medium" 
+                          onClick={() => handleOnboardingResponse(option)}
+                        >
                           {option}
                         </Button>
                       ))}
@@ -542,10 +592,23 @@ export default function FloatingChatbot() {
                   </Button>
                 </div>
               )}
+
+              {/* Nova conversa button - moved inside and only show when there are messages */}
+              {chatSession.messages.filter(msg => msg.role !== 'system').length > 1 && (
+                <div className="flex justify-center pt-2 border-t border-gray-200">
+                  <button
+                    onClick={handleNewConversation}
+                    className="text-gray-400 hover:text-gray-600 text-sm transition-colors cursor-pointer bg-transparent border-none"
+                  >
+                    Nova conversa
+                  </button>
+                </div>
+              )}
             </CardFooter>
           )}
         </Card>
       )}
+
       <audio ref={audioRef} />
     </div>
   );

@@ -7,14 +7,7 @@ import { ChatMessage, ChatSession, Property } from './types';
 export function createChatSession(): ChatSession {
   return {
     messages: [
-     {
-       role: 'system',
-       content: 'És um assistente imobiliário que pode ajudar-te a encontrar propriedades e a responder a perguntas sobre os imóveis.'
-     },
-     {
-       role: 'assistant',
-       content: 'Olá! Como posso ajudar a encontrar o seu próximo imóvel?'
-     }
+     // Start with empty messages array, let onboarding handle the initial message
     ],
     context: {
       relevantProperties: []

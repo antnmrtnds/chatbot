@@ -64,6 +64,22 @@ export default function PropertyChatbot() {
   // Get relevant properties from context
   const relevantProperties = getRelevantProperties(chatSession);
   
+  // Handle starting a new conversation
+  const handleNewConversation = () => {
+    // Track the new conversation event
+    trackEvent({
+      eventName: 'property_chatbot_new_conversation_started',
+      details: { previous_messages_count: chatSession.messages.length }
+    });
+
+    // Create a fresh chat session
+    const newSession = createChatSession();
+    setChatSession(newSession);
+    setInputValue('');
+    
+    console.log('New conversation started');
+  };
+  
   return (
     <div className="flex flex-col md:flex-row gap-4 h-[600px]">
       {/* Chat interface */}
@@ -132,6 +148,18 @@ export default function PropertyChatbot() {
             </Button>
           </div>
         </CardFooter>
+
+        {/* Nova conversa button - only show when there are messages */}
+        {chatSession.messages.filter(msg => msg.role !== 'system').length > 1 && (
+          <div className="flex justify-center pt-2 pb-2 border-t border-gray-200">
+            <button
+              onClick={handleNewConversation}
+              className="text-gray-400 hover:text-gray-600 text-sm transition-colors cursor-pointer bg-transparent border-none"
+            >
+              Nova conversa
+            </button>
+          </div>
+        )}
       </Card>
       
       {/* Property suggestions */}
