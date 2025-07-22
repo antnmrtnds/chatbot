@@ -52,69 +52,123 @@ function generateSearchQueryFromAnswers(answers: Record<string, any>): string {
   return queryParts.join(', ');
 }
 
-// System prompt template
-const SYSTEM_TEMPLATE = `És um assistente imobiliário especializado para o empreendimentos da Civilria.
-A tua função principal é ajudar os utilizadores a encontrar o apartamento ideal com base nos seus critérios e responder a perguntas sobre as propriedades disponíveis, bem como sobre opções de pagamento e financiamento.
+/**
+ * Create context-aware retrieval queries based on conversation history
+ * @param query The current user query
+ * @param chatHistory The conversation history
+ * @returns Enhanced search queries for better retrieval
+ */
+function createContextAwareQueries(query: string, chatHistory: ChatMessage[]): string[] {
+  const queries = [query]; // Always include the original query
+  
+  // If there's conversation history, create additional context-rich queries
+  if (chatHistory.length > 0) {
+    // Get recent conversation context (last 4 messages)
+    const recentMessages = chatHistory.slice(-4);
+    const conversationContext = recentMessages
+      .map(msg => `${msg.role}: ${msg.content}`)
+      .join('\n');
+    
+    // Create a context-enriched query that includes conversation flow
+    const contextEnrichedQuery = `Baseado na conversa: "${query}"\n\nContexto da conversa:\n${conversationContext}`;
+    queries.push(contextEnrichedQuery);
+    
+    // If the query seems to be asking for more details, create specific search queries
+    const queryLower = query.toLowerCase();
+    const detailRequestIndicators = [
+      'mais', 'detalhe', 'informação', 'específico', 'completo', 
+      'more', 'detail', 'information', 'specific', 'complete'
+    ];
+    
+    if (detailRequestIndicators.some(indicator => queryLower.includes(indicator))) {
+      // Add queries for different aspects of detailed information
+      queries.push(
+        'condições de pagamento e financiamento detalhadas',
+        'características técnicas e acabamentos específicos',
+        'localização vantagens proximidades transportes',
+        'investimento valorização potencial mercado imobiliário'
+      );
+    }
+  }
+  
+  return queries;
+}
 
-**Contexto da Conversa:**
-Preferências do Utilizador (recolhidas durante o onboarding):
+// Enhanced System prompt template with conversation awareness
+const SYSTEM_TEMPLATE = `És um assistente imobiliário especializado para o empreendimentos da Civilria, particularmente o Evergreen Pure em Aveiro.
+
+CONTEXTO DA CONVERSA:
+Preferências do Utilizador (onboarding):
 {onboardingAnswers}
 
 Histórico da Conversa:
 {chatHistory}
 
-**Instruções Principais:**
-1.  **Usa as Preferências do Utilizador**: Analisa as preferências do utilizador acima. Usa o seu orçamento, tipologia desejada e outras características para personalizar as tuas sugestões e argumentos.
-2.  **Usa o Contexto Fornecido**: Utiliza SEMPRE a informação da secção "Contexto dos Documentos" abaixo para responder às perguntas. Este contexto contém informações detalhadas e atualizadas sobre os apartamentos e as opções de financiamento.
-3.  **Destaca Benefícios**: Ao interagir, realça proativamente os benefícios de comprar um imóvel em planta ou em construção, como potencial de valorização, opções de personalização e facilidades de pagamento.
-4.  **Responde a Perguntas de Financiamento**: Quando te perguntarem sobre pagamentos, financiamento, impostos ou prazos, usa a informação de contexto para dar respostas claras e detalhadas.
-5.  **Oferece o Próximo Passo**: No final das interações ou quando apropriado, oferece sempre a possibilidade de agendar uma visita ao stand de vendas ou uma reunião com um consultor para dar seguimento ao interesse.
-6.  **Apresenta a Informação de Forma Clara**: Ao descrever unidades, extrai e apresenta todos os detalhes relevantes do contexto.
-7.  **Sê Honesto Sobre Limitações**: Se o contexto não contiver a informação necessária, informa claramente que não tens essa informação. Não inventes detalhes.
-8.  **Garante Transparência**: Assegura ao utilizador que os seus dados de contacto serão usados exclusivamente para apresentar propostas adequadas para os empreendimentos da nossa promotora.
+INSTRUÇÕES PRINCIPAIS:
 
-**IMPORTANTE - Formatação da Resposta:**
-Para garantir que as informações são fáceis de ler e compreender pelos visitantes:
+1. **NATURAL CONVERSATION UNDERSTANDING**: 
+   - Analisa naturalmente o fluxo da conversa sem depender de padrões rígidos
+   - Quando o utilizador se refere a "este apartamento", "essa unidade", ou usa referências contextuais, compreende automaticamente do contexto da conversa
+   - Detecta naturalmente quando o utilizador quer mais informações sobre algo já mencionado
 
-- **Use bullet points (•)** para listas de características ou benefícios
-- **Use números (1., 2., 3.)** para passos ou sequências
-- **Use **texto em negrito** para destacar informações importantes** como preços, áreas, nomes de apartamentos
-- **Use quebras de linha** para separar diferentes secções da resposta
-- **Organize apartamentos em secções claras** com títulos destacados
-- **Para cada apartamento, apresente:**
-  • **Nome/Tipo do Apartamento**
-  • **Preço**: valor em destaque
-  • **Área**: em metros quadrados
-  • **Características principais**: em bullet points
-  • **Descrição breve**: uma frase sobre os pontos fortes
+2. **PROGRESSIVE INFORMATION DISCLOSURE**:
+   - Se já forneceste informações básicas sobre um apartamento, NUNCA repitas exatamente a mesma informação
+   - Para pedidos de mais detalhes, fornece informações progressivamente mais específicas:
+     • Primeira vez: informações básicas (preço, área, tipologia)
+     • Segunda vez: detalhes técnicos, acabamentos, divisões específicas
+     • Terceira vez: contexto de investimento, financiamento, localização
+     • Seguintes: vantagens únicas, comparações, próximos passos
 
-**Exemplo de formatação correta:**
-**Apartamento T2 - Vieira da Silva**
-**Preço**: 960.000 €
-**Área**: 94 m²
+3. **CONVERSATION CONTEXT AWARENESS**:
+   - Usa o histórico da conversa para compreender referências implícitas
+   - Mantém coerência com informações já partilhadas
+   - Constrói sobre conversas anteriores em vez de recomeçar
 
-**Características principais:**
-• Varanda privativa
-• Lugar de garagem incluído  
-• Design contemporâneo
-• Sistemas de climatização eficientes
+4. **SEMANTIC UNDERSTANDING**:
+   - Compreende a intenção por trás das perguntas, não apenas palavras-chave
+   - Identifica quando o utilizador quer detalhes específicos vs. informações gerais
+   - Adapta o nível de detalhe baseado no interesse demonstrado
 
-Dimensões generosas com ligação direta à varanda, ideal para quem valoriza espaço e conforto.
+5. **DYNAMIC RESPONSE ADAPTATION**:
+   - Responde de forma diferente baseada no estágio da conversa
+   - Inicial: apresentação geral e despertar interesse
+   - Interesse demonstrado: detalhes técnicos e específicos
+   - Consideração avançada: financiamento, visitas, próximos passos
 
-**Contexto dos Documentos:**
+6. **CONTEXT-RICH RETRIEVAL UTILIZATION**:
+   - Usa informações do "Contexto dos Documentos" para fornecer respostas precisas e detalhadas
+   - Combina informações de múltiplas fontes para respostas completas
+   - Prioriza informações relevantes ao estado atual da conversa
+
+**FORMATTING GUIDELINES:**
+- Use **negrito** para informações-chave (preços, áreas, nomes)
+- Use bullet points (•) para listas de características
+- Organize informações em secções claras
+- Inclui sempre uma call-to-action apropriada ao contexto
+
+**CONTEXT DOS DOCUMENTOS:**
 {context}
 
-Pergunta do Utilizador: {question}`;
+**PERGUNTA DO UTILIZADOR:** {question}
+
+Responde de forma natural e contextualmente apropriada, demonstrando compreensão do fluxo da conversa.`;
 
 /**
- * Format chat history for the prompt
+ * Format chat history for the prompt with better context structure
  * @param messages Array of chat messages
  * @returns Formatted chat history string
  */
 function formatChatHistory(messages: ChatMessage[]): string {
+  if (messages.length === 0) return "Conversa iniciada agora.";
+  
+  // Format with clear conversation flow
   return messages
-    .map(message => `${message.role}: ${message.content}`)
-    .join('\n');
+    .slice(-8) // Keep last 8 messages for context without overwhelming
+    .map((message, index) => {
+      const role = message.role === 'user' ? 'Utilizador' : 'Assistente';
+      return `${role}: ${message.content}`;
+    })
+    .join('\n\n');
 }
 
 /**
@@ -122,26 +176,46 @@ function formatChatHistory(messages: ChatMessage[]): string {
  * @returns A runnable sequence that can be invoked with a query and chat history
  */
 export function createRagChain() {
-  // Initialize the language model
+  // Initialize the language model with optimal settings for conversation
   const model = new ChatOpenAI({
     modelName: 'gpt-4o',
-    temperature: 0.2,
+    temperature: 0.3, // Slightly higher for more natural conversation
+    maxTokens: 1000, // Reasonable response length
   });
 
   // Create the prompt template
   const prompt = PromptTemplate.fromTemplate(SYSTEM_TEMPLATE);
 
-  // Create the RAG chain
+  // Create the RAG chain with conversation-aware retrieval
   const ragChain = RunnableSequence.from([
     {
       context: async (input: { question: string; chatHistory: ChatMessage[]; onboardingAnswers: Record<string, any>; filters?: SearchFilters }) => {
-        console.log('RAG Chain Context Input - Question:', input.question);
-        console.log('RAG Chain Context Input - Filters:', input.filters);
-        // Retrieve relevant documents based on the question
-        const docs = await similaritySearch(input.question, input.filters, 5);
-        console.log('RAG Chain Context - Retrieved Docs:', docs);
-        const formattedContext = formatDocumentsAsString(docs);
-        console.log('RAG Chain Context - Formatted Context for LLM:', formattedContext);
+        console.log('RAG Chain - Processing query with conversation context');
+        console.log('Question:', input.question);
+        console.log('Chat history length:', input.chatHistory.length);
+        
+        // Create context-aware queries for better retrieval
+        const searchQueries = createContextAwareQueries(input.question, input.chatHistory);
+        console.log('Generated search queries:', searchQueries);
+        
+        // Perform semantic search with multiple queries for comprehensive retrieval
+        const allDocs: VectorSearchResult[] = [];
+        
+        for (const searchQuery of searchQueries) {
+          const docs = await similaritySearch(searchQuery, input.filters, 3);
+          // Add unique documents to avoid duplicates
+          docs.forEach(doc => {
+            if (!allDocs.find(existingDoc => existingDoc.id === doc.id)) {
+              allDocs.push(doc);
+            }
+          });
+        }
+        
+        // Limit total documents to avoid context window issues
+        const finalDocs = allDocs.slice(0, 8);
+        console.log(`Retrieved ${finalDocs.length} unique documents for context`);
+        
+        const formattedContext = formatDocumentsAsString(finalDocs);
         return formattedContext;
       },
       question: (input: { question: string }) => input.question,
@@ -174,12 +248,15 @@ export async function processQuery(
   
   try {
     let finalQuery = query;
-    // If the user has just completed onboarding, generate a query from their answers
+    
+    // Handle onboarding completion
     if (query === "Encontre imóveis com base nas minhas respostas." && Object.keys(onboardingAnswers).length > 0) {
       finalQuery = generateSearchQueryFromAnswers(onboardingAnswers);
       console.log("Generated search query from onboarding answers:", finalQuery);
     }
 
+    console.log('Processing query with modern RAG approach:', finalQuery);
+    
     const response = await chain.invoke({
       question: finalQuery,
       chatHistory: chatHistory,

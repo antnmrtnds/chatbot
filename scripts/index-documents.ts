@@ -317,8 +317,17 @@ async function indexDocuments(documents: Document[]): Promise<void> {
         // that LangChain adds. We also don't need the original `id` or `chunk` fields in the metadata.
         const { loc, id, chunk, ...metadata } = doc.metadata;
 
+        // Clean metadata: remove null values and convert to strings where needed
+        const cleanedMetadata: any = {};
+        for (const [key, value] of Object.entries(metadata)) {
+          if (value !== null && value !== undefined) {
+            // Convert numbers to strings for Pinecone compatibility
+            cleanedMetadata[key] = typeof value === 'object' ? JSON.stringify(value) : String(value);
+          }
+        }
+
         // Store the original pageContent in metadata to retrieve it later during similarity search
-        metadata.pageContent = doc.pageContent;
+        cleanedMetadata.pageContent = doc.pageContent;
 
         // Create a deterministic ID for each chunk to prevent duplicates on re-runs.
         const vectorId = doc.metadata.id;
@@ -327,7 +336,7 @@ async function indexDocuments(documents: Document[]): Promise<void> {
         await pineconeIndex.upsert([{
           id: vectorId,
           values: embedding,
-          metadata: metadata
+          metadata: cleanedMetadata
         }]);
         
       } catch (error: any) {
@@ -355,38 +364,103 @@ async function main() {
 
     let allDocs: Document[] = [];
 
-    // Process JSON property files
-    const jsonFiles = fs.readdirSync(propertyJsonDir).filter(file => file.endsWith('.json'));
+    // Function to recursively find JSON files
+    function findJsonFiles(dir: string): string[] {
+      const files: string[] = [];
+      const items = fs.readdirSync(dir);
+      
+      for (const item of items) {
+        const fullPath = path.join(dir, item);
+        const stat = fs.statSync(fullPath);
+        
+        if (stat.isDirectory()) {
+          // Recursively search subdirectories
+          files.push(...findJsonFiles(fullPath));
+        } else if (item.endsWith('.json')) {
+          files.push(fullPath);
+        }
+      }
+      
+      return files;
+    }
+
+    // Process JSON property files (including subdirectories)
+    const jsonFiles = findJsonFiles(propertyJsonDir);
     console.log(`🔍 Found ${jsonFiles.length} JSON property files to process.`);
 
-    for (const file of jsonFiles) {
-      const filePath = path.join(propertyJsonDir, file);
+    for (const filePath of jsonFiles) {
+      const fileName = path.basename(filePath);
       const fileContent = fs.readFileSync(filePath, 'utf-8');
       const propertyData = JSON.parse(fileContent);
       
-      const { content, ...metadata } = propertyData;
+      // Handle both old format (with 'content') and new format (with description fields)
+      let content: string;
+      let metadata: any = {};
       
-      const docs = await processGenericDocument(content, file, metadata);
+      if (propertyData.content) {
+        // Old format
+        const { content: fileContent, ...rest } = propertyData;
+        content = fileContent;
+        metadata = rest;
+      } else if (propertyData.descricao_geral || propertyData.regras_especificas || propertyData.descricao_por_divisao) {
+        // New format from converted flats
+        content = [
+          propertyData.descricao_geral,
+          propertyData.regras_especificas,
+          propertyData.descricao_por_divisao
+        ].filter(Boolean).join('\n\n');
+        metadata = propertyData.metadata || {};
+      } else {
+        console.warn(`⚠️ Unknown format for file ${fileName}, skipping...`);
+        continue;
+      }
+      
+      const docs = await processGenericDocument(content, fileName, metadata);
       allDocs.push(...docs);
-      console.log(`📄 Processed and chunked ${file}`);
+      console.log(`📄 Processed and chunked ${fileName}`);
     }
 
-    // Process generic text files from the 'property' directory
-    const genericFiles = fs.readdirSync(genericDocsDir).filter(file => file.endsWith('.txt'));
-    console.log(`🔍 Found ${genericFiles.length} generic text files to process.`);
+    // Process generic text files from the 'property' directory (if it exists)
+    if (fs.existsSync(genericDocsDir)) {
+      const genericFiles = fs.readdirSync(genericDocsDir).filter(file => file.endsWith('.txt'));
+      console.log(`🔍 Found ${genericFiles.length} generic text files to process.`);
 
-    for (const file of genericFiles) {
-        const filePath = path.join(genericDocsDir, file);
-        const content = fs.readFileSync(filePath, 'utf-8');
-        const docs = await processGenericDocument(content, file);
-        allDocs.push(...docs);
-        console.log(`📄 Processed and chunked ${file}`);
+      for (const file of genericFiles) {
+          const filePath = path.join(genericDocsDir, file);
+          const content = fs.readFileSync(filePath, 'utf-8');
+          const docs = await processGenericDocument(content, file);
+          allDocs.push(...docs);
+          console.log(`📄 Processed and chunked ${file}`);
+      }
+    } else {
+      console.log(`ℹ️ Generic documents directory (${genericDocsDir}) not found, skipping...`);
     }
 
     if (allDocs.length > 0) {
       console.log(`Total documents to index: ${allDocs.length}`);
       await indexDocuments(allDocs);
       console.log('✅ All documents indexed successfully.');
+    
+    // Also check if we should index the development info
+    const developmentInfoPath = path.join(process.cwd(), 'public', 'civilria', 'evergreen_pure_info.json');
+    if (fs.existsSync(developmentInfoPath)) {
+      console.log('ℹ️ Development info file found, including in indexing...');
+      const devInfoContent = fs.readFileSync(developmentInfoPath, 'utf-8');
+      const devInfoData = JSON.parse(devInfoContent);
+      
+      let content: string;
+      if (devInfoData.descricao_geral || devInfoData.regras_especificas || devInfoData.descricao_por_divisao) {
+        content = [
+          devInfoData.descricao_geral,
+          typeof devInfoData.regras_especificas === 'string' ? devInfoData.regras_especificas : JSON.stringify(devInfoData.regras_especificas),
+          typeof devInfoData.descricao_por_divisao === 'string' ? devInfoData.descricao_por_divisao : JSON.stringify(devInfoData.descricao_por_divisao)
+        ].filter(Boolean).join('\n\n');
+        
+        const devDocs = await processGenericDocument(content, 'evergreen_pure_info.json', devInfoData.metadata || {});
+        await indexDocuments(devDocs);
+        console.log('✅ Development info also indexed successfully.');
+      }
+    }
     } else {
       console.log('No new documents to index.');
     }

@@ -1,0 +1,34 @@
+{
+  "metadata": {
+    "flat_id": "bloco2_a",
+    "typology": "T1",
+    "floor": "0",
+    "total_area_sqm": 67.85,
+    "private_area_sqm": 67.85,
+    "terrace_area_sqm": null,
+    "location": "Aveiro",
+    "development": "Evergreen Pure",
+    "block": "Bloco 2",
+    "fraction": "A"
+  },
+  "descricao_geral": "Descubra o apartamento T1 no exclusivo empreendimento Evergreen Pure, situado a apenas 5 minutos do vibrante centro de Aveiro, conhecido como a Veneza de Portugal. Este projeto, desenvolvido pela UpInvestments, combina charme, modernidade e funcionalidade, oferecendo um refúgio de sofisticação e conforto. Com elevados padrões de qualidade e um design minimalista, o apartamento é banhado por luz natural abundante, graças às suas amplas janelas. A cozinha totalmente equipada, a garagem e a arrecadação são apenas algumas das comodidades que fazem deste espaço uma escolha perfeita para quem busca um lar tranquilo, sem abrir mão da vida urbana.",
+  "regras_especificas": "Visitas apenas com agendamento prévio. Documentação necessária para reserva. O apartamento é destinado a famílias e adultos. Proibição de animais de estimação sem autorização. Condições de financiamento a discutir com o gestor imobiliário.",
+  "descricao_por_divisao": {
+    "Sala e cozinha (open-space)": {
+      "area_m2": 30.53,
+      "descricao": "Um amplo espaço em open-space que combina sala e cozinha, ideal para convívio e momentos de lazer, com espaço suficiente para uma área de estar confortável e uma cozinha totalmente equipada."
+    },
+    "Quarto": {
+      "area_m2": 16.96,
+      "descricao": "Um quarto acolhedor, perfeito para relaxar, com espaço suficiente para uma cama de casal e armários, proporcionando um ambiente tranquilo e privado."
+    },
+    "Casa de banho": {
+      "area_m2": 6.79,
+      "descricao": "Casa de banho moderna com acabamentos de qualidade, equipada com todos os acessórios essenciais e um design funcional."
+    },
+    "Hall e circulação": {
+      "area_m2": 13.57,
+      "descricao": "Hall de entrada espaçoso que proporciona acesso a todas as divisões do apartamento, com circulação fluida e bem iluminada."
+    }
+  }
+}

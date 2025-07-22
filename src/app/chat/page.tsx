@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import PropertyChatbot from '@/components/PropertyChatbot';
+import FloatingChatbot from '@/components/FloatingChatbot';
 import { Building2, Home, MapPin, Info } from 'lucide-react';
 import Link from 'next/link';
 
@@ -105,7 +105,7 @@ export default function ChatPage() {
           </div>
           
           {/* Chatbot */}
-          {isClient && <PropertyChatbot />}
+          {isClient && <FloatingChatbot />}
           
           {/* Example questions */}
           <div className="mt-8">

@@ -1,0 +1,34 @@
+{
+  "metadata": {
+    "flat_id": "bloco2_b",
+    "typology": "T1",
+    "floor": "0",
+    "total_area_sqm": 80.94,
+    "private_area_sqm": 66.61,
+    "terrace_area_sqm": 14.33,
+    "location": "Aveiro",
+    "development": "Evergreen Pure",
+    "block": "Bloco 2",
+    "fraction": "B"
+  },
+  "descricao_geral": "Descubra o seu novo lar no Evergreen Pure, um projeto exclusivo localizado a apenas 5 minutos do vibrante centro de Aveiro, a famosa Veneza de Portugal. Este apartamento T1 no piso 0 combina charme e modernidade, oferecendo um refúgio de sofisticação e conforto em um ambiente urbano dinâmico. Com acabamentos de elevados padrões e um design minimalista, cada espaço foi cuidadosamente pensado para maximizar a funcionalidade e a harmonia. Desfrute de luz natural abundante, uma cozinha totalmente equipada e todas as comodidades que você merece, incluindo lugar de garagem e arrecadação. Venha viver a experiência única de morar em Aveiro, perto de tudo o que você ama.",
+  "regras_especificas": "Não perca a oportunidade de adquirir este apartamento em um dos locais mais desejados de Aveiro. Visitas apenas com agendamento prévio. Aceitamos propostas. Para mais informações, entre em contato com nosso departamento de vendas.",
+  "descricao_por_divisao": {
+    "Sala e cozinha (open-space)": {
+      "area_m2": 29.97,
+      "descricao": "Um espaço amplo e luminoso, ideal para receber amigos e familiares, com uma cozinha moderna totalmente equipada que se integra perfeitamente à sala de estar."
+    },
+    "Quarto": {
+      "area_m2": 16.65,
+      "descricao": "Um quarto aconchegante, perfeito para relaxar após um dia agitado, com janelas que permitem a entrada de luz natural."
+    },
+    "Casa de banho": {
+      "area_m2": 6.66,
+      "descricao": "Casa de banho elegante e funcional, equipada com acabamentos de qualidade que garantem conforto e praticidade."
+    },
+    "Hall e circulação": {
+      "area_m2": 13.32,
+      "descricao": "Um hall acolhedor que conecta todas as divisões, criando uma sensação de fluidez e espaço."
+    }
+  }
+}

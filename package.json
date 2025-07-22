@@ -10,7 +10,9 @@
     "index": "tsx scripts/index-documents.ts",
     "verify-rag": "npx tsx scripts/verify-rag-setup.ts",
     "create-function": "npx tsx scripts/create-function.ts",
-    "create-tables": "npx tsx scripts/create-tables.ts"
+    "create-tables": "npx tsx scripts/create-tables.ts",
+    "convert-flats": "npx tsx scripts/convert-flats-for-pinecone.ts",
+    "index-development": "npx tsx scripts/index-development-info.ts"
   },
   "dependencies": {
     "@langchain/core": "^0.3.62",

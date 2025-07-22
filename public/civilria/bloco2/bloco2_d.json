@@ -1,0 +1,42 @@
+{
+  "metadata": {
+    "flat_id": "bloco2_d",
+    "typology": "T2",
+    "floor": "0",
+    "total_area_sqm": 149,
+    "private_area_sqm": 74.6,
+    "terrace_area_sqm": 74.4,
+    "location": "Aveiro",
+    "development": "Evergreen Pure",
+    "block": "Bloco 2",
+    "fraction": "D"
+  },
+  "descricao_geral": "Descubra o encantador apartamento T2 no desenvolvimento Evergreen Pure, situado na vibrante cidade de Aveiro, a apenas 5 minutos do centro. Este refúgio combina charme e modernidade, oferecendo um lar que se destaca pela sua sofisticação, conforto e tranquilidade. Com acabamentos de elevada qualidade e um design minimalista, o apartamento proporciona um espaço perfeito para viver. A abundância de luz natural que banha a sala e os quartos, juntamente com a cozinha totalmente equipada e as áreas generosas, garantem um estilo de vida urbano sem abrir mão da paz. Aproveite a proximidade a acessos principais como a A25 e A1, tornando a sua locomoção ainda mais prática.",
+  "regras_especificas": "Os interessados devem agendar visitas com antecedência. O apartamento inclui um lugar de garagem e uma arrecadação. Não são permitidos animais de estimação. O financiamento pode ser discutido com o desenvolvedor.",
+  "descricao_por_divisao": {
+    "Sala": {
+      "area_m2": 26.11,
+      "descricao": "Uma sala ampla e iluminada, perfeita para momentos de convívio, com janelas que oferecem luz natural abundante."
+    },
+    "Cozinha": {
+      "area_m2": 7.46,
+      "descricao": "Cozinha totalmente equipada, ideal para os amantes da culinária, com um design funcional e moderno."
+    },
+    "Quarto 1": {
+      "area_m2": 14.92,
+      "descricao": "Quarto principal com espaço generoso e luz natural, ideal para relaxar após um longo dia."
+    },
+    "Quarto 2": {
+      "area_m2": 14.92,
+      "descricao": "Segundo quarto, perfeito para hóspedes ou crianças, mantendo a mesma luminosidade e conforto."
+    },
+    "Casa de banho": {
+      "area_m2": 7.46,
+      "descricao": "Casa de banho com acabamentos de qualidade que proporcionam um ambiente de tranquilidade."
+    },
+    "Hall e circulação": {
+      "area_m2": 3.73,
+      "descricao": "Espaço de circulação que conecta todas as áreas do apartamento de maneira prática e organizada."
+    }
+  }
+}

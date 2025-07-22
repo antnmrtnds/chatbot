@@ -1,0 +1,42 @@
+{
+  "metadata": {
+    "flat_id": "bloco1_e",
+    "typology": "T2",
+    "floor": "1",
+    "total_area_sqm": 93.78,
+    "private_area_sqm": 93.78,
+    "terrace_area_sqm": null,
+    "location": "Aveiro",
+    "development": "Evergreen Pure",
+    "block": "Bloco 1",
+    "fraction": "E"
+  },
+  "descricao_geral": "Descubra o seu novo lar no Evergreen Pure, um projeto exclusivo localizado a apenas 5 minutos do centro de Aveiro, a encantadora Veneza de Portugal. Este sofisticado apartamento T2 no primeiro andar combina charme, modernidade e funcionalidade, oferecendo uma harmonia perfeita entre design contemporâneo e a vibrante vida urbana. Com acabamentos de elevados padrões de qualidade, este refúgio de conforto e tranquilidade é ideal para quem busca um espaço acolhedor e prático, sem abrir mão da sofisticação. Aproveite a luz natural abundante que inunda a sala e os quartos, e desfrute de uma cozinha totalmente equipada, lugar de garagem e arrecadação. Não perca a oportunidade de viver num ambiente que eleva o seu estilo de vida.",
+  "regras_especificas": "Apenas interessados sérios, visitas por agendamento. Não aceitamos propostas abaixo do preço de mercado. O apartamento é ideal para residência própria ou investimento.",
+  "descricao_por_divisao": {
+    "Sala": {
+      "area_m2": 32.82,
+      "descricao": "Ampla sala com luz natural abundante, perfeita para momentos de convívio e lazer."
+    },
+    "Cozinha": {
+      "area_m2": 9.38,
+      "descricao": "Cozinha moderna e totalmente equipada, ideal para preparar deliciosas refeições."
+    },
+    "Quarto 1": {
+      "area_m2": 18.76,
+      "descricao": "Quarto espaçoso com luz natural, ideal para um ambiente relaxante."
+    },
+    "Quarto 2": {
+      "area_m2": 18.76,
+      "descricao": "Outro quarto bem iluminado, perfeito para hóspedes ou como escritório."
+    },
+    "Casa de banho": {
+      "area_m2": 9.38,
+      "descricao": "Casa de banho moderna com acabamentos de qualidade."
+    },
+    "Hall e circulação": {
+      "area_m2": 4.69,
+      "descricao": "Hall de entrada funcional que conecta todos os espaços do apartamento."
+    }
+  }
+}
