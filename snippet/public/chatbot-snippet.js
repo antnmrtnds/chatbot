@@ -247,6 +247,30 @@
       0%, 80%, 100% { transform: scale(0); }
       40% { transform: scale(1); }
     }
+
+    /* Markdown styling for assistant messages */
+    .viriato-chatbot-message-content strong {
+      font-weight: 600;
+      color: #1f2937;
+    }
+    
+    .viriato-chatbot-message-content em {
+      font-style: italic;
+    }
+    
+    .viriato-chatbot-message-content ul {
+      margin: 8px 0;
+      padding-left: 16px;
+    }
+    
+    .viriato-chatbot-message-content li {
+      margin: 4px 0;
+      list-style-type: disc;
+    }
+    
+    .viriato-chatbot-message-content br {
+      line-height: 1.4;
+    }
     
     .viriato-chatbot-whatsapp {
       width: 60px;
@@ -360,6 +384,21 @@
     `;
   }
 
+  // Simple markdown parser for basic formatting
+  function parseMarkdown(text) {
+    return text
+      // Bold text **text** -> <strong>text</strong>
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      // Italic text *text* -> <em>text</em>
+      .replace(/\*(.*?)\*/g, '<em>$1</em>')
+      // Bullet points - convert • or - at start of line to proper list items
+      .replace(/^[•\-]\s+(.+)$/gm, '<li>$1</li>')
+      // Convert consecutive list items to proper ul
+      .replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>')
+      // Line breaks
+      .replace(/\n/g, '<br>');
+  }
+
   // Add message to chat
   function addMessage(content, role = 'assistant') {
     const messagesContainer = document.getElementById('viriato-chatbot-messages');
@@ -372,7 +411,13 @@
     
     const messageContent = document.createElement('div');
     messageContent.className = 'viriato-chatbot-message-content';
-    messageContent.textContent = content;
+    
+    // For assistant messages, parse markdown. For user messages, use plain text.
+    if (role === 'assistant') {
+      messageContent.innerHTML = parseMarkdown(content);
+    } else {
+      messageContent.textContent = content;
+    }
     
     messageDiv.appendChild(avatar);
     messageDiv.appendChild(messageContent);

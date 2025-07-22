@@ -15,6 +15,8 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import * as gtag from '@/lib/gtag';
 import { getVisitorId, trackEvent } from '@/lib/tracking'; // Import trackEvent
 import { useSpeechRecognition } from '@/lib/hooks/useSpeechRecognition';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 export default function FloatingChatbot() {
   const [chatSession, setChatSession] = useState<ChatSession | null>(null); // Start with null
@@ -462,7 +464,25 @@ export default function FloatingChatbot() {
                         ? 'bg-teal-600 text-white'
                         : 'bg-gray-100 text-gray-800'
                     }`}>
-                      <p className="text-sm">{message.content}</p>
+                      {message.role === 'assistant' ? (
+                        <ReactMarkdown 
+                          remarkPlugins={[remarkGfm]}
+                          components={{
+                            p: ({children}) => <p className="text-sm mb-2 last:mb-0">{children}</p>,
+                            strong: ({children}) => <strong className="font-semibold text-gray-900">{children}</strong>,
+                            ul: ({children}) => <ul className="text-sm space-y-1 ml-4">{children}</ul>,
+                            ol: ({children}) => <ol className="text-sm space-y-1 ml-4">{children}</ol>,
+                            li: ({children}) => <li className="text-sm">{children}</li>,
+                            h1: ({children}) => <h1 className="text-base font-semibold text-gray-900 mb-1">{children}</h1>,
+                            h2: ({children}) => <h2 className="text-base font-semibold text-gray-900 mb-1">{children}</h2>,
+                            h3: ({children}) => <h3 className="text-sm font-semibold text-gray-900 mb-1">{children}</h3>,
+                          }}
+                        >
+                          {message.content}
+                        </ReactMarkdown>
+                      ) : (
+                        <p className="text-sm">{message.content}</p>
+                      )}
                     </div>
                     {message.role === 'user' && (
                       <Avatar className="h-8 w-8 bg-gray-200">
