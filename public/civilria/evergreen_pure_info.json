@@ -6,21 +6,29 @@
     "location": "Aveiro",
     "developer": "UpInvestments"
   },
-  "descricao_geral": "Bem-vindo ao Evergreen Pure, um empreendimento exclusivo que redefine o conceito de viver bem no coração de Aveiro. Localizado a apenas 5 minutos do centro da cidade, este projeto combina charme, modernidade e funcionalidade, proporcionando uma harmonia perfeita entre design e vida urbana. Aqui, encontrará um refúgio de sofisticação e conforto, ideal para quem busca tranquilidade sem abrir mão da proximidade ao vibrante centro da cidade. O Evergreen Pure conta com uma arquitetura inovadora e acabamentos de elevados padrões de qualidade, garantindo um lar onde o conforto se encontra com a inspiração. Se você procura um estilo de vida cosmopolita, venha descobrir o seu novo lar no Evergreen Pure.",
+  "descricao_geral": "O Evergreen Pure é um projeto exclusivo situado a apenas 5 minutos do coração de Aveiro, onde o conforto encontra a inspiração. Este empreendimento combina charme, modernidade e funcionalidade, criando uma harmonia perfeita entre design e vida urbana. Com um refúgio de sofisticação e tranquilidade, os residentes poderão desfrutar de um ambiente vibrante e acolhedor, próximo a todas as comodidades da cidade. O desenvolvimento é composto por dois blocos, cada um com oito apartamentos, projetados com elevados padrões de qualidade e minimalismo, proporcionando um espaço que reflete um estilo de vida cosmopolita e contemporâneo.",
   "regras_especificas": {
-    "localizacao": "A 5 minutos do centro de Aveiro, com acessos às rodovias A25 e A1, além de estações de comboio e aeroportos próximos.",
+    "localizacao": {
+      "proximidade_centro_minutos": 5,
+      "acessos": {
+        "rodovias": [
+          "A25",
+          "A1"
+        ],
+        "ferroviarios": "Estações de comboio próximas",
+        "aereos": "Aeroportos próximos"
+      }
+    },
     "tipologias_disponiveis": [
       {
         "tipologia": "T1",
         "area_min_m2": 68
       },
       {
-        "tipologia": "T2",
-        "area_min_m2": null
+        "tipologia": "T2"
       },
       {
-        "tipologia": "T3",
-        "area_min_m2": null
+        "tipologia": "T3"
       },
       {
         "tipologia": "T3 duplex",
@@ -31,15 +39,14 @@
     "iluminacao_natural": true
   },
   "descricao_por_divisao": {
-    "aveiro": {
+    "cidade": {
+      "nome": "Aveiro",
+      "apelido": "Veneza de Portugal",
       "caracteristicas": [
         "Canais pitorescos",
         "Barcos moliceiros",
         "Arquitetura Arte Nova",
-        "Ovos moles",
-        "Pateira de Fermentelos",
-        "Ria de Aveiro",
-        "Residência estudantil vibrante"
+        "Ovos moles"
       ],
       "gastronomia": [
         "Restaurantes diversos",
@@ -85,27 +92,16 @@
       "Ria de Aveiro",
       "Praia da Barra",
       "Costa Nova",
-      "Salinas de Aveiro",
-      "Cascata da Cabreia"
-    ],
-    "qualidade_de_vida": {
-      "seguranca": true,
-      "oferta_educativa": true,
-      "atividades_ao_ar_livre": true
-    }
+      "Salinas de Aveiro"
+    ]
   },
   "desenvolvedor": {
     "nome": "UpInvestments",
-    "grupo": "Loureiro Firm",
     "experiencia_anos": 80,
     "principios": [
       "Dedicação",
       "Integridade",
       "Valores sólidos"
-    ],
-    "parceiros": [
-      "Grupo Casais",
-      "Viriato & Viriato"
     ],
     "missao": "Desenvolver projetos imobiliários excecionais com qualidade e inovação"
   }
