@@ -32,28 +32,6 @@ git push -u origin main
 ### 2.1 Create Environment Variables File
 Your `.env` file should contain all the necessary variables. Make sure these are ready:
 
-```env
-# OpenAI Configuration
-OPENAI_API_KEY=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
-
-# Supabase Configuration
-NEXT_PUBLIC_SUPABASE_URL=https://nflssyblldwruktqftvl.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5mbHNzeWJsbGR3cnVrdHFmdHZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA3Nzc1MTYsImV4cCI6MjA2NjM1MzUxNn0.b9404ZJ47ZR0CtP61Dng5EzK-lxlsFOI1pJhH6rBNc8
-SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5mbHNzeWJsbGR3cnVrdHFmdHZsIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MDc3NzUxNiwiZXhwIjoyMDY2MzUzNTE2fQ.orWxoOITIKp9a9BLjHikhgMIB17Ps2zcqH2hPtjvxeg
-
-# Pinecone Configuration
-PINECONE_API_KEY=pcsk_6VGC66_TsHc2eAUe9ThZRbdW3qMThkJPRCFfdccxdE7VDZG5ujgupzhxWgJ7ercgzuFr7i
-PINECONE_INDEX_NAME=property-listings
-PINECONE_CHAT_HISTORY_INDEX_NAME=chat-history
-
-# Other Services
-ELEVENLABS_API_KEY=sk_2d49b7f16dbf538e0582e0ddb96d85a790dd2f7a9cae3731
-REDIS_URL=redis://chatbot:@Gght567ft@redis-13621.crce204.eu-west-2-3.ec2.redns.redis-cloud.com:13621
-LANGFLOW_API_KEY=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
-TWILIO_ACCOUNT_API_KEY=bQsO5wxaYNP8LCVqjd5Yx5TRw4pHwfRP
-TWILIO_ACCOUNT_SID=ACec309662d0f2787fb80bcf4f76f2d65a
-TWILIO_AUTH_TOKEN=e6c8b82acd3191c369a8004311e47a47
-```
 
 ## 🚀 Step 3: Deploy to Vercel
 
