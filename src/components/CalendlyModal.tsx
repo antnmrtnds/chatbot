@@ -12,9 +12,6 @@ export default function CalendlyModal({ isOpen, onClose, url }: CalendlyModalPro
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="w-[95vw] h-[90vh] md:w-[80vw] md:h-[90vh] p-0">
-        <DialogHeader className="p-4 border-b">
-          <DialogTitle>Agende a sua visita</DialogTitle>
-        </DialogHeader>
         <div className="flex-1 w-full h-full">
           <iframe
             src={url}
