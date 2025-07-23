@@ -1,11 +1,12 @@
 const path = require('path');
+const { WebpackManifestPlugin } = require('webpack-manifest-plugin');
 
 module.exports = {
   mode: 'production',
   entry: './src/embed.ts',
   output: {
     path: path.resolve(__dirname, 'public/embed'),
-    filename: 'viriato-chatbot.js',
+    filename: 'viriato-chatbot.[contenthash].js',
     library: 'ViriatoChatbot',
     libraryTarget: 'umd',
     publicPath: '/embed/',
@@ -38,4 +39,10 @@ module.exports = {
       },
     ],
   },
+  plugins: [
+    new WebpackManifestPlugin({
+      fileName: 'manifest.json',
+      publicPath: '/embed/',
+    }),
+  ],
 }; 
