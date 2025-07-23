@@ -1,6 +1,6 @@
 (function() {
   const SCRIPT_HOST = new URL(document.currentScript.src).origin;
-  const MANIFEST_URL = `${SCRIPT_HOST}/embed/manifest.json`;
+  const MANIFEST_URL = `https://chatbot-azure-eight-78.vercel.app/embed/manifest.json`;
 
   function initChatbot(config) {
     if (window.embedViriatoChatbot) {
