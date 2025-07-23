@@ -4,6 +4,7 @@ import { StringOutputParser } from '@langchain/core/output_parsers';
 import { RunnableSequence } from '@langchain/core/runnables';
 import { ChatMessage, Property, SearchFilters, VectorSearchResult } from './types';
 import { similaritySearch } from './vectorStore';
+import { getAvailablePropertiesSummary } from './propertyService';
 
 // Helper function to format documents as string
 function formatDocumentsAsString(docs: VectorSearchResult[]): string {
@@ -146,7 +147,7 @@ INSTRUÇÕES PRINCIPAIS:
    - If the user's intent is to schedule a viewing for a specific property, find the property's ID (e.g., from 'ID do Apartamento') in the 'CONTEXT DOS DOCUMENTOS' and include it in the response, like this: '[SCHEDULE_MEETING:bloco1_a]'. Crucially, **never** use the literal string 'property_id'.
    - If the user wants a general consultation, use: '[SCHEDULE_MEETING:general_consultation]'.
    - Do not attempt to schedule the meeting yourself. Simply use the special response format to trigger the scheduling UI.
-   - If you cannot find an answer to the user's question in the provided context, proactively suggest scheduling a meeting with an agent by responding with '[SCHEDULE_MEETING:general_consultation]'.
+   - If you cannot find an answer to the user's question or if the search results from the context are empty, state that you couldn't find a direct match for their preferences. Then, present the available property summary by mentioning the available typologies and price ranges. Ask if they would like to explore these options. Do not trigger the scheduling flow in this case.
 
 **FORMATTING GUIDELINES:**
 - Use **negrito** para informações-chave (preços, áreas, nomes)
@@ -223,10 +224,16 @@ export function createRagChain() {
         const finalDocs = allDocs.slice(0, 8);
         console.log(`Retrieved ${finalDocs.length} unique documents for context`);
         
+        if (finalDocs.length === 0) {
+          console.log('No relevant documents found. Getting available properties summary.');
+          const summary = await getAvailablePropertiesSummary();
+          return `Não foram encontrados resultados para a sua pesquisa. ${summary || 'Não há propriedades disponíveis no momento.'}`;
+        }
+        
         const formattedContext = formatDocumentsAsString(finalDocs);
         return formattedContext;
       },
-      question: (input: { question: string }) => input.question,
+      question: (input: { question:string }) => input.question,
       chatHistory: (input: { chatHistory: ChatMessage[] }) => formatChatHistory(input.chatHistory),
       onboardingAnswers: (input: { onboardingAnswers: Record<string, any> }) => formatOnboardingAnswers(input.onboardingAnswers),
     },

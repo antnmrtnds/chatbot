@@ -187,3 +187,51 @@ export async function reindexAllProperties(): Promise<boolean> {
     return false;
   }
 }
+
+/**
+ * Get a summary of available properties, including typologies and price range
+ * @returns A summary string or null if no properties are available
+ */
+export async function getAvailablePropertiesSummary(): Promise<string | null> {
+  try {
+    const properties = await getAllProperties();
+    if (properties.length === 0) {
+      return null;
+    }
+
+    const typologies = new Set<string>();
+    let minPrice = Infinity;
+    let maxPrice = 0;
+
+    properties.forEach(property => {
+      // Attempt to parse typology from the content if available
+      if (property.content) {
+        const contentData = JSON.parse(property.content);
+        if (contentData.typology) {
+          typologies.add(contentData.typology);
+        }
+      }
+
+      if (property.price) {
+        if (property.price < minPrice) {
+          minPrice = property.price;
+        }
+        if (property.price > maxPrice) {
+          maxPrice = property.price;
+        }
+      }
+    });
+
+    const sortedTypologies = Array.from(typologies).sort();
+    let summary = 'Temos as seguintes tipologias disponíveis: ' + sortedTypologies.join(', ') + '.';
+
+    if (minPrice !== Infinity && maxPrice !== 0) {
+      summary += ` Os preços variam entre ${minPrice.toLocaleString('pt-PT', { style: 'currency', currency: 'EUR' })} e ${maxPrice.toLocaleString('pt-PT', { style: 'currency', currency: 'EUR' })}`;
+    }
+
+    return summary;
+  } catch (error) {
+    console.error('Error in getAvailablePropertiesSummary:', error);
+    return 'Não foi possível obter um resumo das propriedades disponíveis.';
+  }
+}
