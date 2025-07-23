@@ -73,12 +73,11 @@ export async function processUserMessage(
   let updatedSession = addUserMessage(session, message);
 
   try {
-    // Send the user's message to the backend
-    const response = await fetch('/api/chat', {
+    // Send the message to the backend RAG chain
+    console.log('Sending to backend:', { message, visitorId, sessionId: session.sessionId, onboardingAnswers: session.onboardingAnswers });
+    const response = await fetch('/apis/chat', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         message: message,
         visitorId,

@@ -36,7 +36,7 @@ export default function PropertyListingsDashboard() {
     });
 
     try {
-      const response = await fetch("/api/property-listings", {
+      const response = await fetch("/apis/property-listings", {
         method: "POST",
         body: formData,
       });

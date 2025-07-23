@@ -6,7 +6,7 @@ import OpenAI from "openai";
 import { Pinecone } from "@pinecone-database/pinecone";
 import PDFParser from "pdf2json";
 
-console.log("Loading /api/property-listings/route.ts");
+console.log("Loading /apis/property-listings/route.ts");
 console.log("OPENAI_API_KEY loaded:", !!process.env.OPENAI_API_KEY);
 console.log("PINECONE_API_KEY loaded:", !!process.env.PINECONE_API_KEY);
 

@@ -32,7 +32,7 @@ export async function trackEvent({ eventName, details }: TrackEventPayload) {
   const visitorId = getVisitorId();
 
   try {
-    const response = await fetch('/api/track', {
+    const response = await fetch('/apis/track', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

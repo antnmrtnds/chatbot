@@ -88,8 +88,9 @@ async function setupRagSystem() {
     'data',
     'src/lib/rag',
     'src/components',
-    'src/app/api/chat',
-    'src/app/chat'
+    'src/app/apis/chat',
+    'src/app/page.tsx',
+    'src/app/chat/page.tsx'
   ];
   
   for (const dir of directories) {

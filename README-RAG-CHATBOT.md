@@ -125,11 +125,12 @@ Example queries:
 
 ## API Endpoints
 
-### POST /api/chat
+The chatbot makes API calls to the Next.js backend for a few key functions:
 
-Process a chat message and return a response.
+### POST /apis/chat
 
-**Request Body:**
+- **Description**: The main endpoint for processing user messages. It receives the user's input, orchestrates the RAG pipeline (retrieval, augmentation, generation), and returns the chatbot's response.
+- **Request Body**:
 
 ```json
 {

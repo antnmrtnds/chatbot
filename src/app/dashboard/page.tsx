@@ -17,7 +17,7 @@ export default function DocumentDashboard() {
   const handleAddDocument = async () => {
     setLoading(true);
     try {
-      const response = await fetch("/api/documents", {
+      const response = await fetch("/apis/documents", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -43,7 +43,7 @@ export default function DocumentDashboard() {
   const handleDeleteDocument = async () => {
     setLoading(true);
     try {
-      const response = await fetch("/api/documents", {
+      const response = await fetch("/apis/documents", {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
