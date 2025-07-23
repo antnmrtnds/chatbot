@@ -271,10 +271,16 @@ export default function FloatingChatbot() {
   // Handle scheduling a meeting
   const handleScheduleMeeting = async (propertyId: string) => {
     try {
+      // Normalize property ID to match mapping format
+      let normalizedPropertyId = propertyId.toLowerCase().trim();
+      
+      // Remove any prefixes or suffixes that might be added
+      normalizedPropertyId = normalizedPropertyId.replace(/^flat_/, '').replace(/\s+/g, '_');
+      
       const response = await fetch('/api/schedule', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ propertyId }),
+        body: JSON.stringify({ propertyId: normalizedPropertyId }),
       });
 
       if (response.ok) {
@@ -282,7 +288,24 @@ export default function FloatingChatbot() {
         setCalendlyUrl(data.schedulingUrl);
         setIsCalendlyOpen(true);
       } else {
-        console.error('Failed to get scheduling URL');
+        const errorData = await response.json();
+        console.error('Failed to get scheduling URL:', errorData);
+        
+        // Fallback to general consultation if specific property fails
+        if (normalizedPropertyId !== 'general_consultation') {
+          console.log('Falling back to general consultation...');
+          const fallbackResponse = await fetch('/api/schedule', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ propertyId: 'general_consultation' }),
+          });
+          
+          if (fallbackResponse.ok) {
+            const fallbackData = await fallbackResponse.json();
+            setCalendlyUrl(fallbackData.schedulingUrl);
+            setIsCalendlyOpen(true);
+          }
+        }
       }
     } catch (error) {
       console.error('Error scheduling meeting:', error);
@@ -322,17 +345,26 @@ export default function FloatingChatbot() {
       // Update chat session
       setChatSession(updatedSession);
       
-      // Play TTS for the latest assistant message
+      // Update the scheduling trigger logic
       const lastAssistantMessage = updatedSession.messages[updatedSession.messages.length - 1];
       if (lastAssistantMessage.role === 'assistant') {
-        // Check for scheduling tag in the last message
-        const match = lastAssistantMessage.content.match(/\[SCHEDULE_MEETING:?(.*?)\]/);
-        if (match) {
-          const propertyId = match[1] || 'general_consultation';
-          handleScheduleMeeting(propertyId);
+        // Check for scheduling tag in the last message with improved regex
+        const scheduleMatch = lastAssistantMessage.content.match(/\[SCHEDULE_MEETING(?::([^\]]+))?\]/);
+        if (scheduleMatch) {
+          let propertyId = scheduleMatch[1] || 'general_consultation';
+          
+          // Clean up the property ID
+          propertyId = propertyId.trim();
+          if (propertyId === '' || propertyId === 'undefined') {
+            propertyId = 'general_consultation';
+          }
+          
           // Remove the tag from the message
-          lastAssistantMessage.content = lastAssistantMessage.content.replace(/\[SCHEDULE_MEETING:?.*?\]/, '').trim();
+          lastAssistantMessage.content = lastAssistantMessage.content.replace(/\[SCHEDULE_MEETING[^\]]*\]/, '').trim();
+          
+          handleScheduleMeeting(propertyId);
         }
+        
         playAudio(lastAssistantMessage.content);
       }
 

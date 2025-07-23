@@ -143,7 +143,7 @@ INSTRUÇÕES PRINCIPAIS:
 7. **SCHEDULING**:
    - When the user expresses intent to schedule a viewing or a meeting, identify this intent.
    - Trigger the scheduling flow by using a special response format: '[SCHEDULE_MEETING]'.
-   - If the user's intent is to schedule a viewing for a specific property, include the property ID in the response, like this: '[SCHEDULE_MEETING:property_id]'.
+   - If the user's intent is to schedule a viewing for a specific property, find the property's ID (e.g., from 'ID do Apartamento') in the 'CONTEXT DOS DOCUMENTOS' and include it in the response, like this: '[SCHEDULE_MEETING:bloco1_a]'. Crucially, **never** use the literal string 'property_id'.
    - If the user wants a general consultation, use: '[SCHEDULE_MEETING:general_consultation]'.
    - Do not attempt to schedule the meeting yourself. Simply use the special response format to trigger the scheduling UI.
    - If you cannot find an answer to the user's question in the provided context, proactively suggest scheduling a meeting with an agent by responding with '[SCHEDULE_MEETING:general_consultation]'.
