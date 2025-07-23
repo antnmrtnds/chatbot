@@ -75,7 +75,7 @@ export async function processUserMessage(
   try {
     // Send the message to the backend RAG chain
     console.log('Sending to backend:', { message, visitorId, sessionId: session.sessionId, onboardingAnswers: session.onboardingAnswers });
-    const response = await fetch('/apis/chat', {
+    const response = await fetch('https://chatbot-azure-eight-78.vercel.app/apis/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

@@ -85,7 +85,7 @@ export default function FloatingChatbot() {
     if (!isTtsEnabled || !text) return;
 
     try {
-      const response = await fetch('/apis/tts', {
+      const response = await fetch('https://chatbot-azure-eight-78.vercel.app/apis/tts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text }),
@@ -119,12 +119,12 @@ export default function FloatingChatbot() {
 
       try {
         // Check if the visitor has completed onboarding before
-        const visitorResponse = await fetch(`/apis/visitors/${id}`);
+        const visitorResponse = await fetch(`https://chatbot-azure-eight-78.vercel.app/apis/visitors/${id}`);
         if (visitorResponse.ok) {
           const visitorData = await visitorResponse.json();
           if (visitorData.onboarding_answers) {
             // Onboarding already complete, load answers and skip to chat
-            const historyResponse = await fetch(`/apis/chat?visitorId=${id}`);
+            const historyResponse = await fetch(`https://chatbot-azure-eight-78.vercel.app/apis/chat?visitorId=${id}`);
             const historyData = await historyResponse.json();
             setChatSession({
               ...createChatSession(),
@@ -140,7 +140,7 @@ export default function FloatingChatbot() {
         }
 
         // Standard chat history initialization
-        const response = await fetch(`/apis/chat?visitorId=${id}`);
+        const response = await fetch(`https://chatbot-azure-eight-78.vercel.app/apis/chat?visitorId=${id}`);
         if (response.ok) {
           const data = await response.json();
           console.log('Chat history received from API:', data);
@@ -249,7 +249,7 @@ export default function FloatingChatbot() {
       
       // Save answers to the backend
       try {
-        await fetch('/apis/chat', {
+        await fetch('https://chatbot-azure-eight-78.vercel.app/apis/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -278,7 +278,7 @@ export default function FloatingChatbot() {
       // Remove any prefixes or suffixes that might be added
       normalizedPropertyId = normalizedPropertyId.replace(/^flat_/, '').replace(/\s+/g, '_');
       
-      const response = await fetch('/apis/schedule', {
+      const response = await fetch('https://chatbot-azure-eight-78.vercel.app/apis/schedule', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ propertyId: normalizedPropertyId }),
@@ -295,7 +295,7 @@ export default function FloatingChatbot() {
         // Fallback to general consultation if specific property fails
         if (normalizedPropertyId !== 'general_consultation') {
           console.log('Falling back to general consultation...');
-          const fallbackResponse = await fetch('/apis/schedule', {
+          const fallbackResponse = await fetch('https://chatbot-azure-eight-78.vercel.app/apis/schedule', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ propertyId: 'general_consultation' }),

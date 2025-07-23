@@ -32,7 +32,7 @@ export async function trackEvent({ eventName, details }: TrackEventPayload) {
   const visitorId = getVisitorId();
 
   try {
-    const response = await fetch('/apis/track', {
+    const response = await fetch('https://chatbot-azure-eight-78.vercel.app/apis/track', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
