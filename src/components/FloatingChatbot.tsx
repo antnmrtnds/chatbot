@@ -6,6 +6,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Input } from "@/components/ui/input";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import CalendlyModal from "@/components/CalendlyModal";
 import { ChatSession, ChatMessage, Property } from '@/lib/rag/types';
 import { createChatSession, processUserMessage, getRelevantProperties } from '@/lib/rag/chatSessionManager';
 import { 
@@ -444,271 +445,258 @@ export default function FloatingChatbot() {
   };
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end space-y-2">
-      {/* Floating button */}
-      {!isOpen && (
-        <div className="flex flex-col items-end space-y-2">
-            <Button
-              onClick={() => {
-                setIsOpen(true);
-                trackEvent({ eventName: 'chatbot_opened' });
-                gtag.event({
-                  action: 'open_chatbot',
-                  category: 'chatbot',
-                  label: 'Floating Chatbot Opened',
-                  value: 1,
-                });
-              }}
-              className="h-14 w-14 rounded-full bg-teal-600 hover:bg-teal-700 shadow-lg"
-            >
-              <MessageCircle className="h-6 w-6 text-white" />
-            </Button>
-            <a 
-              href="https://wa.me/14155238886?text=Ol%C3%A1%2C%20gostaria%20de%20saber%20mais%20sobre%20os%20im%C3%B3veis."
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => trackEvent({ eventName: 'whatsapp_icon_clicked' })}
-            >
-              <div className="h-14 w-14 rounded-full bg-green-500 hover:bg-green-600 shadow-lg flex items-center justify-center">
-                <Phone className="h-6 w-6 text-white" />
-              </div>
-            </a>
-        </div>
-      )}
-      
-      {/* Chat window */}
-      {isOpen && (
-        <Card className={`shadow-xl flex flex-col ${isCalendlyOpen ? 'w-[95vw] h-[90vh] md:w-[80vw] md:h-[90vh]' : 'w-[350px] md:w-[400px] h-[500px]'}`}>
-          <CardHeader className="border-b py-3 px-4 flex flex-row items-center justify-between space-y-0">
-            <CardTitle className="text-sm font-medium flex items-center">
-              <Building2 className="h-4 w-4 text-teal-600 mr-2" />
-              Assistente Imobiliário
-            </CardTitle>
-            <div className="flex gap-1">
-              {isCalendlyOpen && (
-                <Button
+    <>
+      <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end space-y-2">
+        {/* Floating button */}
+        {!isOpen && (
+          <div className="flex flex-col items-end space-y-2">
+              <Button
+                onClick={() => {
+                  setIsOpen(true);
+                  trackEvent({ eventName: 'chatbot_opened' });
+                  gtag.event({
+                    action: 'open_chatbot',
+                    category: 'chatbot',
+                    label: 'Floating Chatbot Opened',
+                    value: 1,
+                  });
+                }}
+                className="h-14 w-14 rounded-full bg-teal-600 hover:bg-teal-700 shadow-lg"
+              >
+                <MessageCircle className="h-6 w-6 text-white" />
+              </Button>
+              <a 
+                href="https://wa.me/14155238886?text=Ol%C3%A1%2C%20gostaria%20de%20saber%20mais%20sobre%20os%20im%C3%B3veis."
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => trackEvent({ eventName: 'whatsapp_icon_clicked' })}
+              >
+                <div className="h-14 w-14 rounded-full bg-green-500 hover:bg-green-600 shadow-lg flex items-center justify-center">
+                  <Phone className="h-6 w-6 text-white" />
+                </div>
+              </a>
+          </div>
+        )}
+        
+        {/* Chat window */}
+        {isOpen && (
+          <Card className="shadow-xl flex flex-col w-[350px] md:w-[400px] h-[500px]">
+            <CardHeader className="border-b py-3 px-4 flex flex-row items-center justify-between space-y-0">
+              <CardTitle className="text-sm font-medium flex items-center">
+                <Building2 className="h-4 w-4 text-teal-600 mr-2" />
+                Assistente Imobiliário
+              </CardTitle>
+              <Button
                   variant="ghost"
                   size="icon"
                   className="h-8 w-8 text-gray-500 hover:text-gray-700"
-                  onClick={() => setIsCalendlyOpen(false)}
+                  onClick={() => {
+                    setIsOpen(false);
+                    trackEvent({ 
+                      eventName: 'chatbot_closed',
+                      details: { messages_exchanged: chatSession?.messages.length ?? 0 }
+                    });
+                  }}
                 >
-                  <ChevronDown className="h-4 w-4" />
+                  <X className="h-4 w-4" />
                 </Button>
-              )}
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-gray-500 hover:text-gray-700"
-                onClick={() => {
-                  setIsOpen(false);
-                  trackEvent({ 
-                    eventName: 'chatbot_closed',
-                    details: { messages_exchanged: chatSession?.messages.length ?? 0 }
-                  });
-                }}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-          </CardHeader>
-          
-          {isCalendlyOpen ? (
-            <div className="flex-1 w-full h-full">
-              <iframe
-                src={calendlyUrl}
-                width="100%"
-                height="100%"
-                frameBorder="0"
-              ></iframe>
-            </div>
-          ) : (
-            <CardContent className="flex-1 overflow-y-auto p-4">
-              <div className="space-y-4">
-                {chatSession ? (
-                  chatSession.messages
-                  .filter(msg => msg.role !== 'system') // Filter out system messages
-                  .map((message, index) => (
-                  <div key={index} className={`flex items-start gap-3 ${message.role === 'user' ? 'justify-end' : ''}`}>
-                    {message.role === 'assistant' && (
-                      <Avatar className="h-8 w-8 bg-teal-100">
-                        <Bot className="h-5 w-5 text-teal-600" />
-                      </Avatar>
-                    )}
-                    <div className={`rounded-lg px-3 py-2 max-w-[80%] ${
-                      message.role === 'user'
-                        ? 'bg-teal-600 text-white'
-                        : 'bg-gray-100 text-gray-800'
-                    }`}>
-                      {message.role === 'assistant' ? (
-                        <ReactMarkdown 
-                          remarkPlugins={[remarkGfm]}
-                          components={{
-                            p: ({children}) => <p className="text-sm mb-2 last:mb-0">{children}</p>,
-                            strong: ({children}) => <strong className="font-semibold text-gray-900">{children}</strong>,
-                            ul: ({children}) => <ul className="text-sm space-y-1 ml-4">{children}</ul>,
-                            ol: ({children}) => <ol className="text-sm space-y-1 ml-4">{children}</ol>,
-                            li: ({children}) => <li className="text-sm">{children}</li>,
-                            h1: ({children}) => <h1 className="text-base font-semibold text-gray-900 mb-1">{children}</h1>,
-                            h2: ({children}) => <h2 className="text-base font-semibold text-gray-900 mb-1">{children}</h2>,
-                            h3: ({children}) => <h3 className="text-sm font-semibold text-gray-900 mb-1">{children}</h3>,
-                          }}
-                        >
-                          {message.content}
-                        </ReactMarkdown>
-                      ) : (
-                        <p className="text-sm">{message.content}</p>
+            </CardHeader>
+            
+              <CardContent className="flex-1 overflow-y-auto p-4">
+                <div className="space-y-4">
+                  {chatSession ? (
+                    chatSession.messages
+                    .filter(msg => msg.role !== 'system') // Filter out system messages
+                    .map((message, index) => (
+                    <div key={index} className={`flex items-start gap-3 ${message.role === 'user' ? 'justify-end' : ''}`}>
+                      {message.role === 'assistant' && (
+                        <Avatar className="h-8 w-8 bg-teal-100">
+                          <Bot className="h-5 w-5 text-teal-600" />
+                        </Avatar>
+                      )}
+                      <div className={`rounded-lg px-3 py-2 max-w-[80%] ${
+                        message.role === 'user'
+                          ? 'bg-teal-600 text-white'
+                          : 'bg-gray-100 text-gray-800'
+                      }`}>
+                        {message.role === 'assistant' ? (
+                          <ReactMarkdown 
+                            remarkPlugins={[remarkGfm]}
+                            components={{
+                              p: ({children}) => <p className="text-sm mb-2 last:mb-0">{children}</p>,
+                              strong: ({children}) => <strong className="font-semibold text-gray-900">{children}</strong>,
+                              ul: ({children}) => <ul className="text-sm space-y-1 ml-4">{children}</ul>,
+                              ol: ({children}) => <ol className="text-sm space-y-1 ml-4">{children}</ol>,
+                              li: ({children}) => <li className="text-sm">{children}</li>,
+                              h1: ({children}) => <h1 className="text-base font-semibold text-gray-900 mb-1">{children}</h1>,
+                              h2: ({children}) => <h2 className="text-base font-semibold text-gray-900 mb-1">{children}</h2>,
+                              h3: ({children}) => <h3 className="text-sm font-semibold text-gray-900 mb-1">{children}</h3>,
+                            }}
+                          >
+                            {message.content}
+                          </ReactMarkdown>
+                        ) : (
+                          <p className="text-sm">{message.content}</p>
+                        )}
+                      </div>
+                      {message.role === 'user' && (
+                        <Avatar className="h-8 w-8 bg-gray-200">
+                          <User className="h-5 w-5 text-gray-600" />
+                        </Avatar>
                       )}
                     </div>
-                    {message.role === 'user' && (
-                      <Avatar className="h-8 w-8 bg-gray-200">
-                        <User className="h-5 w-5 text-gray-600" />
-                      </Avatar>
-                    )}
-                  </div>
-                ))
-              ) : (
-                // Show loading skeleton while session initializes
-                <div className="space-y-4">
-                  <div className="flex items-start gap-3">
-                    <div className="h-8 w-8 rounded-full bg-gray-200 animate-pulse"></div>
-                    <div className="flex-1 space-y-2">
-                      <div className="h-4 w-3/4 rounded bg-gray-200 animate-pulse"></div>
-                      <div className="h-4 w-1/2 rounded bg-gray-200 animate-pulse"></div>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3 justify-end">
-                    <div className="flex-1 space-y-2 items-end">
-                      <div className="h-4 w-3/4 rounded bg-gray-200 animate-pulse ml-auto"></div>
-                    </div>
-                    <div className="h-8 w-8 rounded-full bg-gray-200 animate-pulse"></div>
-                  </div>
-                </div>
-              )}
-
-              {isLoading && chatSession && (
-                <div className="flex items-start gap-3">
-                  <Avatar className="h-8 w-8 bg-teal-100">
-                    <Bot className="h-5 w-5 text-teal-600" />
-                  </Avatar>
-                  <div className="rounded-lg px-3 py-2 bg-gray-100 text-gray-800">
-                    <div className="flex items-center space-x-1">
-                      <span className="h-2 w-2 bg-white/70 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
-                      <span className="h-2 w-2 bg-white/70 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
-                      <span className="h-2 w-2 bg-white/70 rounded-full animate-bounce"></span>
-                    </div>
-                  </div>
-                </div>
-              )}
-              <div ref={messagesEndRef} />
-            </div>
-          </CardContent>
-          )}
-          
-          {chatSession && !isCalendlyOpen && (
-            <CardFooter className="border-t border-white/20 p-4 pb-2 flex flex-col space-y-2">
-              {onboardingInProgress && chatSession.onboardingState === 'in_progress' ? (
-                <div className="w-full">
-                  {onboardingQuestions[chatSession.currentQuestionIndex].type === 'multiple_choice' && (
-                    <div className="flex flex-wrap gap-2">
-                      {onboardingQuestions[chatSession.currentQuestionIndex].options?.map(option => (
-                        <Button 
-                          key={option} 
-                          className="border-2 border-teal-200 bg-teal-50 text-teal-800 hover:bg-teal-100 hover:border-teal-300 font-medium" 
-                          onClick={() => handleOnboardingResponse(option)}
-                        >
-                          {option}
-                        </Button>
-                      ))}
-                    </div>
-                  )}
-                  {onboardingQuestions[chatSession.currentQuestionIndex].type === 'text_input' && (
-                     <div className="w-full flex items-center space-x-2">
-                       <Input
-                         value={inputValue}
-                         onChange={(e) => setInputValue(e.target.value)}
-                         onKeyDown={handleKeyDown}
-                         placeholder="Escreva a sua resposta..."
-                         className="flex-1 rounded-lg"
-                       />
-                       <Button onClick={() => { handleOnboardingResponse(inputValue); setInputValue(''); }} size="icon" className="h-9 w-9 bg-teal-600 text-white hover:bg-teal-700">
-                         <Send className="h-4 w-4" />
-                       </Button>
-                     </div>
-                  )}
-                   {onboardingQuestions[chatSession.currentQuestionIndex].type === 'contact_input' && (
-                    <div className="space-y-3">
-                      <Input
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder="O seu email..."
-                        className="flex-1 rounded-lg"
-                      />
-                      <Input
-                        type="tel"
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
-                        placeholder="O seu telefone..."
-                        className="flex-1 rounded-lg"
-                      />
-                      <div className="flex justify-end gap-2">
-                         <Button className="border border-gray-300 bg-gray-100 text-gray-700 hover:bg-gray-200" onClick={() => handleOnboardingResponse('skip')}>
-                          Pular
-                        </Button>
-                        <Button className="bg-teal-600 text-white hover:bg-teal-700" onClick={() => handleOnboardingResponse(`Email: ${email}, Telefone: ${phone}`)}>
-                          Enviar
-                        </Button>
+                  ))
+                ) : (
+                  // Show loading skeleton while session initializes
+                  <div className="space-y-4">
+                    <div className="flex items-start gap-3">
+                      <div className="h-8 w-8 rounded-full bg-gray-200 animate-pulse"></div>
+                      <div className="flex-1 space-y-2">
+                        <div className="h-4 w-3/4 rounded bg-gray-200 animate-pulse"></div>
+                        <div className="h-4 w-1/2 rounded bg-gray-200 animate-pulse"></div>
                       </div>
                     </div>
-                  )}
-                </div>
-              ) : (
-                <div className="w-full flex items-center space-x-2">
-                  <Input
-                    value={inputValue}
-                    onChange={(e) => setInputValue(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                    placeholder="Escreva a sua mensagem..."
-                    className="flex-1 rounded-lg"
-                    disabled={isLoading}
-                  />
-                  {isAvailable && (
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={toggleListening}
-                      disabled={isLoading}
-                      className={`h-9 w-9 text-gray-500 hover:text-gray-700 ${isListening ? 'bg-red-100' : ''}`}
-                    >
-                      <Mic className="h-4 w-4" />
-                    </Button>
-                  )}
-                  <Button onClick={() => handleSendMessage()} disabled={isLoading} size="icon" className="h-9 w-9 bg-teal-600 text-white hover:bg-teal-700">
-                    <Send className="h-4 w-4" />
-                  </Button>
-                </div>
-              )}
+                    <div className="flex items-start gap-3 justify-end">
+                      <div className="flex-1 space-y-2 items-end">
+                        <div className="h-4 w-3/4 rounded bg-gray-200 animate-pulse ml-auto"></div>
+                      </div>
+                      <div className="h-8 w-8 rounded-full bg-gray-200 animate-pulse"></div>
+                    </div>
+                  </div>
+                )}
 
-              {/* Nova conversa button - moved inside and only show when there are messages */}
-              {chatSession.messages.filter(msg => msg.role !== 'system').length > 1 && (
-                <div className="flex justify-center pt-2 border-t border-gray-200">
-                  <button
-                    onClick={handleNewConversation}
-                    className="text-gray-400 hover:text-gray-600 text-sm transition-colors cursor-pointer bg-transparent border-none"
-                  >
-                    Nova conversa
-                  </button>
-                </div>
-              )}
-            </CardFooter>
-          )}
-        </Card>
-      )}
+                {isLoading && chatSession && (
+                  <div className="flex items-start gap-3">
+                    <Avatar className="h-8 w-8 bg-teal-100">
+                      <Bot className="h-5 w-5 text-teal-600" />
+                    </Avatar>
+                    <div className="rounded-lg px-3 py-2 bg-gray-100 text-gray-800">
+                      <div className="flex items-center space-x-1">
+                        <span className="h-2 w-2 bg-white/70 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+                        <span className="h-2 w-2 bg-white/70 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+                        <span className="h-2 w-2 bg-white/70 rounded-full animate-bounce"></span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                <div ref={messagesEndRef} />
+              </div>
+            </CardContent>
+            
+            
+            {chatSession && (
+              <CardFooter className="border-t border-white/20 p-4 pb-2 flex flex-col space-y-2">
+                {onboardingInProgress && chatSession.onboardingState === 'in_progress' ? (
+                  <div className="w-full">
+                    {onboardingQuestions[chatSession.currentQuestionIndex].type === 'multiple_choice' && (
+                      <div className="flex flex-wrap gap-2">
+                        {onboardingQuestions[chatSession.currentQuestionIndex].options?.map(option => (
+                          <Button 
+                            key={option} 
+                            className="border-2 border-teal-200 bg-teal-50 text-teal-800 hover:bg-teal-100 hover:border-teal-300 font-medium" 
+                            onClick={() => handleOnboardingResponse(option)}
+                          >
+                            {option}
+                          </Button>
+                        ))}
+                      </div>
+                    )}
+                    {onboardingQuestions[chatSession.currentQuestionIndex].type === 'text_input' && (
+                       <div className="w-full flex items-center space-x-2">
+                         <Input
+                           value={inputValue}
+                           onChange={(e) => setInputValue(e.target.value)}
+                           onKeyDown={handleKeyDown}
+                           placeholder="Escreva a sua resposta..."
+                           className="flex-1 rounded-lg"
+                         />
+                         <Button onClick={() => { handleOnboardingResponse(inputValue); setInputValue(''); }} size="icon" className="h-9 w-9 bg-teal-600 text-white hover:bg-teal-700">
+                           <Send className="h-4 w-4" />
+                         </Button>
+                       </div>
+                    )}
+                     {onboardingQuestions[chatSession.currentQuestionIndex].type === 'contact_input' && (
+                      <div className="space-y-3">
+                        <Input
+                          type="email"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          placeholder="O seu email..."
+                          className="flex-1 rounded-lg"
+                        />
+                        <Input
+                          type="tel"
+                          value={phone}
+                          onChange={(e) => setPhone(e.target.value)}
+                          placeholder="O seu telefone..."
+                          className="flex-1 rounded-lg"
+                        />
+                        <div className="flex justify-end gap-2">
+                           <Button className="border border-gray-300 bg-gray-100 text-gray-700 hover:bg-gray-200" onClick={() => handleOnboardingResponse('skip')}>
+                            Pular
+                          </Button>
+                          <Button className="bg-teal-600 text-white hover:bg-teal-700" onClick={() => handleOnboardingResponse(`Email: ${email}, Telefone: ${phone}`)}>
+                            Enviar
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="w-full flex items-center space-x-2">
+                    <Input
+                      value={inputValue}
+                      onChange={(e) => setInputValue(e.target.value)}
+                      onKeyDown={handleKeyDown}
+                      placeholder="Escreva a sua mensagem..."
+                      className="flex-1 rounded-lg"
+                      disabled={isLoading}
+                    />
+                    {isAvailable && (
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={toggleListening}
+                        disabled={isLoading}
+                        className={`h-9 w-9 text-gray-500 hover:text-gray-700 ${isListening ? 'bg-red-100' : ''}`}
+                      >
+                        <Mic className="h-4 w-4" />
+                      </Button>
+                    )}
+                    <Button onClick={() => handleSendMessage()} disabled={isLoading} size="icon" className="h-9 w-9 bg-teal-600 text-white hover:bg-teal-700">
+                      <Send className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
+
+                {/* Nova conversa button - moved inside and only show when there are messages */}
+                {chatSession.messages.filter(msg => msg.role !== 'system').length > 1 && (
+                  <div className="flex justify-center pt-2 border-t border-gray-200">
+                    <button
+                      onClick={handleNewConversation}
+                      className="text-gray-400 hover:text-gray-600 text-sm transition-colors cursor-pointer bg-transparent border-none"
+                    >
+                      Nova conversa
+                    </button>
+                  </div>
+                )}
+              </CardFooter>
+            )}
+          </Card>
+        )}
+      </div>
+
+      <CalendlyModal
+        isOpen={isCalendlyOpen}
+        onClose={() => setIsCalendlyOpen(false)}
+        url={calendlyUrl}
+      />
 
       <audio ref={audioRef} />
-    </div>
+    </>
   );
 }
+
 // Property card component
 function PropertyCard({ property }: { property: Property }) {
   const formatPrice = (price?: number) => {
