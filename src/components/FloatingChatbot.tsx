@@ -30,6 +30,8 @@ export default function FloatingChatbot() {
   const [onboardingInProgress, setOnboardingInProgress] = useState(false);
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+  const [isCalendlyOpen, setIsCalendlyOpen] = useState(false);
+  const [calendlyUrl, setCalendlyUrl] = useState('');
 
   const onboardingQuestions = [
     {
@@ -266,6 +268,27 @@ export default function FloatingChatbot() {
     }
   };
 
+  // Handle scheduling a meeting
+  const handleScheduleMeeting = async (propertyId: string) => {
+    try {
+      const response = await fetch('/api/schedule', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ propertyId }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setCalendlyUrl(data.schedulingUrl);
+        setIsCalendlyOpen(true);
+      } else {
+        console.error('Failed to get scheduling URL');
+      }
+    } catch (error) {
+      console.error('Error scheduling meeting:', error);
+    }
+  };
+
   // Handle sending a message
   const handleSendMessage = async (message: string = inputValue) => {
     if (!message.trim() || isLoading || !visitorId || !chatSession) return;
@@ -300,9 +323,17 @@ export default function FloatingChatbot() {
       setChatSession(updatedSession);
       
       // Play TTS for the latest assistant message
-      const lastMessage = updatedSession.messages[updatedSession.messages.length - 1];
-      if (lastMessage.role === 'assistant') {
-        playAudio(lastMessage.content);
+      const lastAssistantMessage = updatedSession.messages[updatedSession.messages.length - 1];
+      if (lastAssistantMessage.role === 'assistant') {
+        // Check for scheduling tag in the last message
+        const match = lastAssistantMessage.content.match(/\[SCHEDULE_MEETING:?(.*?)\]/);
+        if (match) {
+          const propertyId = match[1] || 'general_consultation';
+          handleScheduleMeeting(propertyId);
+          // Remove the tag from the message
+          lastAssistantMessage.content = lastAssistantMessage.content.replace(/\[SCHEDULE_MEETING:?.*?\]/, '').trim();
+        }
+        playAudio(lastAssistantMessage.content);
       }
 
       setInputValue('');
@@ -415,21 +446,23 @@ export default function FloatingChatbot() {
       
       {/* Chat window */}
       {isOpen && (
-        <Card className="w-[350px] md:w-[400px] h-[500px] shadow-xl flex flex-col">
+        <Card className={`shadow-xl flex flex-col ${isCalendlyOpen ? 'w-[95vw] h-[90vh] md:w-[80vw] md:h-[90vh]' : 'w-[350px] md:w-[400px] h-[500px]'}`}>
           <CardHeader className="border-b py-3 px-4 flex flex-row items-center justify-between space-y-0">
             <CardTitle className="text-sm font-medium flex items-center">
               <Building2 className="h-4 w-4 text-teal-600 mr-2" />
               Assistente Imobiliário
             </CardTitle>
             <div className="flex gap-1">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-gray-500 hover:text-gray-700"
-                onClick={() => setIsTtsEnabled(!isTtsEnabled)}
-              >
-                {isTtsEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
-              </Button>
+              {isCalendlyOpen && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-gray-500 hover:text-gray-700"
+                  onClick={() => setIsCalendlyOpen(false)}
+                >
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+              )}
               <Button
                 variant="ghost"
                 size="icon"
@@ -447,10 +480,20 @@ export default function FloatingChatbot() {
             </div>
           </CardHeader>
           
-          <CardContent className="flex-1 overflow-y-auto p-4">
-            <div className="space-y-4">
-              {chatSession ? (
-                chatSession.messages
+          {isCalendlyOpen ? (
+            <div className="flex-1 w-full h-full">
+              <iframe
+                src={calendlyUrl}
+                width="100%"
+                height="100%"
+                frameBorder="0"
+              ></iframe>
+            </div>
+          ) : (
+            <CardContent className="flex-1 overflow-y-auto p-4">
+              <div className="space-y-4">
+                {chatSession ? (
+                  chatSession.messages
                   .filter(msg => msg.role !== 'system') // Filter out system messages
                   .map((message, index) => (
                   <div key={index} className={`flex items-start gap-3 ${message.role === 'user' ? 'justify-end' : ''}`}>
@@ -527,8 +570,9 @@ export default function FloatingChatbot() {
               <div ref={messagesEndRef} />
             </div>
           </CardContent>
+          )}
           
-          {chatSession && (
+          {chatSession && !isCalendlyOpen && (
             <CardFooter className="border-t border-white/20 p-4 pb-2 flex flex-col space-y-2">
               {onboardingInProgress && chatSession.onboardingState === 'in_progress' ? (
                 <div className="w-full">
