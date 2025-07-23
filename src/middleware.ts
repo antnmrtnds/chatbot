@@ -29,5 +29,5 @@ export function middleware(request: NextRequest) {
 
 // See "Matching Paths" below to learn more
 export const config = {
-  matcher: '/apis/:path*',
+  matcher: 'https://chatbot-azure-eight-78.vercel.app/apis/:path*',
 };
