@@ -6,7 +6,7 @@ module.exports = {
   entry: './src/embed.ts',
   output: {
     path: path.resolve(__dirname, 'public/embed'),
-    filename: 'viriato-chatbot.[contenthash].js',
+    filename: 'viriato-chatbot.js',
     library: 'ViriatoChatbot',
     libraryTarget: 'umd',
     publicPath: '/embed/',

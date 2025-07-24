@@ -3,33 +3,38 @@ const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
 
 module.exports = {
   mode: 'production',
-  entry: './src/embed.ts',
+  entry: {
+    // Explicitly name the output bundle
+    'viriato-chatbot': './src/embed.ts',
+  },
   output: {
     path: path.resolve(__dirname, 'public/embed'),
-    filename: 'viriato-chatbot.js',
-    library: 'ViriatoChatbot',
-    libraryTarget: 'umd',
-    publicPath: '/embed/',
+    // Use the [name] placeholder to create 'viriato-chatbot.js'
+    filename: '[name].js',
+    // Clean the output directory before each build
+    clean: true,
   },
   resolve: {
     extensions: ['.ts', '.tsx', '.js'],
-    plugins: [new TsconfigPathsPlugin({ configFile: "./tsconfig.json" })]
+    plugins: [
+      new TsconfigPathsPlugin({
+        configFile: './tsconfig.json',
+      }),
+    ],
   },
   module: {
     rules: [
       {
         test: /\.tsx?$/,
-        use: {
-          loader: 'ts-loader',
-          options: {
-            configFile: 'tsconfig.json',
-            compilerOptions: {
-              "noEmit": false,
-              "jsx": "react-jsx"
-            }
-          }
-        },
+        loader: 'ts-loader',
         exclude: /node_modules/,
+        options: {
+          configFile: 'tsconfig.json',
+          compilerOptions: {
+            noEmit: false,
+            jsx: 'react-jsx',
+          },
+        },
       },
       {
         test: /\.css$/,
@@ -37,5 +42,4 @@ module.exports = {
       },
     ],
   },
-  plugins: [],
 };
