@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
+import Script from "next/script";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -16,11 +17,13 @@ export default function RootLayout({
   return (
     <html lang="pt">
       <head>
-        <script
-          async
+        <Script
+          strategy="afterInteractive"
           src="https://www.googletagmanager.com/gtag/js?id=G-2QFEQS8FQF"
-        ></script>
-        <script
+        />
+        <Script
+          id="gtag-init"
+          strategy="afterInteractive"
           dangerouslySetInnerHTML={{
             __html: `
               window.dataLayer = window.dataLayer || [];
@@ -35,6 +38,36 @@ export default function RootLayout({
         className={`${GeistSans.variable} ${GeistMono.variable} antialiased`}
       >
         {children}
+        <div
+          id="viriato-chatbot-container"
+          style={{
+            width: "400px",
+            height: "600px",
+            position: "fixed",
+            bottom: "20px",
+            right: "20px",
+            zIndex: 1000,
+          }}
+        ></div>
+        <script
+          id="viriato-chatbot-loader"
+          dangerouslySetInnerHTML={{
+            __html: `
+              var script = document.createElement('script');
+              script.src = 'http://localhost:5174/embed/viriato-chatbot.js';
+              script.async = true;
+              script.defer = true;
+              script.onload = function() {
+                if (window.embedViriatoChatbot) {
+                  window.embedViriatoChatbot({
+                    containerId: 'viriato-chatbot-container',
+                  });
+                }
+              };
+              document.body.appendChild(script);
+            `,
+          }}
+        />
       </body>
     </html>
   );
