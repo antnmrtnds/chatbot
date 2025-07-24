@@ -480,8 +480,8 @@ export default function FloatingChatbot() {
         
         {/* Chat window */}
         {isOpen && (
-          <Card className="shadow-xl flex flex-col w-[350px] md:w-[400px] h-[500px]">
-            <CardHeader className="border-b py-3 px-4 flex flex-row items-center justify-between space-y-0">
+          <Card className="shadow-2xl flex flex-col w-[350px] md:w-[400px] h-[500px] bg-white/80 backdrop-blur-sm dark:bg-zinc-800/80">
+            <CardHeader className="border-b border-white/20 py-3 px-4 flex flex-row items-center justify-between space-y-0">
               <CardTitle className="text-sm font-medium flex items-center">
                 <Building2 className="h-4 w-4 text-teal-600 mr-2" />
                 Assistente Imobiliário
@@ -489,7 +489,7 @@ export default function FloatingChatbot() {
               <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 text-gray-500 hover:text-gray-700"
+                  className="h-8 w-8 text-gray-500 hover:text-gray-700 bg-white/30 backdrop-blur-sm dark:bg-zinc-800/30 dark:border-zinc-700/50"
                   onClick={() => {
                     setIsOpen(false);
                     trackEvent({ 
@@ -516,8 +516,8 @@ export default function FloatingChatbot() {
                       )}
                       <div className={`rounded-lg px-3 py-2 max-w-[80%] ${
                         message.role === 'user'
-                          ? 'bg-teal-600 text-white'
-                          : 'bg-gray-100 text-gray-800'
+                          ? 'bg-teal-600/90 text-white'
+                          : 'bg-gray-100/90 text-gray-800'
                       }`}>
                         {message.role === 'assistant' ? (
                           <ReactMarkdown 
@@ -550,17 +550,17 @@ export default function FloatingChatbot() {
                   // Show loading skeleton while session initializes
                   <div className="space-y-4">
                     <div className="flex items-start gap-3">
-                      <div className="h-8 w-8 rounded-full bg-gray-200 animate-pulse"></div>
+                      <div className="h-8 w-8 rounded-full bg-gray-200/80 animate-pulse"></div>
                       <div className="flex-1 space-y-2">
-                        <div className="h-4 w-3/4 rounded bg-gray-200 animate-pulse"></div>
-                        <div className="h-4 w-1/2 rounded bg-gray-200 animate-pulse"></div>
+                        <div className="h-4 w-3/4 rounded bg-gray-200/80 animate-pulse"></div>
+                        <div className="h-4 w-1/2 rounded bg-gray-200/80 animate-pulse"></div>
                       </div>
                     </div>
                     <div className="flex items-start gap-3 justify-end">
                       <div className="flex-1 space-y-2 items-end">
-                        <div className="h-4 w-3/4 rounded bg-gray-200 animate-pulse ml-auto"></div>
+                        <div className="h-4 w-3/4 rounded bg-gray-200/80 animate-pulse ml-auto"></div>
                       </div>
-                      <div className="h-8 w-8 rounded-full bg-gray-200 animate-pulse"></div>
+                      <div className="h-8 w-8 rounded-full bg-gray-200/80 animate-pulse"></div>
                     </div>
                   </div>
                 )}
@@ -585,7 +585,7 @@ export default function FloatingChatbot() {
             
             
             {chatSession && (
-              <CardFooter className="border-t border-white/20 p-4 pb-2 flex flex-col space-y-2">
+              <CardFooter className="border-t p-4 pb-2 flex flex-col space-y-2">
                 {onboardingInProgress && chatSession.onboardingState === 'in_progress' ? (
                   <div className="w-full">
                     {onboardingQuestions[chatSession.currentQuestionIndex].type === 'multiple_choice' && (
@@ -593,7 +593,7 @@ export default function FloatingChatbot() {
                         {onboardingQuestions[chatSession.currentQuestionIndex].options?.map(option => (
                           <Button 
                             key={option} 
-                            className="border-2 border-teal-200 bg-teal-50 text-teal-800 hover:bg-teal-100 hover:border-teal-300 font-medium" 
+                            className="border-2 border-teal-200/50 bg-teal-50/50 text-teal-800 hover:bg-teal-100/70 hover:border-teal-300/70 font-medium dark:bg-zinc-800/30 dark:border-zinc-700/50" 
                             onClick={() => handleOnboardingResponse(option)}
                           >
                             {option}
@@ -608,9 +608,9 @@ export default function FloatingChatbot() {
                            onChange={(e) => setInputValue(e.target.value)}
                            onKeyDown={handleKeyDown}
                            placeholder="Escreva a sua resposta..."
-                           className="flex-1 rounded-lg"
+                           className="flex-1 rounded-lg bg-white/20 backdrop-blur-sm border-white/30 focus:ring-offset-0 dark:bg-zinc-800/20 dark:border-zinc-700/30"
                          />
-                         <Button onClick={() => { handleOnboardingResponse(inputValue); setInputValue(''); }} size="icon" className="h-9 w-9 bg-teal-600 text-white hover:bg-teal-700">
+                         <Button onClick={() => { handleOnboardingResponse(inputValue); setInputValue(''); }} size="icon" className="h-9 w-9 bg-teal-600/80 text-white hover:bg-teal-700/90 dark:bg-zinc-800/30 dark:border-zinc-700/50">
                            <Send className="h-4 w-4" />
                          </Button>
                        </div>
@@ -622,20 +622,20 @@ export default function FloatingChatbot() {
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
                           placeholder="O seu email..."
-                          className="flex-1 rounded-lg"
+                          className="flex-1 rounded-lg bg-white/20 backdrop-blur-sm border-white/30 focus:ring-offset-0 dark:bg-zinc-800/20 dark:border-zinc-700/30"
                         />
                         <Input
                           type="tel"
                           value={phone}
                           onChange={(e) => setPhone(e.target.value)}
                           placeholder="O seu telefone..."
-                          className="flex-1 rounded-lg"
+                          className="flex-1 rounded-lg bg-white/20 backdrop-blur-sm border-white/30 focus:ring-offset-0 dark:bg-zinc-800/20 dark:border-zinc-700/30"
                         />
                         <div className="flex justify-end gap-2">
-                           <Button className="border border-gray-300 bg-gray-100 text-gray-700 hover:bg-gray-200" onClick={() => handleOnboardingResponse('skip')}>
+                           <Button className="border border-gray-300/50 bg-gray-100/50 text-gray-700 hover:bg-gray-200/70 dark:bg-zinc-800/30 dark:border-zinc-700/50" onClick={() => handleOnboardingResponse('skip')}>
                             Pular
                           </Button>
-                          <Button className="bg-teal-600 text-white hover:bg-teal-700" onClick={() => handleOnboardingResponse(`Email: ${email}, Telefone: ${phone}`)}>
+                          <Button className="bg-teal-600/80 text-white hover:bg-teal-700/90 dark:bg-zinc-800/30 dark:border-zinc-700/50" onClick={() => handleOnboardingResponse(`Email: ${email}, Telefone: ${phone}`)}>
                             Enviar
                           </Button>
                         </div>
@@ -649,7 +649,7 @@ export default function FloatingChatbot() {
                       onChange={(e) => setInputValue(e.target.value)}
                       onKeyDown={handleKeyDown}
                       placeholder="Escreva a sua mensagem..."
-                      className="flex-1 rounded-lg"
+                      className="flex-1 rounded-lg bg-white/20 backdrop-blur-sm border-white/30 focus:ring-offset-0 dark:bg-zinc-800/20 dark:border-zinc-700/30"
                       disabled={isLoading}
                     />
                     {isAvailable && (
@@ -658,12 +658,12 @@ export default function FloatingChatbot() {
                         size="icon"
                         onClick={toggleListening}
                         disabled={isLoading}
-                        className={`h-9 w-9 text-gray-500 hover:text-gray-700 ${isListening ? 'bg-red-100' : ''}`}
+                        className={`h-9 w-9 text-gray-500 hover:text-gray-700 ${isListening ? 'bg-red-100' : ''} bg-white/30 backdrop-blur-sm border-white/30 dark:bg-zinc-800/30 dark:border-zinc-700/50`}
                       >
                         <Mic className="h-4 w-4" />
                       </Button>
                     )}
-                    <Button onClick={() => handleSendMessage()} disabled={isLoading} size="icon" className="h-9 w-9 bg-teal-600 text-white hover:bg-teal-700">
+                    <Button onClick={() => handleSendMessage()} disabled={isLoading} size="icon" className="h-9 w-9 bg-teal-600/80 text-white hover:bg-teal-700/90 dark:bg-zinc-800/30 dark:border-zinc-700/50">
                       <Send className="h-4 w-4" />
                     </Button>
                   </div>
@@ -671,7 +671,7 @@ export default function FloatingChatbot() {
 
                 {/* Nova conversa button - moved inside and only show when there are messages */}
                 {chatSession.messages.filter(msg => msg.role !== 'system').length > 1 && (
-                  <div className="flex justify-center pt-2 border-t border-gray-200">
+                  <div className="flex justify-center pt-2 border-t border-gray-200/30">
                     <button
                       onClick={handleNewConversation}
                       className="text-gray-400 hover:text-gray-600 text-sm transition-colors cursor-pointer bg-transparent border-none"

@@ -2,7 +2,7 @@ create table public.developments (
   id serial not null,
   content text not null,
   embedding public.vector null,
-  chunk_id text null,
+  metadata jsonb null,
   created_at timestamp without time zone null default now(),
   updated_at timestamp without time zone null default now(),
   flat_id text null,

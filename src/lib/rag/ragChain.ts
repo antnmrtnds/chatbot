@@ -96,7 +96,7 @@ function createContextAwareQueries(query: string, chatHistory: ChatMessage[]): s
 }
 
 // Enhanced System prompt template with conversation awareness
-const SYSTEM_TEMPLATE = `És um assistente imobiliário especializado para o empreendimentos da Civilria, particularmente o Evergreen Pure em Aveiro.
+const SYSTEM_TEMPLATE = `És um assistente imobiliário especializado para o empreendimentos da UpInvestments, particularmente o Evergreen Pure em Aveiro.
 
 CONTEXTO DA CONVERSA:
 Preferências do Utilizador (onboarding):

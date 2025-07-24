@@ -9,11 +9,14 @@
     "start": "next start",
     "lint": "next lint",
     "index": "tsx scripts/index-documents.ts",
+    "index-documents": "npx tsx scripts/index-documents.ts",
+    "index-development-info": "npx tsx scripts/index-development-info.ts",
+    "populate-supabase": "npx tsx scripts/populate-supabase-from-json.ts",
+    "setup-rag": "npx tsx scripts/setup-rag.ts",
     "verify-rag": "npx tsx scripts/verify-rag-setup.ts",
     "create-function": "npx tsx scripts/create-function.ts",
     "create-tables": "npx tsx scripts/create-tables.ts",
-    "convert-flats": "npx tsx scripts/convert-flats-for-pinecone.ts",
-    "index-development": "npx tsx scripts/index-development-info.ts"
+    "convert-flats": "npx tsx scripts/convert-flats-for-pinecone.ts"
   },
   "dependencies": {
     "@langchain/core": "^0.3.62",
