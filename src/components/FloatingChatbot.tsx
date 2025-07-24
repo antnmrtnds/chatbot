@@ -480,7 +480,7 @@ export default function FloatingChatbot() {
         
         {/* Chat window */}
         {isOpen && (
-          <Card className="shadow-2xl flex flex-col w-[350px] md:w-[400px] h-[500px] bg-white/80 backdrop-blur-sm dark:bg-zinc-800/80">
+          <Card className="shadow-2xl flex flex-col w-[350px] md:w-[400px] h-[500px] bg-transparent backdrop-blur-lg border border-white/20 dark:border-zinc-800/20">
             <CardHeader className="border-b border-white/20 py-3 px-4 flex flex-row items-center justify-between space-y-0">
               <CardTitle className="text-sm font-medium flex items-center">
                 <Building2 className="h-4 w-4 text-teal-600 mr-2" />
@@ -516,8 +516,8 @@ export default function FloatingChatbot() {
                       )}
                       <div className={`rounded-lg px-3 py-2 max-w-[80%] ${
                         message.role === 'user'
-                          ? 'bg-teal-600/90 text-white'
-                          : 'bg-gray-100/90 text-gray-800'
+                          ? 'bg-teal-600/90 text-white shadow-md'
+                          : 'bg-white/50 dark:bg-zinc-800/50 text-gray-800 dark:text-gray-200 shadow-md'
                       }`}>
                         {message.role === 'assistant' ? (
                           <ReactMarkdown 
@@ -550,17 +550,17 @@ export default function FloatingChatbot() {
                   // Show loading skeleton while session initializes
                   <div className="space-y-4">
                     <div className="flex items-start gap-3">
-                      <div className="h-8 w-8 rounded-full bg-gray-200/80 animate-pulse"></div>
+                      <div className="h-8 w-8 rounded-full bg-gray-200/50 animate-pulse"></div>
                       <div className="flex-1 space-y-2">
-                        <div className="h-4 w-3/4 rounded bg-gray-200/80 animate-pulse"></div>
-                        <div className="h-4 w-1/2 rounded bg-gray-200/80 animate-pulse"></div>
+                        <div className="h-4 w-3/4 rounded bg-gray-200/50 animate-pulse"></div>
+                        <div className="h-4 w-1/2 rounded bg-gray-200/50 animate-pulse"></div>
                       </div>
                     </div>
                     <div className="flex items-start gap-3 justify-end">
                       <div className="flex-1 space-y-2 items-end">
-                        <div className="h-4 w-3/4 rounded bg-gray-200/80 animate-pulse ml-auto"></div>
+                        <div className="h-4 w-3/4 rounded bg-gray-200/50 animate-pulse ml-auto"></div>
                       </div>
-                      <div className="h-8 w-8 rounded-full bg-gray-200/80 animate-pulse"></div>
+                      <div className="h-8 w-8 rounded-full bg-gray-200/50 animate-pulse"></div>
                     </div>
                   </div>
                 )}
