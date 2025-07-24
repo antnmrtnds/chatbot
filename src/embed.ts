@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import FloatingChatbot from './components/FloatingChatbot';
+import './app/globals.css';
 
 const embedChatbot = (elementId: string = 'viriato-chatbot-container') => {
   const embedElement = document.getElementById(elementId);
