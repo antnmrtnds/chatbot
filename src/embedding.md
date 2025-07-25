@@ -104,4 +104,4 @@ You can customize the appearance and position of your chatbot widget from the ad
     *   **Set a launcher icon:** Provide a URL to an image to use as the launcher icon.
     *   **Set the position:** Choose whether the widget should appear on the bottom right or bottom left of the screen.
 3.  The live preview will show you how the widget will look.
-4.  Click "Save Settings" to apply your changes. The widget on your website will update automatically.
+4.  Click "Save Settings" to apply your changes. The widget on your website will update automatically. 

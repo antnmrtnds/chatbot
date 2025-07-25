@@ -30,7 +30,8 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
-    "src/embed.ts"
+    "src/embed.ts",
+    "src/viriato.d.ts"
   ],
   "exclude": [
     "node_modules"
