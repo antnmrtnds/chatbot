@@ -39,13 +39,12 @@ export default function RootLayout({
         className={`${GeistSans.variable} ${GeistMono.variable} antialiased`}
       >
         {children}
-        <Script
-          src="https://viriatochatbot.vercel.app/loader.js"
-          data-api-key="2d912f2b-18a6-4eea-9f21-ef72bc20a1ec"
-          async
-          defer
-        />
-        <viriato-chatbot></viriato-chatbot>
+<Script
+  src="https://viriatochatbot.vercel.app/loader.js"
+  async
+  defer
+/>
+<viriato-chatbot api-key="2d912f2b-18a6-4eea-9f21-ef72bc20a1ec"></viriato-chatbot>
       </body>
     </html>
   );
