@@ -16,7 +16,7 @@ export default function EvergreenPureLanding() {
           <div className="flex items-center justify-between">
             {/* Logo */}
             <div className="text-white text-2xl font-bold">
-              CIVILRIA
+              UPINVESTMENTS
             </div>
             
             {/* Navigation */}
