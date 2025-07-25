@@ -54,7 +54,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `
               var script = document.createElement('script');
-              script.src = ' https://8d1ef0abec48.ngrok-free.app/embed/viriato-chatbot.js';
+              script.src = 'https://f3f6774132db.ngrok-free.app/embed/viriato-chatbot.js';
               script.async = true;
               script.defer = true;
               script.onload = function() {
