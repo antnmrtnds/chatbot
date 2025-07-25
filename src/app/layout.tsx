@@ -39,35 +39,35 @@ export default function RootLayout({
       >
         {children}
         <div
-          id="viriato-chatbot-container"
-          style={{
-            width: "400px",
-            height: "600px",
-            position: "fixed",
-            bottom: "20px",
-            right: "20px",
-            zIndex: 1000,
-          }}
-        ></div>
-        <script
-          id="viriato-chatbot-loader"
-          dangerouslySetInnerHTML={{
-            __html: `
-              var script = document.createElement('script');
-              script.src = 'https://f3f6774132db.ngrok-free.app/embed/viriato-chatbot.js';
-              script.async = true;
-              script.defer = true;
-              script.onload = function() {
-                if (window.embedViriatoChatbot) {
-                  window.embedViriatoChatbot({
-                    containerId: 'viriato-chatbot-container',
-                  });
+        id="viriato-chatbot-container"
+        style={{
+          width: "400px",
+          height: "600px",
+          position: "fixed",
+          bottom: "20px",
+          right: "20px",
+          zIndex: 1000,
+            }}
+          ></div>
+          <script
+            id="viriato-chatbot-loader"
+            dangerouslySetInnerHTML={{
+              __html: `
+                var script = document.createElement('script');
+                script.src = 'https://f3f6774132db.ngrok-free.app/viriato-chatbot.js';
+                script.async = true;
+                script.defer = true;
+                script.onload = function() {
+                  if (window.embedViriatoChatbot) {
+                    window.embedViriatoChatbot({
+                      containerId: 'viriato-chatbot-container',
+                    });
                 }
-              };
-              document.body.appendChild(script);
-            `,
-          }}
-        />
+            };
+            document.body.appendChild(script);
+          `,
+        }}
+      />
       </body>
     </html>
   );
