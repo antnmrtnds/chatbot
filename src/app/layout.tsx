@@ -38,36 +38,11 @@ export default function RootLayout({
         className={`${GeistSans.variable} ${GeistMono.variable} antialiased`}
       >
         {children}
-        <div
-        id="viriato-chatbot-container"
-        style={{
-          width: "400px",
-          height: "600px",
-          position: "fixed",
-          bottom: "20px",
-          right: "20px",
-          zIndex: 1000,
-            }}
-          ></div>
-          <script
-            id="viriato-chatbot-loader"
-            dangerouslySetInnerHTML={{
-              __html: `
-                var script = document.createElement('script');
-                script.src = 'https://f3f6774132db.ngrok-free.app/viriato-chatbot.js';
-                script.async = true;
-                script.defer = true;
-                script.onload = function() {
-                  if (window.embedViriatoChatbot) {
-                    window.embedViriatoChatbot({
-                      containerId: 'viriato-chatbot-container',
-                    });
-                }
-            };
-            document.body.appendChild(script);
-          `,
-        }}
-      />
+        <script 
+        src="https://chatbot-azure-eight-78.vercel.app/viriato-chatbot/loader.js" 
+        data-api-key="2d912f2b-18a6-4eea-9f21-ef72bc20a1ec"
+        async defer>
+    </script>
       </body>
     </html>
   );
