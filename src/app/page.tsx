@@ -64,7 +64,7 @@ export default function EvergreenPureLanding() {
       <section className="relative h-screen flex items-center justify-center">
         <div className="absolute inset-0">
           <Image
-            src="/civilria/ID4cf09501-0000-0500-0000-000015afc88a.jpg.webp"
+            src="https://civilria.com/civilria/ID4cf09501-0000-0500-0000-000015afc88a.jpg.webp"
             alt="Building image"
             fill
             className="object-cover"
@@ -189,7 +189,7 @@ export default function EvergreenPureLanding() {
               <div className="grid grid-cols-1 gap-4">
                 <div className="relative h-80 rounded-lg overflow-hidden">
                   <Image
-                    src="/civilria/ID4cf09501-0000-0500-0000-000015afc89d.jpg.webp"
+                    src="https://civilria.com/civilria/ID4cf09501-0000-0500-0000-000015afc89d.jpg.webp"
                     alt="Apartment Interior"
                     fill
                     className="object-cover"
@@ -197,7 +197,7 @@ export default function EvergreenPureLanding() {
                 </div>
                 <div className="relative h-80 rounded-lg overflow-hidden">
                   <Image
-                    src="/civilria/ID4cf09501-0000-0500-0000-000015afc88b.jpg.webp"
+                    src="https://civilria.com/civilria/ID4cf09501-0000-0500-0000-000015afc88b.jpg.webp"
                     alt="Apartment Kitchen"
                     fill
                     className="object-cover"

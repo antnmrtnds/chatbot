@@ -3,6 +3,7 @@ import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import Script from "next/script";
 import "./globals.css";
+import React from 'react';
 
 export const metadata: Metadata = {
   title: "Evergreen Pure - Apartamentos em Aveiro",
@@ -44,6 +45,7 @@ export default function RootLayout({
           async
           defer
         />
+        <viriato-chatbot></viriato-chatbot>
       </body>
     </html>
   );

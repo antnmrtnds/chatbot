@@ -25,7 +25,9 @@
   },
   "include": [
     "next-env.d.ts",
-    "**/*.ts", 
+    "src/gtag.d.ts",
+    "src/viriato.d.ts",
+    "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
     "src/embed.ts"
