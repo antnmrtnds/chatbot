@@ -12,14 +12,25 @@ const nextConfig = {
         ],
       },
       {
-        source: '/:path*',
+        source: '/(.*)',
         headers: [
           {
             key: 'Content-Security-Policy',
-            value:
-              "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://viriatochatbot.vercel.app https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://viriatochatbot.vercel.app; img-src 'self' data: https://viriatochatbot.vercel.app https://images.unsplash.com https://civilria.com; connect-src 'self' https://viriatochatbot.vercel.app https://*.google-analytics.com https://*.googletagmanager.com; font-src 'self'; frame-src 'self' https://upinvestments.vshow.pt; object-src 'none';",
-          },
-        ],
+            value: [
+              "default-src 'self'",
+              "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://viriatochatbot-5cq1ya7bu-antnmrtnds-projects.vercel.app",
+              "connect-src 'self' https://viriatochatbot-5cq1ya7bu-antnmrtnds-projects.vercel.app",
+              "style-src 'self' 'unsafe-inline'",
+              "img-src 'self' data: https:",
+              "font-src 'self'",
+              "object-src 'none'",
+              "base-uri 'self'",
+              "form-action 'self'",
+              "frame-ancestors 'none'",
+              "upgrade-insecure-requests"
+            ].join('; ')
+          }
+        ]
       },
     ];
   },
