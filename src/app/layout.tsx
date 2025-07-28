@@ -40,7 +40,7 @@ export default function RootLayout({
       >
         {children}
 <Script
-  src="https://viriatochatbot.vercel.app/loader.js"
+  src="https://viriatochatbot-5cq1ya7bu-antnmrtnds-projects.vercel.app/loader.js"
   async
   defer
 />
